@@ -80,7 +80,7 @@ async function request(method, path, body = null, headers = {}) {
       level: 'beginner',
     });
     if (res.status === 201) throw new Error('Should reject duplicate email');
-    if (res.status !== 400) throw new Error(`Expected 400, got ${res.status}`);
+    if (res.status !== 409) throw new Error(`Expected 409 (Conflict), got ${res.status}`);
   });
 
   await test('4. Login with correct credentials', async () => {
@@ -219,6 +219,80 @@ async function request(method, path, body = null, headers = {}) {
     });
     if (res.status !== 200) throw new Error(`Got ${res.status}`);
     console.log(`   → Found ${res.data.participants?.length || 0} participant(s)`);
+  });
+
+  await test('4. Leave event', async () => {
+    if (!event1Id) throw new Error('No event ID');
+    const res = await request('POST', `/events/${event1Id}/leave`, {}, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status !== 200) throw new Error(`Got ${res.status}`);
+    console.log(`   → Left event, remaining participants: ${res.data.event.joinedUsers.length}`);
+  });
+
+  // ===== RATINGS =====
+  console.log('\n⭐ RATINGS & REVIEWS\n');
+
+  let ratingId;
+
+  await test('1. Reject rating before event ends', async () => {
+    if (!event1Id) throw new Error('No event ID');
+    const res = await request('POST', '/ratings', {
+      eventId: event1Id,
+      score: 5,
+      review: 'Amazing event!',
+    }, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status === 201) throw new Error('Should reject rating for future event');
+  });
+
+  await test('2. Reject invalid score (0)', async () => {
+    if (!event2Id) throw new Error('No event ID');
+    const res = await request('POST', '/ratings', {
+      eventId: event2Id,
+      score: 0,
+      review: 'Test',
+    }, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status === 201) throw new Error('Should reject score < 1');
+  });
+
+  await test('3. Reject invalid score (6)', async () => {
+    if (!event2Id) throw new Error('No event ID');
+    const res = await request('POST', '/ratings', {
+      eventId: event2Id,
+      score: 6,
+      review: 'Test',
+    }, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status === 201) throw new Error('Should reject score > 5');
+  });
+
+  await test('4. Reject non-integer score (4.5)', async () => {
+    if (!event2Id) throw new Error('No event ID');
+    const res = await request('POST', '/ratings', {
+      eventId: event2Id,
+      score: 4.5,
+      review: 'Test',
+    }, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status === 201) throw new Error('Should reject non-integer score');
+  });
+
+  await test('5. Reject rating if user not joined', async () => {
+    if (!event1Id) throw new Error('No event ID');
+    const res = await request('POST', '/ratings', {
+      eventId: event1Id,
+      score: 3,
+      review: 'Did not join',
+    }, {
+      'Authorization': `Bearer ${tokens.adi}`,
+    });
+    if (res.status === 201) throw new Error('Should require user to be participant');
   });
 
   // ===== SUMMARY =====
