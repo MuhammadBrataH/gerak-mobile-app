@@ -61,16 +61,16 @@ Dokumen ini mencakup:
 
 ### 2.1 Visi Produk
 
-GERAK adalah platform mobile yang menghubungkan individu pencari olahraga dengan penyelenggara event olahraga komunitas. Platform ini memudahkan pengguna menemukan event terdekat berdasarkan preferensi (jenis olahraga, level kemampuan) dan lokasi real-time via GPS.
+GERAK adalah platform direktori olahraga komunitas yang menghubungkan individu pencari olahraga dengan penyelenggara event olahraga lokal. Platform ini memudahkan pengguna menemukan event berdasarkan preferensi (jenis olahraga, level kemampuan) dan lokasi regional (filter kota/kecamatan). Integrasi WhatsApp Smart-Redirect memungkinkan komunikasi cepat dan structured antara pemain dan organizer tanpa perlu in-app chat.
 
 ### 2.2 Nilai yang Diberikan
 
 | Untuk Pencari Olahraga | Untuk Organizer Event |
 |---|---|
-| Menemukan event terdekat dengan cepat | Mencari pemain untuk mengisi slot kosong |
-| Filter berdasarkan level kemampuan | Reach pengguna lebih luas |
-| Komunikasi langsung via WhatsApp | Manajemen event lebih efisien |
-| Lihat rating komunitas sebelum join | Build community trust |
+| Menemukan event komunitas dengan filter regional | Mencari pemain untuk mengisi slot kosong |
+| Filter berdasarkan jenis olahraga dan level kemampuan | Reach pengguna lebih luas |
+| Komunikasi terstruktur via WhatsApp Smart-Redirect | Manajemen event lebih efisien |
+| Lihat rating komunitas sebelum join | Build community trust dan reputasi |
 
 ### 2.3 Pengguna Target
 
@@ -80,10 +80,11 @@ GERAK adalah platform mobile yang menghubungkan individu pencari olahraga dengan
 ### 2.4 Asumsi dan Dependensi
 
 - Pengguna memiliki koneksi internet (WiFi atau 3G+)
-- GPS terhubung dan enabled di device
-- WhatsApp terpasang di device pengguna
+- WhatsApp terpasang di device pengguna (wajib untuk Smart-Redirect)
+- GPS adalah optional untuk MVP (bisa diaktifkan di future phase untuk geofencing)
 - Backend API sudah siap minggu ke-4
 - MongoDB Atlas atau MongoDB lokal sudah disetup
+- Pengguna memiliki nomor WhatsApp yang valid untuk dihubungi
 
 ## III. FITUR-FITUR (MoSCoW PRIORITY)
 
@@ -110,13 +111,15 @@ GERAK adalah platform mobile yang menghubungkan individu pencari olahraga dengan
 | AUTH-05 | Logout | Session dihapus, user redirect ke login |
 | AUTH-06 | Edit profil | Update nama, foto, olahraga favorit, level kemampuan |
 
-#### 3.1.2 Browse & Search Events
+#### 3.1.2 Browse & Search Events (dengan Regional Filter)
 
-**Deskripsi:** Pengguna dapat melihat list event dengan filter dan search.
+**Deskripsi:** Pengguna dapat melihat list event dengan filter berbasis text (kota/kecamatan) dan dropdown preferensi.
 
 **User Story:**
-- Sebagai pengguna, saya ingin melihat list event terdekat dari lokasi saya
-- Sebagai pengguna, saya ingin filter event berdasarkan olahraga dan level kemampuan
+- Sebagai pengguna, saya ingin melihat list event terdekat dari region saya
+- Sebagai pengguna, saya ingin filter event berdasarkan olahraga (futsal, badminton, basket, dll)
+- Sebagai pengguna, saya ingin filter event berdasarkan level kemampuan (pemula, menengah, kompetitif)
+- Sebagai pengguna, saya ingin filter event berdasarkan kota/kecamatan
 - Sebagai pengguna, saya ingin scroll infinite atau load more untuk event lebih banyak
 - Sebagai pengguna, saya ingin pull-to-refresh untuk update list event terbaru
 
@@ -124,75 +127,82 @@ GERAK adalah platform mobile yang menghubungkan individu pencari olahraga dengan
 
 | ID | Kriteria | Detail |
 |---|---|---|
-| EVT-01 | List event | Tampilkan: nama, olahraga, level, slot kosong, jarak, waktu |
+| EVT-01 | List event | Tampilkan: nama, olahraga, level, slot kosong, waktu, lokasi, rating |
 | EVT-02 | Filter sport | Dropdown list olahraga (futsal, badminton, basketball, tennis, volleyball) |
-| EVT-03 | Filter level | Filter: beginner, intermediate, advanced, mixed |
-| EVT-04 | Pagination | Infinite scroll atau tombol Load More |
-| EVT-05 | Pull-to-refresh | Gesture tarik ke atas untuk refresh list |
-| EVT-06 | Sort by distance | Default sort berdasarkan jarak terdekat |
+| EVT-03 | Filter level | Filter: pemula (beginner), menengah (intermediate), kompetitif (advanced), mixed |
+| EVT-04 | Filter city | Dropdown kota/kab atau free-text search kota |
+| EVT-05 | Filter district | Optional: filter spesifik kecamatan (dropdown atau autocomplete) |
+| EVT-06 | Pagination | Infinite scroll atau tombol Load More |
+| EVT-07 | Pull-to-refresh | Gesture tarik ke atas untuk refresh list |
+| EVT-08 | Sort default | Default sort berdasarkan waktu event atau rating tertinggi |
 
-#### 3.1.3 Event Detail & Join
+#### 3.1.3 Event Detail, Rating View, & WhatsApp Smart-Redirect
 
-**Deskripsi:** Pengguna dapat melihat detail event dan join/confirm kehadiran.
+**Deskripsi:** Pengguna dapat melihat detail event lengkap, rating komunitas, dan redirect terstruktur ke WhatsApp admin.
 
 **User Story:**
-- Sebagai pengguna, saya ingin melihat informasi lengkap event (deskripsi, pemain, rating, ulasan)
+- Sebagai pengguna, saya ingin melihat informasi lengkap event (deskripsi, pemain yang sudah join, rating, ulasan)
 - Sebagai pengguna, saya ingin join event dan confirm kehadiran
-- Sebagai pengguna, saya ingin redirect ke WhatsApp admin setelah join
-- Sebagai pengguna, saya ingin tahu berapa slot yang tersedia
+- Sebagai pengguna, saya ingin redirect ke WhatsApp admin dengan pesan template yang terstruktur
+- Sebagai pengguna, saya ingin tahu berapa slot yang tersedia dan siapa saja yang sudah join
 
 **Acceptance Criteria:**
 
 | ID | Kriteria | Detail |
 |---|---|---|
-| DET-01 | Detail event | Info: nama, deskripsi, waktu, lokasi, level, slot kosong |
+| DET-01 | Detail event | Info: nama, deskripsi, waktu, lokasi (kota/kecamatan), level, slot kosong, organizer |
 | DET-02 | List pemain | Tampilkan nama & level kemampuan pemain yang sudah join |
-| DET-03 | Rating & ulasan | Tampilkan rata-rata rating dan ulasan dari pengguna lain |
-| DET-04 | Join button | Tombol aktif jika ada slot kosong, disable jika penuh |
-| DET-05 | Confirmation modal | Modal popup konfirmasi sebelum join |
-| DET-06 | WhatsApp redirect | Tombol hubungi admin via WhatsApp (deep link wa.me) |
-| DET-07 | Status user | Indicator: sudah join / belum join / pending approval |
+| DET-03 | Rating & ulasan | Tampilkan rata-rata rating dan 3-5 ulasan terbaru dari pengguna lain |
+| DET-04 | Join button | Tombol aktif jika ada slot kosong, disable jika penuh atau sudah join |
+| DET-05 | Confirmation modal | Modal popup konfirmasi "Yakin join event ini?" sebelum proceed |
+| DET-06 | WhatsApp Smart-Redirect | Deep link ke WhatsApp dengan format pesan terstruktur: "Nama User join Event Name - [Nama Acara]" |
+| DET-07 | Admin contact | Tampilkan nomor WhatsApp organizer (masked atau format wa.me link) |
+| DET-08 | Leave event | Tombol untuk leave/cancel join jika belum dimulai |
 
-#### 3.1.4 Geofencing & Location
+#### 3.1.4 Create Event (untuk Organizer/Admin)
 
-**Deskripsi:** Aplikasi menggunakan GPS untuk filter event berdasarkan radius lokasi pengguna.
+**Deskripsi:** Organizer atau penyelenggara dapat membuat event baru dan publikasi ke direktori.
 
 **User Story:**
-- Sebagai pengguna, saya ingin aplikasi meminta izin akses GPS
-- Sebagai pengguna, saya ingin filter event berdasarkan radius (1km, 5km, 10km, 20km, semua lokasi)
-- Sebagai pengguna, saya ingin tahu jarak setiap event dari lokasi saya
-- Sebagai pengguna, saya ingin event diurutkan berdasarkan jarak terdekat
+- Sebagai organizer, saya ingin buat event baru dengan detail lengkap
+- Sebagai organizer, saya ingin set jumlah slot dan jenis olahraga
+- Sebagai organizer, saya ingin edit atau delete event yang sudah dibuat
+- Sebagai organizer, saya ingin provide nomor WhatsApp untuk dihubungi pemain
 
 **Acceptance Criteria:**
 
 | ID | Kriteria | Detail |
 |---|---|---|
-| GEO-01 | GPS permission | Request izin akses lokasi saat app pertama kali dibuka |
-| GEO-02 | Radius filter | Slider atau dropdown untuk pilih 1/5/10/20 km atau semua |
-| GEO-03 | Distance display | Tampilkan jarak event dalam format "2.5 km" |
-| GEO-04 | Sort by distance | Event dengan jarak terdekat muncul paling atas |
-| GEO-05 | GPS off handling | Graceful error jika GPS tidak aktif |
+| CRT-01 | Create form | Input: nama event, deskripsi, olahraga, level, waktu mulai/selesai, lokasi, kota, kecamatan, max slot, nomor WhatsApp |
+| CRT-02 | Validation | Semua field wajib diisi, format waktu valid, max slot > 0 |
+| CRT-03 | Publish event | Event otomatis ter-list di browse page setelah create |
+| CRT-04 | Edit event | Organizer bisa edit event yang masih berlangsung atau akan datang |
+| CRT-05 | Delete event | Organizer bisa delete event dan event hilang dari direktori |
+| CRT-06 | Event history | Organizer bisa lihat list event yang sudah dibuat |
 
 ### 3.2 SHOULD HAVE (Fitur Penting - Sangat Diinginkan)
 
 #### 3.2.1 Rating & Review System
 
-**Deskripsi:** Pengguna dapat memberikan rating dan ulasan untuk event yang sudah diikuti.
+**Deskripsi:** Pengguna dapat memberikan rating dan ulasan untuk event yang sudah diikuti untuk membangun trust dan reputasi komunitas.
 
 **User Story:**
 - Sebagai pengguna, saya ingin memberi rating 1-5 bintang untuk event yang sudah selesai
 - Sebagai pengguna, saya ingin tulis ulasan tekstual tentang pengalaman event
-- Sebagai pengguna, saya ingin lihat rating dan ulasan dari pengguna lain
+- Sebagai pengguna, saya ingin lihat rating dan ulasan dari pengguna lain sebelum join
+- Sebagai organizer, saya ingin lihat feedback dari pemain untuk improve event kedepannya
 
 **Acceptance Criteria:**
 
 | ID | Kriteria | Detail |
 |---|---|---|
-| RAT-01 | Form rating | UI: star rating (1-5) dan text field untuk ulasan max 500 karakter |
-| RAT-02 | Only post-event | User hanya bisa rate setelah event selesai (backend validasi) |
-| RAT-03 | List reviews | Tampilkan 5-10 review terbaru dengan nama user, rating, text, date |
-| RAT-04 | Average rating | Hitung dan display rata-rata rating event |
-| RAT-05 | Review count | Tampilkan jumlah review total |
+| RAT-01 | Form rating | UI: star rating (1-5 stars) dan text field untuk ulasan max 500 karakter |
+| RAT-02 | Only post-event | User hanya bisa rate setelah event selesai (backend validasi time) |
+| RAT-03 | List reviews | Tampilkan 5-10 review terbaru dengan nama user, rating, text, tanggal |
+| RAT-04 | Average rating | Hitung dan display rata-rata rating event di event card dan detail page |
+| RAT-05 | Review count | Tampilkan jumlah review total (contoh: "4.5 bintang dari 23 ulasan") |
+| RAT-06 | Update/Delete | User bisa update atau delete rating mereka sendiri |
+| RAT-07 | User rating badge | Tampilkan average rating dari pengguna di profile (reputasi) |
 
 #### 3.2.2 User Profile & History
 
@@ -214,17 +224,36 @@ GERAK adalah platform mobile yang menghubungkan individu pencari olahraga dengan
 
 ### 3.3 COULD HAVE (Fitur Tambahan - Nice to Have)
 
-#### 3.3.1 Push Notification
+#### 3.3.1 Geofencing & GPS-based Location
 
-Notifikasi untuk event terbaru berdasarkan preferensi pengguna (opsional, bisa ditambah kemudian).
+Aplikasi menggunakan GPS dan radius calculation untuk filter event berdasarkan lokasi real-time pengguna. Fitur ini optional untuk MVP dan bisa diimplementasikan di phase kedua setelah core features stable. Jika dijalankan, akan include: GPS permission request, radius slider (1/5/10/20 km), distance display per event, dan sorting by distance.
 
-#### 3.3.2 Map View
+#### 3.3.2 Push Notification
 
-Tampilan map dengan marker untuk event terdekat (opsional, bisa diimplementasikan tahap 2).
+Notifikasi untuk event terbaru atau event matching dengan preferensi pengguna (sport, level, lokasi). Optional, bisa ditambah kemudian untuk user engagement yang lebih tinggi.
 
-#### 3.3.3 Sparring Finder
+#### 3.3.3 Map View with Event Markers
 
-Fitur khusus untuk mencari lawan sparring (opsional, kompleks, bisa dimulai dari MVP sederhana).
+Tampilan peta interaktif dengan marker untuk event terdekat. User bisa tap marker untuk lihat detail event. Optional, berguna untuk visual discovery tapi kompleks untuk MVP phase.
+
+#### 3.3.4 Tournament Directory (Mading Digital)
+
+**Deskripsi:** Admin/penyelenggara dapat publikasi info turnamen lokal dengan poster dan tautan pendaftaran eksternal (read-only untuk user biasa).
+
+**User Story:**
+- Sebagai organizer, saya ingin publikasikan info turnamen dengan poster dan deskripsi
+- Sebagai pengguna, saya ingin lihat daftar turnamen lokal dengan kategori dan tanggal
+- Sebagai pengguna, saya ingin klik untuk buka tautan pendaftaran turnamen (eksternal link)
+
+**Acceptance Criteria:**
+
+| ID | Kriteria | Detail |
+|---|---|---|
+| TRN-01 | Tournament listing | Tab terpisah di app atau section di home page |
+| TRN-02 | Tournament card | Tampilkan: nama, tanggal, olahraga, kategori level, foto poster |
+| TRN-03 | Tournament detail | Info: deskripsi, prize pool, slots tersedia, contact, registration link |
+| TRN-04 | External link | Tombol daftar mengarah ke link eksternal (web/form) |
+| TRN-05 | Admin create | Organizer bisa upload poster & info turnamen |
 
 ### 3.4 WON'T HAVE (Out of Scope)
 
@@ -242,7 +271,7 @@ Fitur khusus untuk mencari lawan sparring (opsional, kompleks, bisa dimulai dari
 | Load list event | < 2 detik (3G) | Dengan pagination |
 | Open event detail | < 1 detik | Cached data support |
 | GPS location get | < 500ms | Background execution |
-| Geofencing calculation | < 200ms | Efficient query |
+| Geofencing calculation | < 200ms | Efficient query (jika enabled di phase 2) |
 
 ### 4.2 Security
 

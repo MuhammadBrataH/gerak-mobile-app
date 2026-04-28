@@ -21,9 +21,9 @@ Politeknik Negeri Bandung, Indonesia
 
 ## Abstrak
 
-Dokumen ini adalah *Software Design Document* (SDD) untuk aplikasi GERAK—sebuah platform komunitas olahraga berbasis lokasi yang memfasilitasi pencarian pertandingan olahraga secara real-time. GERAK membantu individu menemukan rekan bermain yang selevel dan komunitas dapat mengisi slot pemain dengan lebih efisien melalui integrasi WhatsApp. Dibangun dengan Flutter untuk frontend mobile, Node.js/Express untuk backend API, dan MongoDB untuk database, aplikasi ini menerapkan arsitektur MVC dengan fitur geofencing, rating system, dan real-time event filtering. Dokumen ini mendefinisikan use case diagram, activity diagram, entity relationship diagram, struktur database, rancangan antarmuka pengguna, dan strategi pengujian untuk memandu implementasi yang konsisten selama 7 minggu pengembangan oleh tim 3 orang. Tujuan akhir adalah menghasilkan aplikasi production-ready yang dapat digunakan komunitas olahraga nyata dan berkelanjutan hingga tugas akhir.
+Dokumen ini adalah *Software Design Document* (SDD) untuk aplikasi GERAK—sebuah platform direktori olahraga komunitas yang memfasilitasi pencarian pertandingan dan pencarian lawan tanding (sparring) secara terpusat. GERAK membantu individu menemukan rekan bermain yang selevel dan komunitas dapat mengisi slot pemain dengan lebih efisien melalui integrasi WhatsApp Smart-Redirect. Dibangun dengan Flutter untuk frontend mobile, Node.js/Express untuk backend API, dan MongoDB untuk database, aplikasi ini menerapkan filter berbasis lokasi teks/dropdown regional, rating system, dan event matching dengan priority pada core MVP (Must-Have features). Dokumen ini mendefinisikan use case diagram, activity diagram, entity relationship diagram, struktur database, rancangan antarmuka pengguna, dan strategi pengujian untuk memandu implementasi yang konsisten selama 7 minggu pengembangan oleh tim 3 orang. Tujuan akhir adalah menghasilkan aplikasi production-ready yang dapat digunakan komunitas olahraga nyata dan berkelanjutan hingga tugas akhir.
 
-**Kata kunci:** *SDD, Software Design Document, GERAK, platform olahraga, mobile application, Flutter, MongoDB, geofencing*
+**Kata kunci:** *SDD, Software Design Document, GERAK, platform olahraga, direktori event, smart matchmaking, WhatsApp integration, regional filter*
 
 
 ## I. PENDAHULUAN
@@ -77,10 +77,11 @@ Masalah yang akan diselesaikan oleh aplikasi GERAK:
 - Belum ada channel komunikasi langsung yang cepat antara pencari dan penyelenggara
 - Informasi event tersebar di berbagai media sosial
 
-### 2.4 Kurangnya Informasi Event Berbasis Lokasi
+### 2.4 Kurangnya Informasi Event Berbasis Regional/Lokasi
 
-- Belum ada sistem yang menampilkan event berdasarkan jarak dan proximity pengguna
-- User harus manual mencari informasi event di lokasi mereka
+- Belum ada direktori terpusat untuk discovery event olahraga per wilayah (kota/kecamatan)
+- User harus manual mencari informasi event tersebar di berbagai media sosial
+- Tidak ada mekanisme efisien untuk kontak langsung antara pencari dan organizer event
 
 
 
@@ -89,9 +90,9 @@ Masalah yang akan diselesaikan oleh aplikasi GERAK:
 
 ### 3.1 Tujuan Utama
 
-- Menyediakan platform terpusat untuk pengguna menemukan event olahraga berbasis GPS
-- Memfasilitasi penyelenggara untuk mencari dan merekrut pemain baru
-- Mempercepat komunikasi antara pemain dan penyelenggara via WhatsApp
+- Menyediakan direktori terpusat (mading digital) untuk pengguna menemukan event olahraga berbasis filter regional (kota/kecamatan)
+- Memfasilitasi penyelenggara untuk mencari dan merekrut pemain baru dengan reach yang lebih luas
+- Mempercepat komunikasi dan negosiasi antara pemain dan penyelenggara melalui WhatsApp Smart-Redirect dengan pesan template terstruktur
 
 ### 3.2 Tujuan Sekunder
 
@@ -126,14 +127,13 @@ Untuk menjalankan aplikasi GERAK pada sisi user, diperlukan:
 - Android minimum versi 5.0 (API Level 21) dengan minimal 2GB RAM
 - iOS minimum versi 11.0 dengan minimal 2GB RAM
 - Koneksi internet (WiFi atau mobile data 3G+)
-- GPS enabled untuk fitur geofencing
-- WhatsApp terpasang untuk redirect komunikasi
+- WhatsApp terpasang untuk Smart-Redirect komunikasi (wajib)
+- GPS enabled adalah optional (untuk future geofencing feature di Could-Have phase)
 
 #### **b. Development Tools:**
 
 - Flutter SDK version 3.0+ dan Dart SDK 2.17+
 - Android Studio 4.1+ atau VS Code dengan Flutter extension
-- Xcode 12+ (jika development di macOS untuk iOS)
 - Git untuk version control
 - Postman atau Insomnia untuk API testing
 - MongoDB Compass untuk database management
@@ -181,7 +181,7 @@ Untuk menjalankan aplikasi GERAK pada sisi user, diperlukan:
 │        │     │ Event            │       └──────────┘          │
 │        │     │                  │                             │
 │        │     └──────────────────┘                             │
-│        │                                                       │
+│        │                                                             │
 │        │     ┌──────────────────┐                             │
 │        │     │                  │                             │
 │        └────►│ View Profile &   │                             │
@@ -189,12 +189,7 @@ Untuk menjalankan aplikasi GERAK pada sisi user, diperlukan:
 │              │                  │                             │
 │              └──────────────────┘                             │
 │                                                               │
-│              ┌──────────────────┐                             │
-│              │                  │                             │
-│              │ Geofencing Search│                             │
-│              │ by Radius        │                             │
-│              │                  │                             │
-│              └──────────────────┘                             │
+│                                                             │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 ``` 
@@ -265,40 +260,6 @@ Untuk menjalankan aplikasi GERAK pada sisi user, diperlukan:
 │                                          │
 └──────────────────────────────────────────┘
 ```
-
-### 5.4 Use Case Diagram - Geofencing
-
-```
-┌──────────────────────────────────────────┐
-│      Geofencing & Location Module        │
-├──────────────────────────────────────────┤
-│                                          │
-│     ┌────────────────────┐               │
-│     │                    │               │
-│     │  Enable GPS        │    ┌──────┐   │
-│     │  - Request Perms   ├───►│ User │   │
-│     │  - Get Location    │    └──────┘   │
-│     └────────────────────┘               │
-│                                          │
-│     ┌────────────────────┐               │
-│     │                    │               │
-│     │  Set Radius Filter │               │
-│     │  - 1km, 5km,       │               │
-│     │  - 10km, 20km      │               │
-│     │                    │               │
-│     └────────────────────┘               │
-│                                          │
-│     ┌────────────────────┐               │
-│     │                    │               │
-│     │  View Nearby Events│               │
-│     │  - Map View        │               │
-│     │  - Sorted by Dist  │               │
-│     │                    │               │
-│     └────────────────────┘               │
-│                                          │
-└──────────────────────────────────────────┘
-```
-
 
 ## VI. RANCANGAN ACTIVITY DIAGRAM
 
@@ -552,8 +513,9 @@ Relasi:
 | level | String | 50 | Level: beginner, intermediate, advanced, mixed |
 | start_time | Date | - | Waktu mulai event |
 | end_time | Date | - | Waktu selesai event |
-| location | String | 255 | Alamat lokasi event |
-| coordinates | GeoJSON | - | {type: 'Point', coordinates: [longitude, latitude]} untuk geospatial query |
+| location | String | 255 | Alamat lengkap lokasi event |
+| city | String | 100 | Kota/kab untuk filter regional (contoh: Bandung, Jakarta) |
+| district | String | 100 | Kecamatan/district untuk filter lebih spesifik (optional) |
 | total_slots | Integer | - | Total slot pemain yang tersedia |
 | joined_users | Array | - | Array User ID yang sudah join |
 | max_slots | Integer | - | Maksimal slot (sama dengan total_slots) |
@@ -603,9 +565,9 @@ Relasi:
 
 | Method | Endpoint | Parameters | Response | Status |
 |---|---|---|---|---|
-| GET | `/events` | query: sport, level, radius, lat, lng, page, limit | `{ events: [...], total: 10, page: 1 }` | 200 |
+| GET | `/events` | query: sport, level, city, district, page, limit | `{ events: [...], total: 10, page: 1 }` | 200 |
 | GET | `/events/:id` | - | `{ event: {...} }` | 200 |
-| POST | `/events` | name, description, sport, level, startTime, endTime, location, coordinates, maxSlots, adminPhone | `{ event: {...} }` | 201 |
+| POST | `/events` | name, description, sport, level, startTime, endTime, location, city, district, maxSlots, adminPhone | `{ event: {...} }` | 201 |
 | PUT | `/events/:id` | (update fields) | `{ event: {...} }` | 200 |
 | DELETE | `/events/:id` | - | `{ message: "Event deleted" }` | 200 |
 | POST | `/events/:id/join` | - | `{ message: "Join successful", event: {...} }` | 200 |
@@ -623,90 +585,9 @@ Relasi:
 | DELETE | `/ratings/:id` | - | `{ message: "Rating deleted" }` | 200 |
 
 
-## X. STRUKTUR FOLDER PROYEK
+## X. RANCANGAN ANTARMUKA (USER INTERFACE)
 
-```
-lib/
-├── main.dart                              # Entry point aplikasi
-├── core/
-│   ├── constants/
-│   │   ├── api_constants.dart            # URL API, endpoints (Ersya)
-│   │   ├── app_constants.dart            # Konstanta aplikasi
-│   │   └── asset_constants.dart          # Path gambar, font
-│   ├── network/
-│   │   ├── http_client.dart              # Dio HTTP client (Brata)
-│   │   ├── interceptors.dart             # Auth interceptor + error handling
-│   │   └── api_service.dart              # Wrapper API calls
-│   ├── theme/
-│   │   ├── app_colors.dart               # Palet warna dari Figma (Abi)
-│   │   ├── app_text_styles.dart          # Typography dari Figma
-│   │   └── app_theme.dart                # ThemeData global
-│   └── utils/
-│       ├── date_formatter.dart           # Helper format tanggal
-│       ├── currency_formatter.dart       # Helper format mata uang
-│       ├── location_utils.dart           # Helper perhitungan jarak GPS
-│       ├── validators.dart               # Validasi email, password, dll
-│       └── logger.dart                   # Logging utility
-├── shared/
-│   └── widgets/
-│       ├── app_button.dart               # Tombol reusable (Abi)
-│       ├── app_input_field.dart          # Input field reusable
-│       ├── event_card.dart               # Card event di list
-│       ├── rating_widget.dart            # Star rating component
-│       ├── loading_indicator.dart        # Loading spinner
-│       └── error_widget.dart             # Error message widget
-├── features/
-│   ├── auth/
-│   │   ├── models/
-│   │   │   ├── user_model.dart           # User data model
-│   │   │   └── auth_response.dart        # Response dari API login
-│   │   ├── views/
-│   │   │   ├── login_page.dart           # Login screen (Abi)
-│   │   │   ├── register_page.dart        # Register screen (Abi)
-│   │   │   └── profile_page.dart         # Profile screen (Abi)
-│   │   └── controllers/
-│   │       ├── auth_controller.dart      # Auth logic (Brata)
-│   │       └── login_controller.dart     # Login specific logic
-│   ├── events/
-│   │   ├── models/
-│   │   │   ├── event_model.dart          # Event data model
-│   │   │   ├── join_response.dart        # Response join event
-│   │   │   └── event_filter.dart         # Filter object untuk query
-│   │   ├── views/
-│   │   │   ├── events_list_page.dart     # List event dengan filter (Abi)
-│   │   │   ├── event_detail_page.dart    # Detail event (Abi)
-│   │   │   └── join_confirmation.dart    # Modal confirm join
-│   │   └── controllers/
-│   │       ├── events_controller.dart    # Fetch & filter events (Brata)
-│   │       ├── event_detail_controller.dart # Detail event logic
-│   │       └── join_event_controller.dart  # Join event logic
-│   ├── geofencing/
-│   │   ├── models/
-│   │   │   ├── location_model.dart       # Koordinat & radius
-│   │   │   └── geofence_filter.dart      # Filter geofencing
-│   │   ├── views/
-│   │   │   ├── map_page.dart             # Map view dengan marker (Abi)
-│   │   │   └── radius_filter_widget.dart # Slider radius filter
-│   │   └── controllers/
-│   │       └── geofencing_controller.dart # GPS & geospatial logic (Brata)
-│   └── reputation/
-│       ├── models/
-│       │   ├── rating_model.dart         # Rating data model
-│       │   └── review_model.dart         # Review data model
-│       ├── views/
-│       │   ├── rating_page.dart          # Form rating event (Abi)
-│       │   ├── review_list_page.dart     # List review event (Abi)
-│       │   └── rating_modal.dart         # Modal beri rating
-│       └── controllers/
-│           └── rating_controller.dart    # Rating & review logic (Brata)
-
-pubspec.yaml                               # Dependency management
-```
-
-
-## XI. RANCANGAN ANTARMUKA (USER INTERFACE)
-
-### 11.1 Rancangan Layar Login
+### 10.1 Rancangan Layar Login
 
 ```
 ┌─────────────────────────────────┐
@@ -729,7 +610,7 @@ pubspec.yaml                               # Dependency management
 └─────────────────────────────────┘
 ```
 
-### 11.2 Rancangan Layar List Event
+### 10.2 Rancangan Layar List Event
 
 ```
 ┌─────────────────────────────────┐
@@ -757,7 +638,7 @@ pubspec.yaml                               # Dependency management
 └─────────────────────────────────┘
 ```
 
-### 11.3 Rancangan Layar Detail Event
+### 10.3 Rancangan Layar Detail Event
 
 ```
 ┌─────────────────────────────────┐
@@ -795,7 +676,7 @@ pubspec.yaml                               # Dependency management
 └─────────────────────────────────┘
 ```
 
-### 11.4 Rancangan Layar Profile
+### 10.4 Rancangan Layar Profile
 
 ```
 ┌─────────────────────────────────┐
@@ -828,9 +709,9 @@ pubspec.yaml                               # Dependency management
 ```
 
 
-## XII. RANCANGAN PENGUJIAN (TESTING STRATEGY)
+## XI. RANCANGAN PENGUJIAN (TESTING STRATEGY)
 
-### 12.1 Tipe Pengujian yang Dilakukan
+### 11.1 Tipe Pengujian yang Dilakukan
 
 **a. Unit Testing**
 - Test setiap controller/business logic function
@@ -853,7 +734,7 @@ pubspec.yaml                               # Dependency management
 - Test dengan GPS off/on
 - User acceptance testing
 
-### 12.2 Kuisioner Pengujian (User Acceptance Test)
+### 11.2 Kuisioner Pengujian (User Acceptance Test)
 
 **Kriteria Penilaian:**
 - STS (Sangat Tidak Setuju) = 1 Poin
@@ -883,7 +764,7 @@ pubspec.yaml                               # Dependency management
 - Total Skor 86-100: Excellent, siap production
 
 
-## XIII. TEKNOLOGI STACK & TOOLS
+## XII. TEKNOLOGI STACK & TOOLS
 
 | Komponen | Technology | Alasan |
 |---|---|---|
@@ -901,7 +782,7 @@ pubspec.yaml                               # Dependency management
 | Database Management | MongoDB Compass | Database visualization & management |
 
 
-## XIV. KESIMPULAN
+## XIII. KESIMPULAN
 
 Aplikasi GERAK dirancang sebagai platform komunitas olahraga yang menghubungkan pencari olahraga dengan penyelenggara event secara efisien. Melalui fitur geofencing, filtering berbasis level kemampuan, dan integrasi WhatsApp, GERAK memberikan solusi praktis untuk masalah rekrutmen pemain dan discovery event olahraga lokal.
 
