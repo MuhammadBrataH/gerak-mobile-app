@@ -49,37 +49,40 @@ const listEvents = asyncHandler(async (req, res) => {
     const {
         sport,
         level,
-    city,
-    district,
-    page = 1,
-    limit = 10,
-  } = req.query;
+        city,
+        district,
+        page = 1,
+        limit = 10,
+    } = req.query;
 
-  const query = {};
+    const query = {};
 
-  if (sport) {
-    query.sport = sport;
-  }
+    if (sport) {
+        query.sport = sport;
+    }
 
-  if (level) {
-    query.level = level;
-  }
+    if (level) {
+        query.level = level;
+    }
 
-  if (city) {
-    query.city = { $regex: city, $options: 'i' };
-  }
+    if (city) {
+        query.city = { $regex: city, $options: 'i' };
+    }
 
-  if (district) {
-    query.district = { $regex: district, $options: 'i' };
-  }
+    if (district) {
+        query.district = { $regex: district, $options: 'i' };
+    }
 
-  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNumber = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
-  const skip = (pageNumber - 1) * limitNumber;
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    const skip = (pageNumber - 1) * limitNumber;
 
-  const [events, total] = await Promise.all([
-    Event.find(query)
-      .sort({ startTime: 1 })
+    const [events, total] = await Promise.all([
+        Event.find(query)
+            .sort({ startTime: 1 })
+            .skip(skip)
+            .limit(limitNumber),
+        Event.countDocuments(query),
     ]);
 
     res.status(200).json({
@@ -108,6 +111,8 @@ const createEvent = asyncHandler(async (req, res) => {
         startTime,
         endTime,
         location,
+        city,
+        district = '',
         coordinates,
         maxSlots,
         totalSlots,
@@ -115,13 +120,8 @@ const createEvent = asyncHandler(async (req, res) => {
         imageUrl = '',
     } = req.body;
 
-    if (!name || !sport || !level || !startTime || !endTime || !location || !adminPhone) {
-        throw new ApiError(400, 'name, sport, level, startTime, endTime, location, and adminPhone are required');
-    }
-
-    const parsedCoordinates = parseCoordinates(coordinates);
-    if (!parsedCoordinates) {
-        throw new ApiError(400, 'coordinates must include longitude and latitude');
+    if (!name || !sport || !level || !startTime || !endTime || !location || !city || !adminPhone) {
+        throw new ApiError(400, 'name, sport, level, startTime, endTime, location, city, and adminPhone are required');
     }
 
     const normalizedTotalSlots = parseNumber(totalSlots, parseNumber(maxSlots, 0));
@@ -131,7 +131,7 @@ const createEvent = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'totalSlots or maxSlots must be greater than zero');
     }
 
-    const event = await Event.create({
+    const eventData = {
         name,
         description,
         sport,
@@ -139,17 +139,27 @@ const createEvent = asyncHandler(async (req, res) => {
         startTime,
         endTime,
         location,
-        coordinates: {
-            type: 'Point',
-            coordinates: parsedCoordinates,
-        },
+        city,
+        district,
         totalSlots: normalizedTotalSlots,
         maxSlots: normalizedMaxSlots,
         adminPhone,
         imageUrl,
         createdBy: req.user._id,
-    });
+    };
 
+    // Coordinates are optional for MVP (will be for phase 2 GPS feature)
+    if (coordinates) {
+        const parsedCoordinates = parseCoordinates(coordinates);
+        if (parsedCoordinates) {
+            eventData.coordinates = {
+                type: 'Point',
+                coordinates: parsedCoordinates,
+            };
+        }
+    }
+
+    const event = await Event.create(eventData);
     const populatedEvent = await populateEvent(event);
     res.status(201).json({ event: populatedEvent });
 });
@@ -165,7 +175,7 @@ const updateEvent = asyncHandler(async (req, res) => {
         throw new ApiError(403, 'You are not allowed to update this event');
     }
 
-const fields = ['name', 'description', 'sport', 'level', 'startTime', 'endTime', 'location', 'city', 'district', 'adminPhone', 'imageUrl'];
+    const fields = ['name', 'description', 'sport', 'level', 'startTime', 'endTime', 'location', 'city', 'district', 'adminPhone', 'imageUrl'];
     for (const field of fields) {
         if (req.body[field] !== undefined) {
             event[field] = req.body[field];
