@@ -51,12 +51,6 @@ Dokumen ini mencakup:
 - Strategi testing dengan kuisioner
 - Teknologi stack dan tools yang digunakan
 
-### 1.3 Target Pembaca
-
-- **Implementer/Developer:** Brata dan Abi untuk coding dan UI
-- **Project Manager:** Ersya untuk tracking dan quality control
-- **Stakeholder/Dosen:** Untuk validasi design sebelum implementasi
-
 
 ## II. IDENTIFIKASI MASALAH
 
@@ -585,133 +579,10 @@ Relasi:
 | DELETE | `/ratings/:id` | - | `{ message: "Rating deleted" }` | 200 |
 
 
-## X. RANCANGAN ANTARMUKA (USER INTERFACE)
 
-### 10.1 Rancangan Layar Login
+## X. RANCANGAN PENGUJIAN (TESTING STRATEGY)
 
-```
-┌─────────────────────────────────┐
-│         GERAK                   │
-│   Platform Olahraga Komunitas   │
-│                                 │
-│  ┌─────────────────────────────┐│
-│  │ Email                       ││
-│  │ [___________________]       ││
-│  │                             ││
-│  │ Password                    ││
-│  │ [___________________]       ││
-│  │                             ││
-│  │  [   LOGIN   ]              ││
-│  │                             ││
-│  │  Belum punya akun?          ││
-│  │  [Daftar Sekarang]          ││
-│  └─────────────────────────────┘│
-│                                 │
-└─────────────────────────────────┘
-```
-
-### 10.2 Rancangan Layar List Event
-
-```
-┌─────────────────────────────────┐
-│ GERAK    |Profile    |Logout    │
-├─────────────────────────────────┤
-│ Filter:                         │
-│ [Sport ▼] [Level ▼] [Radius ▼]│
-│                                 │
-│ ┌──────────────────────────────┐│
-│ │ Futsal Rabu Malam    [2.5km] ││
-│ │ Intermediate | 3 Slot Kosong  ││
-│ │ 19:00 - 20:30 | Jakarta       ││
-│ │        [LIHAT DETAIL]         ││
-│ └──────────────────────────────┘│
-│                                 │
-│ ┌──────────────────────────────┐│
-│ │ Badminton Minggu Pagi [5km]  ││
-│ │ Beginner | 5 Slot Kosong      ││
-│ │ 08:00 - 10:00 | Bandung       ││
-│ │        [LIHAT DETAIL]         ││
-│ └──────────────────────────────┘│
-│                                 │
-│        [LOAD MORE]              │
-│                                 │
-└─────────────────────────────────┘
-```
-
-### 10.3 Rancangan Layar Detail Event
-
-```
-┌─────────────────────────────────┐
-│  < BACK    Detail Event          │
-├─────────────────────────────────┤
-│                                 │
-│ [Event Image Area]              │
-│                                 │
-│ Futsal Rabu Malam               │
-│ ⭐ 4.5 (12 reviews)             │
-│                                 │
-│ Intermediate | 3 Slot Kosong     │
-│ Waktu: 19:00 - 20:30            │
-│ Lokasi: GOR Senayan, Jakarta     │
-│ Jarak: 2.5 km                   │
-│                                 │
-│ Pemain Bergabung: (5 Orang)      │
-│ • Adi (Intermediate)             │
-│ • Budi (Advanced)                │
-│ • Citra (Beginner)               │
-│ • (dan 2 lainnya)                │
-│                                 │
-│ Deskripsi:                      │
-│ Friendly match futsal, welcome   │
-│ untuk semua level.               │
-│                                 │
-│  [JOIN EVENT] [MAP]             │
-│                                 │
-│ Rating & Review:                │
-│ ★★★★★ "Tempat oke, fun match!"  │
-│ ★★★★☆ "Admin ramah banget"      │
-│                                 │
-│  [BERI RATING]                  │
-│                                 │
-└─────────────────────────────────┘
-```
-
-### 10.4 Rancangan Layar Profile
-
-```
-┌─────────────────────────────────┐
-│ GERAK    |Home    |Logout       │
-├─────────────────────────────────┤
-│                                 │
-│         [Foto Profil]           │
-│                                 │
-│ Nama: Adi Pratama               │
-│ Email: adi@email.com            │
-│ Level: Intermediate             │
-│ Olahraga: Futsal, Badminton     │
-│                                 │
-│  [EDIT PROFIL]                  │
-│                                 │
-│ Event yang Sudah Diikuti: 12    │
-│                                 │
-│ Riwayat Event:                  │
-│ ┌──────────────────────────────┐│
-│ │ Futsal Rabu Malam       [5★]  ││
-│ │ 25 Mei 2026 | Selesai        ││
-│ │            [BERI RATING]     ││
-│ └──────────────────────────────┘│
-│ ┌──────────────────────────────┐│
-│ │ Badminton Minggu Pagi    [4★] ││
-│ │ 18 Mei 2026 | Selesai        ││
-│ └──────────────────────────────┘│
-│                                 │
-└─────────────────────────────────┘
-```
-
-
-## XI. RANCANGAN PENGUJIAN (TESTING STRATEGY)
-
-### 11.1 Tipe Pengujian yang Dilakukan
+### 10.1 Tipe Pengujian yang Dilakukan
 
 **a. Unit Testing**
 - Test setiap controller/business logic function
@@ -734,7 +605,7 @@ Relasi:
 - Test dengan GPS off/on
 - User acceptance testing
 
-### 11.2 Kuisioner Pengujian (User Acceptance Test)
+### 10.2 Kuisioner Pengujian (User Acceptance Test)
 
 **Kriteria Penilaian:**
 - STS (Sangat Tidak Setuju) = 1 Poin
@@ -764,7 +635,7 @@ Relasi:
 - Total Skor 86-100: Excellent, siap production
 
 
-## XII. TEKNOLOGI STACK & TOOLS
+## XI. TEKNOLOGI STACK & TOOLS
 
 | Komponen | Technology | Alasan |
 |---|---|---|
@@ -782,7 +653,7 @@ Relasi:
 | Database Management | MongoDB Compass | Database visualization & management |
 
 
-## XIII. KESIMPULAN
+## XII. KESIMPULAN
 
 Aplikasi GERAK dirancang sebagai platform komunitas olahraga yang menghubungkan pencari olahraga dengan penyelenggara event secara efisien. Melalui fitur geofencing, filtering berbasis level kemampuan, dan integrasi WhatsApp, GERAK memberikan solusi praktis untuk masalah rekrutmen pemain dan discovery event olahraga lokal.
 
@@ -795,7 +666,7 @@ Kesuksesan implementasi bergantung pada:
 4. Feedback loop dari stakeholder/dosen di setiap review
 
 
-## XV. DAFTAR PUSTAKA
+## XIII. DAFTAR PUSTAKA
 
 Fadholi, M.L., 2018. Sistem Online Untuk Dokumen Perancangan Perangkat Lunak Bagi Perusahaan Atau Tim Pengembang, Yogyakarta.
 

@@ -44,18 +44,12 @@ Dokumen SRS ini bertujuan untuk:
 
 Dokumen ini mencakup:
 
-- ✓ Use case diagram dan deskripsi untuk setiap fitur
-- ✓ Kebutuhan fungsional dengan detail acceptance criteria
-- ✓ Kebutuhan non-fungsional (performance, security, compatibility)
-- ✓ Prioritas fitur menggunakan MoSCoW method
-- ✓ Assumptions dan constraints
-- ✓ Glossary dan terminologi
-
-### 1.3 Target Pembaca
-
-- **Development Team:** Brata dan Abi untuk implementasi
-- **Project Manager:** Ersya untuk tracking dan validasi
-- **Stakeholder:** Dosen dan reviewers untuk approval
+- Use case diagram dan deskripsi untuk setiap fitur
+- Kebutuhan fungsional dengan detail acceptance criteria
+- Kebutuhan non-fungsional (performance, security, compatibility)
+- Prioritas fitur menggunakan MoSCoW method
+- Assumptions dan constraints
+- Glossary dan terminologi
 
 ## II. DESKRIPSI UMUM PRODUK
 
