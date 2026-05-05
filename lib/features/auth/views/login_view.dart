@@ -1,42 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
-class LoginView extends GetView<AuthController> {
-  LoginView({super.key});
+class LoginView extends StatefulWidget {
+  const LoginView({super.key});
 
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<AuthController>();
+
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(label: Text('Email')),
+              decoration: const InputDecoration(
+                label: Text('Email'),
+                border: OutlineInputBorder(),
+              ),
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(label: Text('Password')),
+              decoration: const InputDecoration(
+                label: Text('Password'),
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Obx(
               () => ElevatedButton(
                 onPressed: controller.isLoading.value
                     ? null
                     : () {
-                        // Call the login method with dummy credentials
-                        controller.login(emailController.text, passwordController.text);
+                        controller.login(
+                          emailController.text,
+                          passwordController.text,
+                        );
                       },
-
-                child: Text('Login'),
+                child: Text(
+                  controller.isLoading.value ? 'Loading...' : 'Login',
+                ),
               ),
             ),
           ],
