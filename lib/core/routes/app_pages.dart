@@ -4,8 +4,11 @@ import '../../features/auth/controllers/auth_binding.dart';
 import '../../features/events/views/dashboard_view.dart';
 import '../../features/profile/views/account_info_view.dart';
 import '../../features/profile/views/account_settings_view.dart';
+import '../../features/profile/views/delete_account_step1_view.dart';
+import '../../features/profile/views/delete_account_step2_view.dart';
 import '../../features/profile/views/edit_profile_view.dart';
 import '../../features/profile/views/email_update_view.dart';
+import '../../features/profile/views/password_update_view.dart';
 import '../../features/profile/views/phone_update_view.dart';
 import '../../features/profile/views/profile_view.dart';
 import '../../locofy/login.dart';
@@ -59,6 +62,18 @@ class AppPages {
     GetPage(
       name: AppRoutes.accountSettings,
       page: () => const AccountSettingsView(),
+    ),
+    GetPage(
+      name: AppRoutes.passwordUpdate,
+      page: () => const PasswordUpdateView(),
+    ),
+    GetPage(
+      name: AppRoutes.deleteAccountStep1,
+      page: () => const DeleteAccountStep1View(),
+    ),
+    GetPage(
+      name: AppRoutes.deleteAccountStep2,
+      page: () => const DeleteAccountStep2View(),
     ),
     // Add more routes here
   ];

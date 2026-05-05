@@ -2,8 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/routes/app_routes.dart';
 
-class AccountSettingsView extends StatelessWidget {
-  const AccountSettingsView({super.key});
+class PasswordUpdateView extends StatefulWidget {
+  const PasswordUpdateView({super.key});
+
+  @override
+  State<PasswordUpdateView> createState() => _PasswordUpdateViewState();
+}
+
+class _PasswordUpdateViewState extends State<PasswordUpdateView> {
+  final _currentController = TextEditingController();
+  final _newController = TextEditingController();
+  final _confirmController = TextEditingController();
+
+  @override
+  void dispose() {
+    _currentController.dispose();
+    _newController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
 
   void _showToast(String message) {
     Get.snackbar(
@@ -26,26 +43,59 @@ class AccountSettingsView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _AccountSettingsTopBar(onBackTap: () => Get.back()),
+                  _PasswordTopBar(onBackTap: () => Get.back()),
+                  const SizedBox(height: 16),
+                  const Center(
+                    child: Text(
+                      'Perbarui kata sandi',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontFamily: 'Lexend',
+                        fontWeight: FontWeight.w700,
+                        height: 1.33,
+                        letterSpacing: -1.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Silahkan masukkan kata sandi anda saat ini dan\nkata sandi baru',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xC4323232),
+                        fontSize: 12,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w600,
+                        height: 1.33,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  _SettingsItem(
-                    label: 'Informasi Akun',
-                    onTap: () => Get.toNamed(AppRoutes.accountInfo),
+                  _PasswordField(
+                    label: 'Kata Sandi Saat Ini',
+                    controller: _currentController,
                   ),
                   const SizedBox(height: 12),
-                  _SettingsItem(
-                    label: 'Kata Sandi',
-                    onTap: () => Get.toNamed(AppRoutes.passwordUpdate),
+                  _PasswordField(
+                    label: 'Kata Sandi Baru',
+                    controller: _newController,
                   ),
                   const SizedBox(height: 12),
-                  _SettingsItem(
-                    label: 'Hapus akun',
-                    onTap: () => Get.toNamed(AppRoutes.deleteAccountStep1),
+                  _PasswordField(
+                    label: 'Konfirmasi Kata Sandi Baru',
+                    controller: _confirmController,
+                  ),
+                  const SizedBox(height: 16),
+                  _PrimaryButton(
+                    label: 'Ubah Kata Sandi',
+                    onTap: () => _showToast('Ubah kata sandi tapped'),
                   ),
                 ],
               ),
             ),
-            _AccountSettingsBottomNavBar(
+            _PasswordBottomNavBar(
               onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
               onCommunityTap: () => _showToast('Community tapped'),
               onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
@@ -57,10 +107,10 @@ class AccountSettingsView extends StatelessWidget {
   }
 }
 
-class _AccountSettingsTopBar extends StatelessWidget {
+class _PasswordTopBar extends StatelessWidget {
   final VoidCallback onBackTap;
 
-  const _AccountSettingsTopBar({required this.onBackTap});
+  const _PasswordTopBar({required this.onBackTap});
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +121,7 @@ class _AccountSettingsTopBar extends StatelessWidget {
           IconButton(onPressed: onBackTap, icon: const Icon(Icons.arrow_back)),
           const SizedBox(width: 8),
           const Text(
-            'Pengaturan Akun',
+            'Kata Sandi',
             style: TextStyle(
               color: Colors.black,
               fontSize: 24,
@@ -87,46 +137,84 @@ class _AccountSettingsTopBar extends StatelessWidget {
   }
 }
 
-class _SettingsItem extends StatelessWidget {
+class _PasswordField extends StatelessWidget {
   final String label;
-  final VoidCallback onTap;
+  final TextEditingController controller;
 
-  const _SettingsItem({required this.label, required this.onTap});
+  const _PasswordField({required this.label, required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xB7A1A1A1)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xFF090909),
-                    fontSize: 15,
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontWeight: FontWeight.w600,
-                    height: 1.07,
-                  ),
-                ),
+    return TextField(
+      controller: controller,
+      obscureText: true,
+      style: const TextStyle(
+        color: Color(0xFF090909),
+        fontSize: 12,
+        fontFamily: 'Plus Jakarta Sans',
+        fontWeight: FontWeight.w600,
+        height: 1.33,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: Color(0xC4323232),
+          fontSize: 12,
+          fontFamily: 'Plus Jakarta Sans',
+          fontWeight: FontWeight.w600,
+          height: 1.33,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xB7A1A1A1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xB7A1A1A1)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _PrimaryButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(60),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'Plus Jakarta Sans',
+                fontWeight: FontWeight.w700,
+                height: 1.5,
               ),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: Color(0xFF94A3B8),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -134,12 +222,12 @@ class _SettingsItem extends StatelessWidget {
   }
 }
 
-class _AccountSettingsBottomNavBar extends StatelessWidget {
+class _PasswordBottomNavBar extends StatelessWidget {
   final VoidCallback onCommunityTap;
   final VoidCallback onHomeTap;
   final VoidCallback onProfileTap;
 
-  const _AccountSettingsBottomNavBar({
+  const _PasswordBottomNavBar({
     required this.onCommunityTap,
     required this.onHomeTap,
     required this.onProfileTap,

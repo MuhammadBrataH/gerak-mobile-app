@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/routes/app_routes.dart';
 
-class AccountSettingsView extends StatelessWidget {
-  const AccountSettingsView({super.key});
+class DeleteAccountStep1View extends StatefulWidget {
+  const DeleteAccountStep1View({super.key});
+
+  @override
+  State<DeleteAccountStep1View> createState() => _DeleteAccountStep1ViewState();
+}
+
+class _DeleteAccountStep1ViewState extends State<DeleteAccountStep1View> {
+  int? _selectedIndex;
 
   void _showToast(String message) {
     Get.snackbar(
@@ -24,28 +31,77 @@ class AccountSettingsView extends StatelessWidget {
             SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _AccountSettingsTopBar(onBackTap: () => Get.back()),
-                  const SizedBox(height: 20),
-                  _SettingsItem(
-                    label: 'Informasi Akun',
-                    onTap: () => Get.toNamed(AppRoutes.accountInfo),
+                  _DeleteAccountTopBar(
+                    title: 'Hapus Akun',
+                    onBackTap: () => Get.back(),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sebelum Anda pergi, ada\nyang bisa kami bantu?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w700,
+                      height: 1.6,
+                      letterSpacing: -1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Beri tahu kami alasan Anda ingin menghapus akun agar kami dapat membantu mengatasi masalah\numum dan meningkatkan aplikasi bagi komunitas. Anda dapat melewatkan langkah ini.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xC4323232),
+                      fontSize: 12,
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontWeight: FontWeight.w600,
+                      height: 1.33,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _ReasonOption(
+                    label: 'Masalah keamanan atau privasi',
+                    isSelected: _selectedIndex == 0,
+                    onTap: () => setState(() => _selectedIndex = 0),
                   ),
                   const SizedBox(height: 12),
-                  _SettingsItem(
-                    label: 'Kata Sandi',
-                    onTap: () => Get.toNamed(AppRoutes.passwordUpdate),
+                  _ReasonOption(
+                    label: 'Kesulitan dalam memulai penggunaan akun',
+                    isSelected: _selectedIndex == 1,
+                    onTap: () => setState(() => _selectedIndex = 1),
                   ),
                   const SizedBox(height: 12),
-                  _SettingsItem(
-                    label: 'Hapus akun',
-                    onTap: () => Get.toNamed(AppRoutes.deleteAccountStep1),
+                  _ReasonOption(
+                    label: 'Alasan lainnya',
+                    isSelected: _selectedIndex == 2,
+                    onTap: () => setState(() => _selectedIndex = 2),
+                  ),
+                  const SizedBox(height: 16),
+                  _PrimaryButton(
+                    label: 'Lanjut',
+                    onTap: () => Get.toNamed(AppRoutes.deleteAccountStep2),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => _showToast('Lewati tapped'),
+                    child: const Text(
+                      'Lewati',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 12,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            _AccountSettingsBottomNavBar(
+            _DeleteAccountBottomNavBar(
               onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
               onCommunityTap: () => _showToast('Community tapped'),
               onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
@@ -57,10 +113,11 @@ class AccountSettingsView extends StatelessWidget {
   }
 }
 
-class _AccountSettingsTopBar extends StatelessWidget {
+class _DeleteAccountTopBar extends StatelessWidget {
+  final String title;
   final VoidCallback onBackTap;
 
-  const _AccountSettingsTopBar({required this.onBackTap});
+  const _DeleteAccountTopBar({required this.title, required this.onBackTap});
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +127,9 @@ class _AccountSettingsTopBar extends StatelessWidget {
         children: [
           IconButton(onPressed: onBackTap, icon: const Icon(Icons.arrow_back)),
           const SizedBox(width: 8),
-          const Text(
-            'Pengaturan Akun',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               color: Colors.black,
               fontSize: 24,
               fontFamily: 'Lexend',
@@ -87,11 +144,16 @@ class _AccountSettingsTopBar extends StatelessWidget {
   }
 }
 
-class _SettingsItem extends StatelessWidget {
+class _ReasonOption extends StatelessWidget {
   final String label;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const _SettingsItem({required this.label, required this.onTap});
+  const _ReasonOption({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +163,7 @@ class _SettingsItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Ink(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -121,10 +184,14 @@ class _SettingsItem extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: Color(0xFF94A3B8),
+              Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFBCBCBC)),
+                ),
               ),
             ],
           ),
@@ -134,12 +201,51 @@ class _SettingsItem extends StatelessWidget {
   }
 }
 
-class _AccountSettingsBottomNavBar extends StatelessWidget {
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _PrimaryButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(60),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'Plus Jakarta Sans',
+                fontWeight: FontWeight.w700,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteAccountBottomNavBar extends StatelessWidget {
   final VoidCallback onCommunityTap;
   final VoidCallback onHomeTap;
   final VoidCallback onProfileTap;
 
-  const _AccountSettingsBottomNavBar({
+  const _DeleteAccountBottomNavBar({
     required this.onCommunityTap,
     required this.onHomeTap,
     required this.onProfileTap,
