@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import '../../features/auth/controllers/auth_binding.dart';
 import '../../features/auth/views/login_view.dart';
 import '../../features/events/views/dashboard_view.dart';
+import '../../locofy/onboarding1.dart';
 
 class AppPages {
   static final List<GetPage> pages = [
+    GetPage(name: AppRoutes.onboarding, page: () => const Onboarding1()),
     GetPage(
       name: AppRoutes.login,
       page: () => LoginView(),
@@ -15,7 +17,6 @@ class AppPages {
       name: AppRoutes.dashboard,
       page: () => DashboardView(),
       binding: AuthBinding(),
-
     ),
     // Add more routes here
   ];
