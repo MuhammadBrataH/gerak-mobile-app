@@ -103,6 +103,10 @@ const getEventById = asyncHandler(async (req, res) => {
 });
 
 const createEvent = asyncHandler(async (req, res) => {
+    // Only community accounts (organizers) can create events
+    if (!req.user || req.user.accountType !== 'community') {
+        throw new ApiError(403, 'Only community accounts can create events');
+    }
     const {
         name,
         description = '',

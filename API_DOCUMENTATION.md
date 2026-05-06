@@ -20,7 +20,8 @@ curl -X POST http://localhost:5000/auth/register \
     "name": "John Doe",
     "phone": "+6281234567890",
     "sports": ["futsal", "badminton"],
-    "level": "intermediate"
+    "level": "intermediate",
+    "accountType": "personal"  
   }'
 ```
 
@@ -35,6 +36,8 @@ curl -X POST http://localhost:5000/auth/register \
 | level | String | No | Skill level: beginner/intermediate/advanced/mixed (default: beginner) |
 | photoUrl | String | No | Profile picture URL |
 
+| accountType | String | No | Jenis akun: `personal` (peserta) atau `community` (komunitas/penyelenggara). Default: `personal` |
+
 **Response (201):**
 ```json
 {
@@ -47,7 +50,8 @@ curl -X POST http://localhost:5000/auth/register \
     "level": "intermediate",
     "photoUrl": "",
     "createdAt": "2026-04-28T10:00:00.000Z",
-    "updatedAt": "2026-04-28T10:00:00.000Z"
+    "updatedAt": "2026-04-28T10:00:00.000Z",
+    "accountType": "personal"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -227,6 +231,8 @@ curl -X POST http://localhost:5000/events \
     "imageUrl": "https://example.com/image.jpg"
   }'
 ```
+
+Catatan penting: Hanya akun dengan `accountType: "community"` (komunitas/penyelenggara) yang boleh membuat event. Jika akun Anda bertipe `personal` (peserta), permintaan akan ditolak dengan kode 403.
 
 **Request Body:**
 | Field | Type | Required | Notes |
@@ -641,6 +647,7 @@ Token expiry:
   phone: String,
   sports: [String], // futsal, badminton, basketball, tennis, volleyball
   level: String, // beginner, intermediate, advanced, mixed
+  accountType: String, // personal | community
   photoUrl: String,
   refreshTokenHash: String,
   createdAt: DateTime,

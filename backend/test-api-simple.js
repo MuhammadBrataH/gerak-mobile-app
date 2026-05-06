@@ -68,6 +68,7 @@ async function request(method, path, body = null, headers = {}) {
             phone: '+6287654321098',
             sports: ['futsal'],
             level: 'advanced',
+            accountType: 'community',
         });
         if (res.status !== 201) throw new Error(`Got ${res.status}, expected 201`);
         tokens.budi = res.data.token;

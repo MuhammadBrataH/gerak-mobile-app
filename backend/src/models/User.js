@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
             enum: ['beginner', 'intermediate', 'advanced'],
             default: 'beginner',
         },
+        accountType: {
+            type: String,
+            enum: ['personal', 'community'],
+            default: 'personal',
+        },
         latitude: {
             type: Number,
             default: null,

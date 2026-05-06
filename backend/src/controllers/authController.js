@@ -33,6 +33,7 @@ const register = asyncHandler(async (req, res) => {
         phone,
         sports = [],
         level = 'beginner',
+        accountType = 'personal',
         latitude = null,
         longitude = null,
         photoUrl = '',
@@ -44,6 +45,10 @@ const register = asyncHandler(async (req, res) => {
 
     if (!validatePasswordStrength(password)) {
         throw new ApiError(400, 'Password must be at least 8 characters and contain letters and numbers');
+    }
+
+    if (!['personal', 'community'].includes(accountType)) {
+        throw new ApiError(400, 'accountType must be either "personal" or "community"');
     }
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -59,6 +64,7 @@ const register = asyncHandler(async (req, res) => {
         phone,
         sports: Array.isArray(sports) ? sports : [],
         level,
+        accountType,
         latitude,
         longitude,
         photoUrl,
