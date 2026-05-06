@@ -8,6 +8,7 @@ abstract class AppRoutes {
   static const String registerPrivate3 = '/register/private/step-3';
   static const String registerCommunity1 = '/register/community/step-1';
   static const String registerCommunity2 = '/register/community/step-2';
+  static const String community = '/community';
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String accountInfo = '/profile/account-info';

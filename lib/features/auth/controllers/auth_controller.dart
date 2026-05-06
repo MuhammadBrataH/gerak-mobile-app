@@ -25,12 +25,7 @@ class AuthController extends GetxController {
         password: 'password',
         skill: 'Bau',
       ),
-      UserModel(
-        nama: 'Admin',
-        email: 'admin@gmail.com',
-        password: '123',
-        skill: 'Baq',
-      ),
+      UserModel(nama: 'Admin', email: 'admin', password: '123', skill: 'Baq'),
     ];
 
     if (email.isEmpty || password.isEmpty) {

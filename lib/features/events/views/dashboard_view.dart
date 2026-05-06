@@ -22,6 +22,8 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final Set<String> _selectedCategories = {};
+  String _selectedLocation = 'Bandung';
+  DateTime _selectedDate = DateTime.now();
 
   void _showToast(String message) {
     Get.snackbar(
@@ -30,6 +32,46 @@ class _HomeViewState extends State<HomeView> {
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
     );
+  }
+
+  Future<void> _openLocationSheet() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.9),
+      isScrollControlled: true,
+      builder: (context) {
+        return const _LocationFilterSheet();
+      },
+    );
+    if (selected != null && selected.isNotEmpty) {
+      setState(() {
+        _selectedLocation = selected;
+      });
+    }
+  }
+
+  Future<void> _openDateSheet() async {
+    final selected = await showModalBottomSheet<DateTime>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.9),
+      isScrollControlled: true,
+      builder: (context) {
+        return _DateFilterSheet(initialDate: _selectedDate);
+      },
+    );
+    if (selected != null) {
+      setState(() {
+        _selectedDate = selected;
+      });
+    }
+  }
+
+  String _formatDateLabel(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day-$month-${date.year}';
   }
 
   @override
@@ -109,8 +151,10 @@ class _HomeViewState extends State<HomeView> {
                         ),
                         const SizedBox(height: 16),
                         _FilterRow(
-                          onLocationTap: () => _showToast('Lokasi tapped'),
-                          onDateTap: () => _showToast('Tanggal tapped'),
+                          locationLabel: _selectedLocation,
+                          dateLabel: _formatDateLabel(_selectedDate),
+                          onLocationTap: _openLocationSheet,
+                          onDateTap: _openDateSheet,
                         ),
                         const SizedBox(height: 24),
                         const Text(
@@ -150,6 +194,10 @@ class _HomeViewState extends State<HomeView> {
                 }
                 if (label == 'Profile') {
                   Get.toNamed(AppRoutes.profile);
+                  return;
+                }
+                if (label == 'Community') {
+                  Get.offAllNamed(AppRoutes.community);
                   return;
                 }
                 _showToast('Nav: $label');
@@ -401,10 +449,17 @@ class _CategoryChips extends StatelessWidget {
 }
 
 class _FilterRow extends StatelessWidget {
+  final String locationLabel;
+  final String dateLabel;
   final VoidCallback onLocationTap;
   final VoidCallback onDateTap;
 
-  const _FilterRow({required this.onLocationTap, required this.onDateTap});
+  const _FilterRow({
+    required this.locationLabel,
+    required this.dateLabel,
+    required this.onLocationTap,
+    required this.onDateTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +468,7 @@ class _FilterRow extends StatelessWidget {
         Expanded(
           child: _FilterChip(
             icon: Icons.place,
-            label: 'Bandung',
+            label: locationLabel,
             onTap: onLocationTap,
           ),
         ),
@@ -421,7 +476,7 @@ class _FilterRow extends StatelessWidget {
         Expanded(
           child: _FilterChip(
             icon: Icons.calendar_month,
-            label: '21-04-2026',
+            label: dateLabel,
             onTap: onDateTap,
           ),
         ),
@@ -481,6 +536,494 @@ class _FilterChip extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationFilterSheet extends StatefulWidget {
+  const _LocationFilterSheet();
+
+  @override
+  State<_LocationFilterSheet> createState() => _LocationFilterSheetState();
+}
+
+class _LocationFilterSheetState extends State<_LocationFilterSheet> {
+  final TextEditingController _controller = TextEditingController();
+  String _query = '';
+
+  final List<String> _cities = const [
+    'Ambon',
+    'Balikpapan',
+    'Bandung',
+    'Banjarmasin',
+    'Batam',
+    'Bekasi',
+    'Bogor',
+    'Cilegon',
+    'Denpasar',
+    'Jakarta',
+    'Makassar',
+    'Malang',
+    'Manado',
+    'Medan',
+    'Padang',
+    'Palembang',
+    'Pekanbaru',
+    'Semarang',
+    'Surabaya',
+    'Yogyakarta',
+  ];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _cities
+        .where((city) => city.toLowerCase().contains(_query.toLowerCase()))
+        .toList();
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(50),
+              topRight: Radius.circular(50),
+            ),
+            border: Border(
+              top: BorderSide(color: Color(0x80000000), width: 0.3),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 102,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9199A5),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: TextField(
+                  controller: _controller,
+                  onChanged: (value) {
+                    setState(() {
+                      _query = value;
+                    });
+                  },
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 20,
+                    fontFamily: 'Lexend',
+                    fontWeight: FontWeight.w400,
+                    height: 1.8,
+                    letterSpacing: -0.75,
+                  ),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    hintText: 'Masukkan kata kunci',
+                    hintStyle: TextStyle(
+                      color: Color(0x7F0F172A),
+                      fontSize: 20,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w300,
+                      height: 1.8,
+                      letterSpacing: -0.75,
+                    ),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Divider(height: 1, color: Color(0x33000000)),
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, color: Color(0xFF808080)),
+                  itemBuilder: (context, index) {
+                    final city = filtered[index];
+                    return ListTile(
+                      title: Text(
+                        city,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 20,
+                          fontFamily: 'Lexend',
+                          fontWeight: FontWeight.w400,
+                          height: 1.8,
+                          letterSpacing: -0.75,
+                        ),
+                      ),
+                      onTap: () => Get.back(result: city),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DateFilterSheet extends StatefulWidget {
+  final DateTime initialDate;
+
+  const _DateFilterSheet({required this.initialDate});
+
+  @override
+  State<_DateFilterSheet> createState() => _DateFilterSheetState();
+}
+
+class _DateFilterSheetState extends State<_DateFilterSheet> {
+  late DateTime _selectedDate;
+  late DateTime _visibleMonth;
+  late DateTime _currentMonth;
+
+  static const _monthNames = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
+
+  static const _dayNames = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = DateTime(
+      widget.initialDate.year,
+      widget.initialDate.month,
+      widget.initialDate.day,
+    );
+    _visibleMonth = DateTime(_selectedDate.year, _selectedDate.month);
+    final now = DateTime.now();
+    _currentMonth = DateTime(now.year, now.month);
+  }
+
+  bool get _canGoPrev {
+    return _visibleMonth.isAfter(_currentMonth);
+  }
+
+  void _goPrevMonth() {
+    if (!_canGoPrev) return;
+    setState(() {
+      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month - 1);
+    });
+  }
+
+  void _goNextMonth() {
+    setState(() {
+      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1);
+    });
+  }
+
+  int _daysInMonth(DateTime month) {
+    final nextMonth = DateTime(month.year, month.month + 1, 1);
+    return nextMonth.subtract(const Duration(days: 1)).day;
+  }
+
+  String _formatHeader(DateTime date) {
+    final dayNames = [
+      'Minggu',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+    ];
+    final dayName = dayNames[date.weekday % 7];
+    final monthName = _monthNames[date.month - 1];
+    return '$dayName, $monthName ${date.day}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final daysInMonth = _daysInMonth(_visibleMonth);
+    final firstWeekday = DateTime(
+      _visibleMonth.year,
+      _visibleMonth.month,
+      1,
+    ).weekday;
+    final leadingEmpty = firstWeekday % 7;
+    final totalCells = leadingEmpty + daysInMonth;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(50),
+            topRight: Radius.circular(50),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2563EB),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50),
+                  topRight: Radius.circular(50),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 102,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF9199A5),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Pilih Tanggal',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w300,
+                      height: 2.4,
+                      letterSpacing: -0.75,
+                    ),
+                  ),
+                  Text(
+                    _formatHeader(_selectedDate),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w700,
+                      height: 1.29,
+                      letterSpacing: -0.75,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${_monthNames[_visibleMonth.month - 1]} ${_visibleMonth.year}',
+                            style: const TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 17,
+                              fontFamily: 'Lexend',
+                              fontWeight: FontWeight.w400,
+                              height: 2.12,
+                              letterSpacing: -0.75,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: _canGoPrev ? _goPrevMonth : null,
+                            icon: Icon(
+                              Icons.chevron_left,
+                              color: _canGoPrev
+                                  ? const Color(0xFF0F172A)
+                                  : const Color(0x660F172A),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _goNextMonth,
+                            icon: const Icon(
+                              Icons.chevron_right,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: _dayNames
+                            .map(
+                              (day) => SizedBox(
+                                width: 36,
+                                child: Text(
+                                  day,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Color(0xB20F172A),
+                                    fontSize: 15,
+                                    fontFamily: 'Lexend',
+                                    fontWeight: FontWeight.w400,
+                                    height: 2.4,
+                                    letterSpacing: -0.75,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: GridView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 7,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              childAspectRatio: 1.2,
+                            ),
+                        itemCount: totalCells,
+                        itemBuilder: (context, index) {
+                          if (index < leadingEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          final day = index - leadingEmpty + 1;
+                          final date = DateTime(
+                            _visibleMonth.year,
+                            _visibleMonth.month,
+                            day,
+                          );
+                          final isSelected =
+                              date.year == _selectedDate.year &&
+                              date.month == _selectedDate.month &&
+                              date.day == _selectedDate.day;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedDate = date;
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF2563EB)
+                                    : Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                day.toString(),
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xCC0F172A),
+                                  fontSize: 15,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w400,
+                                  height: 2.4,
+                                  letterSpacing: -0.75,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                      child: Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Get.back(),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color(0xFF2563EB),
+                                fontSize: 20,
+                                fontFamily: 'Lexend',
+                                fontWeight: FontWeight.w400,
+                                height: 1.8,
+                                letterSpacing: -0.75,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            height: 46,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                              ),
+                              onPressed: () => Get.back(result: _selectedDate),
+                              child: const Text(
+                                'SIMPAN',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.8,
+                                  letterSpacing: -0.75,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
