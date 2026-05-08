@@ -212,7 +212,7 @@ class _BottomNavItem extends StatelessWidget {
     final color = isActive ? Colors.white : const Color(0x99475569);
 
     return SizedBox(
-      width: 80,
+      width: 110,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -237,6 +237,8 @@ class _BottomNavItem extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         label,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
                         style: TextStyle(
                           color: color,
                           fontSize: 10,

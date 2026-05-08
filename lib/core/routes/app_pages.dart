@@ -2,6 +2,7 @@ import 'app_routes.dart';
 import 'package:get/get.dart';
 import '../../features/auth/controllers/auth_binding.dart';
 import '../../features/community/views/community_view.dart';
+import '../../features/community/views/community_profile_view.dart';
 import '../../features/events/views/dashboard_view.dart';
 import '../../features/profile/views/account_info_view.dart';
 import '../../features/profile/views/account_settings_view.dart';
@@ -35,6 +36,10 @@ class AppPages {
       binding: AuthBinding(),
     ),
     GetPage(name: AppRoutes.community, page: () => const CommunityView()),
+    GetPage(
+      name: AppRoutes.communityProfile,
+      page: () => const CommunityProfileView(),
+    ),
     GetPage(name: AppRoutes.register, page: () => const SignUpSelect()),
     GetPage(
       name: AppRoutes.registerPrivate1,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../core/routes/app_routes.dart';
 
@@ -310,6 +311,12 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+class _ChipData {
+  final String label;
+  final String iconPath;
+  const _ChipData(this.label, this.iconPath);
+}
+
 class _CategoryChips extends StatelessWidget {
   final Set<String> selectedLabels;
   final ValueChanged<String> onCategoryTap;
@@ -322,25 +329,25 @@ class _CategoryChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = [
-      'SEPAK BOLA',
-      'BASKET',
-      'BADMINTON',
-      'LARI',
-      'PADEL',
-      'FUTSAL',
-      'VOLLEY',
-      'MINI SOCCER',
+      const _ChipData('SEPAK BOLA', 'assets/icons/soccer.svg'),
+      const _ChipData('BASKET', 'assets/icons/basketball.svg'),
+      const _ChipData('BADMINTON', 'assets/icons/badminton.svg'),
+      const _ChipData('LARI', 'assets/icons/run.svg'),
+      const _ChipData('PADEL', 'assets/icons/padel.svg'),
+      const _ChipData('FUTSAL', 'assets/icons/futsal.svg'),
+      const _ChipData('VOLLEY', 'assets/icons/volley.svg'),
+      const _ChipData('MINI SOCCER', 'assets/icons/mini_soccer.svg'),
     ];
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: categories.map((label) {
-        final isActive = selectedLabels.contains(label);
+      children: categories.map((chip) {
+        final isActive = selectedLabels.contains(chip.label);
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => onCategoryTap(label),
+            onTap: () => onCategoryTap(chip.label),
             borderRadius: BorderRadius.circular(10),
             child: Ink(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -350,16 +357,31 @@ class _CategoryChips extends StatelessWidget {
                     : const Color(0xFF475569),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFFFAFBFF),
-                  fontSize: 10,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                  letterSpacing: -0.6,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(
+                    chip.iconPath,
+                    width: 14,
+                    height: 14,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFFFAFBFF),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    chip.label,
+                    style: const TextStyle(
+                      color: Color(0xFFFAFBFF),
+                      fontSize: 10,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -595,51 +617,65 @@ class _CommunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Get.toNamed(
+          AppRoutes.communityProfile,
+          arguments: {
+            'name': data.name,
+            'badgeUrl': data.badgeUrl,
+            'categories': data.categories,
+          },
+        ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0x4CE2E8F0)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data.name,
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 29,
-                    fontFamily: 'Lexend',
-                    fontWeight: FontWeight.w700,
-                    height: 1.03,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  data.categories,
-                  style: const TextStyle(
-                    color: Color(0xFF2563EB),
-                    fontSize: 10,
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ],
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: const Color(0x4CE2E8F0)),
           ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 49,
-            backgroundImage: NetworkImage(data.badgeUrl),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.name,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 24,
+                        fontFamily: 'Lexend',
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      data.categories,
+                      style: const TextStyle(
+                        color: Color(0xFF2563EB),
+                        fontSize: 10,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w700,
+                        height: 1.5,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              CircleAvatar(
+                radius: 49,
+                backgroundImage: NetworkImage(data.badgeUrl),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -717,7 +753,7 @@ class _NavItem extends StatelessWidget {
     final color = isActive ? Colors.white : const Color(0x99475569);
 
     return SizedBox(
-      width: 80,
+      width: 110,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -742,6 +778,8 @@ class _NavItem extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         label,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
                         style: TextStyle(
                           color: color,
                           fontSize: 10,

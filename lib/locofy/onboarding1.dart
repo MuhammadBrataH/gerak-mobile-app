@@ -83,20 +83,22 @@ class _Onboarding1State extends State<Onboarding1> {
                       padding: const EdgeInsets.only(right: 20, top: 6),
                       child: Align(
                         alignment: Alignment.topRight,
-                        child: TextButton(
-                          onPressed: _skipToEnd,
-                          child: const Text(
-                            'Lewati',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontWeight: FontWeight.w800,
-                              height: 2,
-                              letterSpacing: -1.2,
-                              color: royalblue200,
-                            ),
-                          ),
-                        ),
+                        child: _currentIndex < _pages.length - 1
+                            ? TextButton(
+                                onPressed: _skipToEnd,
+                                child: const Text(
+                                  'Lewati',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.5,
+                                    letterSpacing: -0.4,
+                                    color: royalblue200,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(height: 40),
                       ),
                     ),
                     Expanded(
