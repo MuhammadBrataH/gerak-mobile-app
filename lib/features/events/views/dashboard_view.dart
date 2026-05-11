@@ -77,41 +77,57 @@ class _HomeViewState extends State<HomeView> {
 
   void _showProfileMenu(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final menuWidth = 120.0;
 
     showMenu(
       context: context,
-      position: RelativeRect.fromLTRB(screenWidth - 180, 56, 16, 0),
+      position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
       items: [
         PopupMenuItem(
-          value: 'logout',
-          child: Row(
-            children: [
-              const Icon(Icons.logout, color: Color(0xFF2563EB), size: 20),
-              const SizedBox(width: 12),
-              const Text(
-                'Sign Out',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+          enabled: false,
+          child: Container(
+            width: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: GestureDetector(
+                onTap: () {
+                  Get.back();
+                  Get.offAllNamed(AppRoutes.login);
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.login, color: Color(0xFF2563EB), size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Login',
+                      style: TextStyle(
+                        color: Color(0xFF2563EB),
+                        fontSize: 14,
+                        fontFamily: 'Lexend',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ],
-      elevation: 8.0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
-      ),
-    ).then((value) {
-      if (value == 'logout') {
-        Get.snackbar('Logout', 'You have been logged out');
-        Get.offAllNamed(AppRoutes.login);
-      }
-    });
+      elevation: 0,
+      color: Colors.transparent,
+    );
   }
 
   void _openSearchSheet(List<_ActivityCardData> activities) {
