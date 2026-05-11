@@ -4,10 +4,12 @@
  */
 
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 (async () => {
     try {
-        await mongoose.connect('mongodb://127.0.0.1:27017/gerak');
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/gerak';
+        await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
         // Drop all collections

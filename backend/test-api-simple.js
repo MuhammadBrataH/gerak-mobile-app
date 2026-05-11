@@ -13,6 +13,9 @@ async function test(name, fn) {
         results.push({ name, status: 'pass' });
     } catch (err) {
         console.log(`✗ ${name}: ${err.message}`);
+        if (err.response) {
+            console.log(`   Error response: ${JSON.stringify(err.response)}`);
+        }
         results.push({ name, status: 'fail' });
     }
 }
@@ -65,6 +68,7 @@ async function request(method, path, body = null, headers = {}) {
             phone: '+6287654321098',
             sports: ['futsal'],
             level: 'advanced',
+            accountType: 'community',
         });
         if (res.status !== 201) throw new Error(`Got ${res.status}, expected 201`);
         tokens.budi = res.data.token;
@@ -122,7 +126,10 @@ async function request(method, path, body = null, headers = {}) {
         }, {
             'Authorization': `Bearer ${tokens.budi}`,
         });
-        if (res.status !== 201) throw new Error(`Got ${res.status}, expected 201`);
+        if (res.status !== 201) {
+            console.log(`   DEBUG: Response data: ${JSON.stringify(res.data)}`);
+            throw new Error(`Got ${res.status}, expected 201`);
+        }
         event1Id = res.data.event._id;
         console.log(`   → Event created: ${res.data.event.name}`);
         console.log(`   → City: ${res.data.event.city}, District: ${res.data.event.district}`);
