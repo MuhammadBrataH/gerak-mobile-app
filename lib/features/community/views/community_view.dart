@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../core/routes/app_routes.dart';
+import 'community_add_sheet.dart';
 
 class CommunityView extends StatefulWidget {
   const CommunityView({super.key});
@@ -38,13 +39,24 @@ class _CommunityViewState extends State<CommunityView> {
     }
   }
 
+  Future<void> _openAddSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const CommunityAddSheet();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final communities = <_CommunityCardData>[
       _CommunityCardData(
         name: 'PLAYMAKER FUN CLUB',
         categories: 'FOOTBALL • PADEL',
-        badgeUrl: 'https://placehold.co/98x98',
+        badgeUrl: 'assets/sample 1.jpg',
       ),
     ];
 
@@ -73,7 +85,7 @@ class _CommunityViewState extends State<CommunityView> {
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
-                          onActionTap: () => _showToast('Lihat semua tapped'),
+                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
                         _CategoryChips(
@@ -117,7 +129,17 @@ class _CommunityViewState extends State<CommunityView> {
                     itemBuilder: (context, index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: _CommunityCard(data: communities[index]),
+                        child: _CommunityCard(
+                          data: communities[index],
+                          onTap: () => Get.toNamed(
+                            AppRoutes.communityProfile,
+                            arguments: {
+                              'name': communities[index].name,
+                              'badgeUrl': communities[index].badgeUrl,
+                              'categories': communities[index].categories,
+                            },
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -140,7 +162,7 @@ class _CommunityViewState extends State<CommunityView> {
                 _showToast('Nav: $label');
               },
             ),
-            _FloatingActionButton(onTap: () => _showToast('Add tapped')),
+            _FloatingActionButton(onTap: _openAddSheet),
           ],
         ),
       ),
@@ -186,7 +208,7 @@ class _TopBar extends StatelessWidget {
             onTap: onProfileTap,
             child: const CircleAvatar(
               radius: 16,
-              backgroundImage: NetworkImage('https://placehold.co/32x32'),
+              backgroundImage: AssetImage('assets/sample 1.jpg'),
             ),
           ),
         ],
@@ -612,22 +634,16 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
 
 class _CommunityCard extends StatelessWidget {
   final _CommunityCardData data;
+  final VoidCallback onTap;
 
-  const _CommunityCard({required this.data});
+  const _CommunityCard({required this.data, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Get.toNamed(
-          AppRoutes.communityProfile,
-          arguments: {
-            'name': data.name,
-            'badgeUrl': data.badgeUrl,
-            'categories': data.categories,
-          },
-        ),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(32),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -652,6 +668,8 @@ class _CommunityCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         height: 1.1,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.visible,
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -671,7 +689,7 @@ class _CommunityCard extends StatelessWidget {
               const SizedBox(width: 16),
               CircleAvatar(
                 radius: 49,
-                backgroundImage: NetworkImage(data.badgeUrl),
+                backgroundImage: AssetImage(data.badgeUrl),
               ),
             ],
           ),
@@ -753,7 +771,7 @@ class _NavItem extends StatelessWidget {
     final color = isActive ? Colors.white : const Color(0x99475569);
 
     return SizedBox(
-      width: 110,
+      width: 120,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -778,7 +796,7 @@ class _NavItem extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         label,
-                        softWrap: false,
+                        maxLines: 1,
                         overflow: TextOverflow.visible,
                         style: TextStyle(
                           color: color,

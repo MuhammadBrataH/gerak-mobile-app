@@ -84,7 +84,7 @@ class _HomeViewState extends State<HomeView> {
         time: 'TODAY, 20:00',
         location: 'CIJERAH SOCCER ARENA',
         labelIconAsset: 'assets/icons/soccer.svg',
-        badgeUrl: 'https://placehold.co/44x44',
+        badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFF1F5F9),
       ),
       _ActivityCardData(
@@ -94,7 +94,7 @@ class _HomeViewState extends State<HomeView> {
         time: 'SUN, 07:00',
         location: 'TAMAN MALUKU BANDUNG',
         labelIconAsset: 'assets/icons/run.svg',
-        badgeUrl: 'https://placehold.co/39x39',
+        badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFB1C8FC),
       ),
       _ActivityCardData(
@@ -104,7 +104,7 @@ class _HomeViewState extends State<HomeView> {
         time: 'SAT, 19:00',
         location: 'LARS PADEL BANDUNG',
         labelIconAsset: 'assets/icons/padel.svg',
-        badgeUrl: 'https://placehold.co/44x44',
+        badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFF1F5F9),
       ),
     ];
@@ -134,7 +134,7 @@ class _HomeViewState extends State<HomeView> {
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
-                          onActionTap: () => _showToast('Lihat semua tapped'),
+                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
                         _CategoryChips(
@@ -249,7 +249,7 @@ class _TopBar extends StatelessWidget {
             onTap: onProfileTap,
             child: const CircleAvatar(
               radius: 16,
-              backgroundImage: NetworkImage('https://placehold.co/32x32'),
+              backgroundImage: AssetImage('assets/sample 1.jpg'),
             ),
           ),
         ],
@@ -419,8 +419,8 @@ class _CategoryChips extends StatelessWidget {
                 children: [
                   SvgPicture.asset(
                     category.iconAsset,
-                    width: 12,
-                    height: 12,
+                    width: 14,
+                    height: 14,
                     colorFilter: const ColorFilter.mode(
                       Color(0xFFFAFBFF),
                       BlendMode.srcIn,
@@ -1135,7 +1135,7 @@ class _ActivityCard extends StatelessWidget {
               ),
               CircleAvatar(
                 radius: 22,
-                backgroundImage: NetworkImage(data.badgeUrl),
+                backgroundImage: AssetImage(data.badgeUrl),
               ),
             ],
           ),

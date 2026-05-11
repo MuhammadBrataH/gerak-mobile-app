@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -23,7 +24,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     super.initState();
     final args = Get.arguments as Map<String, dynamic>? ?? {};
     communityName = args['name'] as String? ?? 'PLAYMAKER FUN CLUB';
-    badgeUrl = args['badgeUrl'] as String? ?? 'https://placehold.co/144x144';
+    badgeUrl = args['badgeUrl'] as String? ?? 'assets/sample 1.jpg';
     categories = args['categories'] as String? ?? 'FOOTBALL • PADEL';
   }
 
@@ -36,6 +37,90 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     );
   }
 
+  Future<void> _openMoreSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      enableDrag: true,
+      builder: (context) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.7,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _ActionItem(
+                            icon: Icons.share_outlined,
+                            label: 'Bagikan',
+                            onTap: () => Get.back(),
+                          ),
+                          _ActionItem(
+                            icon: Icons.group_outlined,
+                            label: 'Lihat Anggota',
+                            onTap: () => Get.back(),
+                          ),
+                          _ActionItem(
+                            icon: Icons.notifications_outlined,
+                            label: 'Kelola Notifikasi',
+                            onTap: () => Get.back(),
+                          ),
+                          _ActionItem(
+                            icon: Icons.report_gmailerrorred_outlined,
+                            label: 'Laporkan Grup',
+                            onTap: () => Get.back(),
+                          ),
+                          _ActionItem(
+                            icon: Icons.logout,
+                            label: 'Keluar Grup',
+                            onTap: () => Get.back(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,30 +130,32 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
           children: [
             CustomScrollView(
               slivers: [
-                // ── Header (profil komunitas) ──
                 SliverToBoxAdapter(
-                  child: _CommunityHeader(
-                    communityName: communityName,
-                    badgeUrl: badgeUrl,
-                    onBackTap: () => Get.back(),
-                    onProfileTap: () => _showToast('Profile avatar tapped'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _CommunityHeader(
+                        communityName: communityName,
+                        badgeUrl: badgeUrl,
+                        onBackTap: () => Get.back(),
+                        onProfileTap: () => _showToast('Profile avatar tapped'),
+                        onMoreTap: _openMoreSheet,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: _ProfileTabs(
+                          activeIndex: _selectedTab,
+                          onTabChanged: (index) {
+                            setState(() => _selectedTab = index);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 ),
-
-                // ── Tab bar ──
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _TabBarDelegate(
-                    selectedTab: _selectedTab,
-                    onTabChanged: (index) {
-                      setState(() => _selectedTab = index);
-                    },
-                  ),
-                ),
-
-                // ── Konten Tab ──
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 140),
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
                   sliver: _selectedTab == 0
                       ? _buildPostinganList()
                       : _buildPertandinganList(),
@@ -96,7 +183,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
         avatarUrl: badgeUrl,
         timeAgo: '1 minggu yang lalu',
         content: 'Lorem Ipsum anjing babi bajingan keparat',
-        imageUrl: 'https://placehold.co/308x150',
+        imageUrl: 'assets/sample 1.jpg',
         hasReadMore: false,
       ),
       _PostData(
@@ -105,7 +192,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
         timeAgo: '1 minggu yang lalu',
         content:
             'Lorem Ipsum anjing babi bajingan keparat asd\nasdasdasdad, banyak asd',
-        imageUrl: 'https://placehold.co/308x150',
+        imageUrl: 'assets/sample 1.jpg',
         hasReadMore: true,
       ),
     ];
@@ -168,12 +255,14 @@ class _CommunityHeader extends StatelessWidget {
   final String badgeUrl;
   final VoidCallback onBackTap;
   final VoidCallback onProfileTap;
+  final VoidCallback onMoreTap;
 
   const _CommunityHeader({
     required this.communityName,
     required this.badgeUrl,
     required this.onBackTap,
     required this.onProfileTap,
+    required this.onMoreTap,
   });
 
   @override
@@ -214,7 +303,7 @@ class _CommunityHeader extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: onMoreTap,
                   icon: const Icon(
                     Icons.more_horiz,
                     size: 22,
@@ -234,7 +323,7 @@ class _CommunityHeader extends StatelessWidget {
                         color: const Color(0x332563EB),
                       ),
                       image: const DecorationImage(
-                        image: NetworkImage('https://placehold.co/40x40'),
+                        image: AssetImage('assets/sample 1.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -249,7 +338,7 @@ class _CommunityHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: CircleAvatar(
               radius: 72,
-              backgroundImage: NetworkImage(badgeUrl),
+              backgroundImage: AssetImage(badgeUrl),
             ),
           ),
 
@@ -307,8 +396,14 @@ class _CommunityHeader extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: const [
-                _SportChip(label: 'BASKET', iconPath: 'assets/icons/basketball.svg'),
-                _SportChip(label: 'BADMINTON', iconPath: 'assets/icons/badminton.svg'),
+                _SportChip(
+                  label: 'BASKET',
+                  iconPath: 'assets/icons/basketball.svg',
+                ),
+                _SportChip(
+                  label: 'BADMINTON',
+                  iconPath: 'assets/icons/badminton.svg',
+                ),
                 _SportChip(label: 'LARI', iconPath: 'assets/icons/run.svg'),
               ],
             ),
@@ -350,54 +445,6 @@ class _CommunityHeader extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// TAB BAR (Postingan / Pertandingan) — SliverPersistentHeader
-// ═══════════════════════════════════════════════════════════
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final int selectedTab;
-  final ValueChanged<int> onTabChanged;
-
-  _TabBarDelegate({required this.selectedTab, required this.onTabChanged});
-
-  @override
-  double get maxExtent => 42;
-  @override
-  double get minExtent => 42;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          _TabItem(
-            label: 'Postingan',
-            isSelected: selectedTab == 0,
-            onTap: () => onTabChanged(0),
-          ),
-          const SizedBox(width: 24),
-          _TabItem(
-            label: 'Pertandingan',
-            isSelected: selectedTab == 1,
-            onTap: () => onTabChanged(1),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _TabBarDelegate oldDelegate) {
-    return oldDelegate.selectedTab != selectedTab;
-  }
-}
-
 class _TabItem extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -435,10 +482,42 @@ class _TabItem extends StatelessWidget {
             height: 2,
             width: label.length * 7.0,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color(0xFF2563EB)
-                  : Colors.transparent,
+              color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
               borderRadius: BorderRadius.circular(25),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileTabs extends StatelessWidget {
+  final int activeIndex;
+  final ValueChanged<int> onTabChanged;
+
+  const _ProfileTabs({required this.activeIndex, required this.onTabChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(width: 1, color: Color(0xFFE2E8F0))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TabItem(
+              label: 'POSTINGAN',
+              isSelected: activeIndex == 0,
+              onTap: () => onTabChanged(0),
+            ),
+          ),
+          Expanded(
+            child: _TabItem(
+              label: 'PERTANDINGAN',
+              isSelected: activeIndex == 1,
+              onTap: () => onTabChanged(1),
             ),
           ),
         ],
@@ -494,6 +573,40 @@ class _SportChip extends StatelessWidget {
   }
 }
 
+class _ActionItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: const Color(0xFFF1F5F9),
+        child: Icon(icon, size: 18, color: const Color(0xFF0F172A)),
+      ),
+      title: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF0F172A),
+          fontSize: 14,
+          fontFamily: 'Plus Jakarta Sans',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 // POSTINGAN CARD
 // ═══════════════════════════════════════════════════════════
@@ -538,7 +651,7 @@ class _PostCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 21,
-                backgroundImage: NetworkImage(data.avatarUrl),
+                backgroundImage: AssetImage(data.avatarUrl),
               ),
               const SizedBox(width: 10),
               Column(
@@ -616,7 +729,7 @@ class _PostCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(32),
             child: Stack(
               children: [
-                Image.network(
+                Image.asset(
                   data.imageUrl,
                   width: double.infinity,
                   height: 150,
@@ -732,7 +845,7 @@ class _MatchCard extends StatelessWidget {
               const SizedBox(width: 12),
               CircleAvatar(
                 radius: 20,
-                backgroundImage: NetworkImage(data.avatarUrl),
+                backgroundImage: AssetImage(data.avatarUrl),
               ),
             ],
           ),
@@ -741,11 +854,7 @@ class _MatchCard extends StatelessWidget {
           // ── Date & Location ──
           Row(
             children: [
-              const Icon(
-                Icons.access_time,
-                size: 14,
-                color: Color(0xFF475569),
-              ),
+              const Icon(Icons.access_time, size: 14, color: Color(0xFF475569)),
               const SizedBox(width: 8),
               Text(
                 data.dateTime,

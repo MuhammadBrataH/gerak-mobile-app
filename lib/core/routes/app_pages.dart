@@ -1,9 +1,10 @@
-import 'app_routes.dart';
 import 'package:get/get.dart';
+import 'app_routes.dart';
 import '../../features/auth/controllers/auth_binding.dart';
-import '../../features/community/views/community_view.dart';
 import '../../features/community/views/community_profile_view.dart';
+import '../../features/community/views/community_view.dart';
 import '../../features/events/views/dashboard_view.dart';
+import '../../features/events/views/sports_all_view.dart';
 import '../../features/profile/views/account_info_view.dart';
 import '../../features/profile/views/account_settings_view.dart';
 import '../../features/profile/views/delete_account_step1_view.dart';
@@ -15,11 +16,11 @@ import '../../features/profile/views/phone_update_view.dart';
 import '../../features/profile/views/profile_view.dart';
 import '../../locofy/login.dart';
 import '../../locofy/onboarding1.dart';
+import '../../locofy/signup_community_step1.dart';
+import '../../locofy/signup_community_step2.dart';
 import '../../locofy/signup_private_step1.dart';
 import '../../locofy/signup_private_step2.dart';
 import '../../locofy/signup_private_step3.dart';
-import '../../locofy/signup_community_step1.dart';
-import '../../locofy/signup_community_step2.dart';
 import '../../locofy/signup_select.dart';
 
 class AppPages {
@@ -35,6 +36,7 @@ class AppPages {
       page: () => DashboardView(),
       binding: AuthBinding(),
     ),
+    GetPage(name: AppRoutes.sportsAll, page: () => const SportsAllView()),
     GetPage(name: AppRoutes.community, page: () => const CommunityView()),
     GetPage(
       name: AppRoutes.communityProfile,
