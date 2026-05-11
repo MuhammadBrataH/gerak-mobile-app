@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
-import 'package:gerak_mobile_app/features/auth/controllers/auth_controller.dart';
+import 'package:gerak_mobile_app/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:gerak_mobile_app/locofy/login_tokens.dart';
 
 class LoginLocofy extends StatefulWidget {
@@ -506,3 +506,4 @@ class _PasswordFieldState extends State<_PasswordField> {
     );
   }
 }
+
