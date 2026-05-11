@@ -50,6 +50,45 @@ class _CommunityViewState extends State<CommunityView> {
     );
   }
 
+  void _showProfileMenu(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(screenWidth - 180, 56, 16, 0),
+      items: [
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              const Icon(Icons.logout, color: Color(0xFF2563EB), size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'Sign Out',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 8.0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+      ),
+    ).then((value) {
+      if (value == 'logout') {
+        Get.snackbar('Logout', 'You have been logged out');
+        Get.offAllNamed(AppRoutes.login);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final communities = <_CommunityCardData>[
@@ -73,10 +112,7 @@ class _CommunityViewState extends State<CommunityView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _TopBar(
-                          onMenuTap: () => _showToast('Menu tapped'),
-                          onProfileTap: () => Get.toNamed(AppRoutes.profile),
-                        ),
+                        _TopBar(onProfileTap: () => _showProfileMenu(context)),
                         const SizedBox(height: 20),
                         const _HeroHeadline(),
                         const SizedBox(height: 18),
@@ -171,10 +207,9 @@ class _CommunityViewState extends State<CommunityView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onMenuTap;
   final VoidCallback onProfileTap;
 
-  const _TopBar({required this.onMenuTap, required this.onProfileTap});
+  const _TopBar({required this.onProfileTap});
 
   @override
   Widget build(BuildContext context) {
@@ -184,25 +219,16 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: onMenuTap,
-                icon: const Icon(Icons.menu_rounded),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'GERAK',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 24,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w900,
-                  height: 1.33,
-                  letterSpacing: -1.2,
-                ),
-              ),
-            ],
+          const Text(
+            'GERAK',
+            style: TextStyle(
+              color: Color(0xFF2563EB),
+              fontSize: 24,
+              fontFamily: 'Lexend',
+              fontWeight: FontWeight.w900,
+              height: 1.33,
+              letterSpacing: -1.2,
+            ),
           ),
           GestureDetector(
             onTap: onProfileTap,

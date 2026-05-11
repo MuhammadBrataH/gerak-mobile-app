@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../core/routes/app_routes.dart';
+import 'activity_detail_view.dart';
 
 class DashboardView extends GetView<AuthController> {
   const DashboardView({super.key});
@@ -74,35 +75,196 @@ class _HomeViewState extends State<HomeView> {
     return '$day-$month-${date.year}';
   }
 
+  void _showProfileMenu(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(screenWidth - 180, 56, 16, 0),
+      items: [
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              const Icon(Icons.logout, color: Color(0xFF2563EB), size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'Sign Out',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 8.0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+      ),
+    ).then((value) {
+      if (value == 'logout') {
+        Get.snackbar('Logout', 'You have been logged out');
+        Get.offAllNamed(AppRoutes.login);
+      }
+    });
+  }
+
+  void _openSearchSheet(List<_ActivityCardData> activities) {
+    final textController = TextEditingController();
+    List<_ActivityCardData> filteredActivities = activities;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: TextField(
+                      controller: textController,
+                      onChanged: (value) {
+                        setState(() {
+                          filteredActivities = activities
+                              .where(
+                                (activity) =>
+                                    activity.title.toLowerCase().contains(
+                                      value.toLowerCase(),
+                                    ) ||
+                                    activity.location.toLowerCase().contains(
+                                      value.toLowerCase(),
+                                    ) ||
+                                    activity.label.toLowerCase().contains(
+                                      value.toLowerCase(),
+                                    ),
+                              )
+                              .toList();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Cari aktivitas...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      itemCount: filteredActivities.length,
+                      itemBuilder: (context, index) {
+                        final activity = filteredActivities[index];
+                        return ListTile(
+                          leading: SvgPicture.asset(
+                            activity.labelIconAsset,
+                            width: 40,
+                            height: 40,
+                          ),
+                          title: Text(activity.title.replaceAll('\n', ' ')),
+                          subtitle: Text(activity.location),
+                          onTap: () {
+                            Get.back();
+                            Get.to(
+                              () => ActivityDetailView(
+                                title: activity.title.replaceAll('\n', ' '),
+                                label: activity.label,
+                                labelColor: activity.labelColor,
+                                time: activity.time,
+                                location: activity.location,
+                                address: activity.address,
+                                community: activity.community,
+                                description: activity.description,
+                                price: activity.price,
+                                participants: '8/44',
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activities = <_ActivityCardData>[
       _ActivityCardData(
+        id: '1',
         label: 'FOOTBALL • ELITE TIER',
         labelColor: const Color(0xFF2563EB),
         title: 'GIMMICK LEAGUE\nWEEK 3',
-        time: 'TODAY, 20:00',
+        time: 'Friday, April 17, 20:00 - 22:00',
         location: 'CIJERAH SOCCER ARENA',
+        address:
+            'Gg. Sari Asih Gg Manunggal, RT.03/RW.09, Cijerah, Kec. Bandung Kulon, Kota Bandung, Jawa Barat',
+        community: 'Playmaker Fun Club',
+        description:
+            '#NambahBugarBukanCedera\n\nKomunitas Sepak Bola Fun Bandung\n\nOpen Public, Newbie Friendly',
+        price: 'IDR 85K',
         labelIconAsset: 'assets/icons/soccer.svg',
         badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFF1F5F9),
       ),
       _ActivityCardData(
+        id: '2',
         label: 'RUNNING • SOCIAL',
         labelColor: const Color(0xFF005F8A),
         title: 'JOGGING\nBARENG',
-        time: 'SUN, 07:00',
+        time: 'Sunday, April 19, 07:00 - 08:30',
         location: 'TAMAN MALUKU BANDUNG',
+        address: 'Taman Maluku, Bandung, Jawa Barat',
+        community: 'Bandung Runners Club',
+        description:
+            '#SehatItuPenting\n\nKomunitas Lari Bandung\n\nOpen Public, All Levels Welcome',
+        price: 'IDR 25K',
         labelIconAsset: 'assets/icons/run.svg',
         badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFB1C8FC),
       ),
       _ActivityCardData(
+        id: '3',
         label: 'PADEL • FUN MATCH',
         labelColor: const Color(0xFF2563EB),
         title: 'PLAYPADEL\nBANDUNG',
-        time: 'SAT, 19:00',
+        time: 'Saturday, April 18, 19:00 - 21:00',
         location: 'LARS PADEL BANDUNG',
+        address: 'Jl. Pasteur, Bandung, Jawa Barat',
+        community: 'Padel Community',
+        description:
+            'Mari bermain padel bersama komunitas yang seru!\n\nKomunitas Padel Bandung\n\nOpen Public, Beginner Friendly',
+        price: 'IDR 120K',
         labelIconAsset: 'assets/icons/padel.svg',
         badgeUrl: 'assets/sample 1.jpg',
         backgroundColor: const Color(0xFFF1F5F9),
@@ -122,14 +284,11 @@ class _HomeViewState extends State<HomeView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _TopBar(
-                          onMenuTap: () => _showToast('Menu tapped'),
-                          onProfileTap: () => _showToast('Profile tapped'),
-                        ),
+                        _TopBar(onProfileTap: () => _showProfileMenu(context)),
                         const SizedBox(height: 20),
                         const _HeroHeadline(),
                         const SizedBox(height: 18),
-                        _SearchBar(onTap: () => _showToast('Search tapped')),
+                        _SearchBar(onTap: () => _openSearchSheet(activities)),
                         const SizedBox(height: 24),
                         _SectionHeader(
                           title: 'KATEGORI',
@@ -212,10 +371,9 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onMenuTap;
   final VoidCallback onProfileTap;
 
-  const _TopBar({required this.onMenuTap, required this.onProfileTap});
+  const _TopBar({required this.onProfileTap});
 
   @override
   Widget build(BuildContext context) {
@@ -225,25 +383,16 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: onMenuTap,
-                icon: const Icon(Icons.menu_rounded),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'GERAK',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 24,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w900,
-                  height: 1.33,
-                  letterSpacing: -1.2,
-                ),
-              ),
-            ],
+          const Text(
+            'GERAK',
+            style: TextStyle(
+              color: Color(0xFF2563EB),
+              fontSize: 24,
+              fontFamily: 'Lexend',
+              fontWeight: FontWeight.w900,
+              height: 1.33,
+              letterSpacing: -1.2,
+            ),
           ),
           GestureDetector(
             onTap: onProfileTap,
@@ -1037,88 +1186,86 @@ class _ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: data.backgroundColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0x4CE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              SvgPicture.asset(
-                data.labelIconAsset,
-                width: 16,
-                height: 16,
-                colorFilter: ColorFilter.mode(data.labelColor, BlendMode.srcIn),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                data.label,
-                style: TextStyle(
-                  color: data.labelColor,
-                  fontSize: 10,
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: FontWeight.w900,
-                  height: 1.5,
-                  letterSpacing: 2,
+    return GestureDetector(
+      onTap: () {
+        Get.to(
+          () => ActivityDetailView(
+            title: data.title.replaceAll('\n', ' '),
+            label: data.label,
+            labelColor: data.labelColor,
+            time: data.time,
+            location: data.location,
+            address: data.address,
+            community: data.community,
+            description: data.description,
+            price: data.price,
+            participants: '8/44',
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: data.backgroundColor,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: const Color(0x4CE2E8F0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SvgPicture.asset(
+                  data.labelIconAsset,
+                  width: 16,
+                  height: 16,
+                  colorFilter: ColorFilter.mode(
+                    data.labelColor,
+                    BlendMode.srcIn,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            data.title,
-            style: const TextStyle(
-              color: Color(0xFF0F172A),
-              fontSize: 30,
-              fontFamily: 'Lexend',
-              fontWeight: FontWeight.w700,
-              height: 1,
+                const SizedBox(width: 8),
+                Text(
+                  data.label,
+                  style: TextStyle(
+                    color: data.labelColor,
+                    fontSize: 10,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontWeight: FontWeight.w900,
+                    height: 1.5,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: Color(0xFF475569),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          data.time,
-                          style: const TextStyle(
+            const SizedBox(height: 12),
+            Text(
+              data.title,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 30,
+                fontFamily: 'Lexend',
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            size: 14,
                             color: Color(0xFF475569),
-                            fontSize: 12,
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontWeight: FontWeight.w500,
-                            height: 1.33,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.place,
-                          size: 14,
-                          color: Color(0xFF475569),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            data.location,
+                          const SizedBox(width: 6),
+                          Text(
+                            data.time,
                             style: const TextStyle(
                               color: Color(0xFF475569),
                               fontSize: 12,
@@ -1127,19 +1274,42 @@ class _ActivityCard extends StatelessWidget {
                               height: 1.33,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.place,
+                            size: 14,
+                            color: Color(0xFF475569),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              data.location,
+                              style: const TextStyle(
+                                color: Color(0xFF475569),
+                                fontSize: 12,
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontWeight: FontWeight.w500,
+                                height: 1.33,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              CircleAvatar(
-                radius: 22,
-                backgroundImage: AssetImage(data.badgeUrl),
-              ),
-            ],
-          ),
-        ],
+                CircleAvatar(
+                  radius: 22,
+                  backgroundImage: AssetImage(data.badgeUrl),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1317,21 +1487,31 @@ class _FloatingActionButton extends StatelessWidget {
 }
 
 class _ActivityCardData {
+  final String id;
   final String label;
   final Color labelColor;
   final String title;
   final String time;
   final String location;
+  final String address;
+  final String community;
+  final String description;
+  final String price;
   final String labelIconAsset;
   final String badgeUrl;
   final Color backgroundColor;
 
   const _ActivityCardData({
+    required this.id,
     required this.label,
     required this.labelColor,
     required this.title,
     required this.time,
     required this.location,
+    required this.address,
+    required this.community,
+    required this.description,
+    required this.price,
     required this.labelIconAsset,
     required this.badgeUrl,
     required this.backgroundColor,

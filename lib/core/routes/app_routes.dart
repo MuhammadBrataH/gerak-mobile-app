@@ -11,6 +11,7 @@ abstract class AppRoutes {
   static const String community = '/community';
   static const String communityProfile = '/community/profile';
   static const String sportsAll = '/sports/all';
+  static const String activityDetail = '/activity/detail';
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String accountInfo = '/profile/account-info';

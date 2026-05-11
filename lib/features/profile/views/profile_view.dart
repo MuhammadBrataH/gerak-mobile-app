@@ -24,6 +24,45 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  void _showProfileMenu(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(screenWidth - 180, 56, 16, 0),
+      items: [
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              const Icon(Icons.logout, color: Color(0xFF2563EB), size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'Sign Out',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 8.0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+      ),
+    ).then((value) {
+      if (value == 'logout') {
+        Get.snackbar('Logout', 'You have been logged out');
+        Get.offAllNamed(AppRoutes.login);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,9 +76,9 @@ class _ProfileViewState extends State<ProfileView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _ProfileTopBar(
-                    onMenuTap: () => _showToast('Menu tapped'),
-                    onBellTap: () => _showToast('Notification tapped'),
-                    onAvatarTap: () => _showToast('Avatar tapped'),
+                    onAvatarTap: () {
+                      _showProfileMenu(context);
+                    },
                   ),
                   const SizedBox(height: 24),
                   _ProfileHeader(
@@ -94,15 +133,9 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _ProfileTopBar extends StatelessWidget {
-  final VoidCallback onMenuTap;
-  final VoidCallback onBellTap;
   final VoidCallback onAvatarTap;
 
-  const _ProfileTopBar({
-    required this.onMenuTap,
-    required this.onBellTap,
-    required this.onAvatarTap,
-  });
+  const _ProfileTopBar({required this.onAvatarTap});
 
   @override
   Widget build(BuildContext context) {
@@ -111,42 +144,24 @@ class _ProfileTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: onMenuTap,
-                icon: const Icon(Icons.menu_rounded),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'GERAK',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 24,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w900,
-                  height: 1.33,
-                  letterSpacing: -1.2,
-                ),
-              ),
-            ],
+          const Text(
+            'GERAK',
+            style: TextStyle(
+              color: Color(0xFF2563EB),
+              fontSize: 24,
+              fontFamily: 'Lexend',
+              fontWeight: FontWeight.w900,
+              height: 1.33,
+              letterSpacing: -1.2,
+            ),
           ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: onBellTap,
-                icon: const Icon(Icons.notifications_none_rounded),
-              ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onAvatarTap,
-                child: const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color(0xFFE2E8F0),
-                  child: Icon(Icons.person, color: Color(0xFF94A3B8)),
-                ),
-              ),
-            ],
+          GestureDetector(
+            onTap: onAvatarTap,
+            child: const CircleAvatar(
+              radius: 18,
+              backgroundColor: Color(0xFFE2E8F0),
+              child: Icon(Icons.person, color: Color(0xFF94A3B8)),
+            ),
           ),
         ],
       ),
