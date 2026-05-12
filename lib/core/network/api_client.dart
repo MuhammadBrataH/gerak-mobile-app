@@ -17,7 +17,7 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.137.252:5000';
+  static const String baseUrl = 'http://192.168.137.1:5000';
   static const String accessTokenKey = 'token';
   static const String refreshTokenKey = 'refreshToken';
 
@@ -27,7 +27,16 @@ class ApiClient {
   final List<Completer<void>> _refreshQueue = [];
 
   ApiClient({Dio? dio, FlutterSecureStorage? storage})
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)),
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: baseUrl,
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 10),
+            ),
+          ),
       _storage = storage ?? const FlutterSecureStorage() {
     _dio.interceptors.add(
       InterceptorsWrapper(

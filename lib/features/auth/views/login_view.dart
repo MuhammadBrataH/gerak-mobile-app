@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginView extends StatefulWidget {
@@ -69,6 +70,11 @@ class _LoginViewState extends State<LoginView> {
                   controller.isLoading.value ? 'Loading...' : 'Login',
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Get.toNamed(AppRoutes.register),
+              child: const Text('Create an account'),
             ),
           ],
         ),
