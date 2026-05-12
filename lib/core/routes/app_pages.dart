@@ -1,6 +1,13 @@
 import 'package:get/get.dart';
 import 'app_routes.dart';
 import '../../features/auth/presentation/controllers/auth_binding.dart';
+import '../../features/auth/presentation/pages/login_view.dart';
+import '../../features/auth/presentation/pages/signup_select_view.dart';
+import '../../features/auth/presentation/pages/signup_private_step1_view.dart';
+import '../../features/auth/presentation/pages/signup_private_step2_view.dart';
+import '../../features/auth/presentation/pages/signup_private_step3_view.dart';
+import '../../features/auth/presentation/pages/signup_community_step1_view.dart';
+import '../../features/auth/presentation/pages/signup_community_step2_view.dart';
 import '../../features/community/presentation/pages/community_profile_view.dart';
 import '../../features/community/presentation/pages/community_view.dart';
 import '../../features/events/presentation/pages/dashboard_view.dart';
@@ -14,22 +21,34 @@ import '../../features/profile/presentation/pages/email_update_view.dart';
 import '../../features/profile/presentation/pages/password_update_view.dart';
 import '../../features/profile/presentation/pages/phone_update_view.dart';
 import '../../features/profile/presentation/pages/profile_view.dart';
-import '../../shared/generated/pages/login.dart';
-import '../../shared/generated/pages/onboarding1.dart';
-import '../../shared/generated/pages/signup_community_step1.dart';
-import '../../shared/generated/pages/signup_community_step2.dart';
-import '../../shared/generated/pages/signup_private_step1.dart';
-import '../../shared/generated/pages/signup_private_step2.dart';
-import '../../shared/generated/pages/signup_private_step3.dart';
-import '../../shared/generated/pages/signup_select.dart';
 
 class AppPages {
   static final List<GetPage> pages = [
-    GetPage(name: AppRoutes.onboarding, page: () => const Onboarding1()),
     GetPage(
       name: AppRoutes.login,
-      page: () => const LoginLocofy(),
+      page: () => const LoginView(),
       binding: AuthBinding(),
+    ),
+    GetPage(name: AppRoutes.register, page: () => const SignUpSelectView()),
+    GetPage(
+      name: AppRoutes.registerPrivate1,
+      page: () => const SignUpPrivateStep1View(),
+    ),
+    GetPage(
+      name: AppRoutes.registerPrivate2,
+      page: () => const SignUpPrivateStep2View(),
+    ),
+    GetPage(
+      name: AppRoutes.registerPrivate3,
+      page: () => const SignUpPrivateStep3View(),
+    ),
+    GetPage(
+      name: AppRoutes.registerCommunity1,
+      page: () => const SignUpCommunityStep1View(),
+    ),
+    GetPage(
+      name: AppRoutes.registerCommunity2,
+      page: () => const SignUpCommunityStep2View(),
     ),
     GetPage(
       name: AppRoutes.dashboard,
@@ -41,27 +60,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.communityProfile,
       page: () => const CommunityProfileView(),
-    ),
-    GetPage(name: AppRoutes.register, page: () => const SignUpSelect()),
-    GetPage(
-      name: AppRoutes.registerPrivate1,
-      page: () => const SignUpPrivateStep1(),
-    ),
-    GetPage(
-      name: AppRoutes.registerPrivate2,
-      page: () => const SignUpPrivateStep2(),
-    ),
-    GetPage(
-      name: AppRoutes.registerPrivate3,
-      page: () => const SignUpPrivateStep3(),
-    ),
-    GetPage(
-      name: AppRoutes.registerCommunity1,
-      page: () => const SignUpCommunityStep1(),
-    ),
-    GetPage(
-      name: AppRoutes.registerCommunity2,
-      page: () => const SignUpCommunityStep2(),
     ),
     GetPage(name: AppRoutes.profile, page: () => const ProfileView()),
     GetPage(name: AppRoutes.editProfile, page: () => const EditProfileView()),
@@ -84,6 +82,6 @@ class AppPages {
       name: AppRoutes.deleteAccountStep2,
       page: () => const DeleteAccountStep2View(),
     ),
-    // Add more routes here
+    // TODO: Add onboarding, signup, and other auth pages
   ];
 }

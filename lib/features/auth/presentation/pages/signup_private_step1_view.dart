@@ -2,61 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
-import 'package:gerak_mobile_app/locofy/signup_private_tokens.dart';
+import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
 
-class SignUpPrivateStep3 extends StatefulWidget {
-  const SignUpPrivateStep3({super.key});
+class SignUpPrivateStep1View extends StatefulWidget {
+  const SignUpPrivateStep1View({super.key});
 
   @override
-  State<SignUpPrivateStep3> createState() => _SignUpPrivateStep3State();
+  State<SignUpPrivateStep1View> createState() => _SignUpPrivateStep1ViewState();
 }
 
-class _SignUpPrivateStep3State extends State<SignUpPrivateStep3> {
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
-  late final TextEditingController _confirmPasswordController;
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
+class _SignUpPrivateStep1ViewState extends State<SignUpPrivateStep1View> {
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
 
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
-    _confirmPasswordController = TextEditingController();
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final confirm = _confirmPasswordController.text;
-
-    if (email.isEmpty) {
-      Get.snackbar('Validasi', 'Email wajib diisi');
+  void _goNext() {
+    if (_firstNameController.text.trim().isEmpty) {
+      Get.snackbar('Validasi', 'Nama depan wajib diisi');
       return;
     }
-    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(email)) {
-      Get.snackbar('Validasi', 'Format email tidak valid');
-      return;
-    }
-    if (password.isEmpty || confirm.isEmpty) {
-      Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
-      return;
-    }
-    if (password != confirm) {
-      Get.snackbar('Validasi', 'Konfirmasi password tidak sama');
-      return;
-    }
-    Get.offAllNamed(AppRoutes.login);
+    Get.toNamed(AppRoutes.registerPrivate2);
   }
 
   @override
@@ -168,31 +146,13 @@ class _SignUpPrivateStep3State extends State<SignUpPrivateStep3> {
                                   ),
                                   const SizedBox(height: 28),
                                   _LabeledInput(
-                                    label: 'Email',
-                                    controller: _emailController,
+                                    label: 'Nama depan',
+                                    controller: _firstNameController,
                                   ),
                                   const SizedBox(height: 16),
                                   _LabeledInput(
-                                    label: 'Password',
-                                    controller: _passwordController,
-                                    obscureText: !_showPassword,
-                                    onToggleVisibility: () {
-                                      setState(() {
-                                        _showPassword = !_showPassword;
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _LabeledInput(
-                                    label: 'Konfirmasi Password',
-                                    controller: _confirmPasswordController,
-                                    obscureText: !_showConfirmPassword,
-                                    onToggleVisibility: () {
-                                      setState(() {
-                                        _showConfirmPassword =
-                                            !_showConfirmPassword;
-                                      });
-                                    },
+                                    label: 'Nama belakang (opsional)',
+                                    controller: _lastNameController,
                                   ),
                                   const SizedBox(height: 28),
                                   Container(
@@ -204,7 +164,7 @@ class _SignUpPrivateStep3State extends State<SignUpPrivateStep3> {
                                       ),
                                     ),
                                     child: ElevatedButton(
-                                      onPressed: _submit,
+                                      onPressed: _goNext,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
                                         elevation: 0,
@@ -219,7 +179,7 @@ class _SignUpPrivateStep3State extends State<SignUpPrivateStep3> {
                                         ),
                                       ),
                                       child: const Text(
-                                        'DAFTAR',
+                                        'LANJUT',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontFamily: 'Lexend',
@@ -262,15 +222,8 @@ class _SignUpPrivateStep3State extends State<SignUpPrivateStep3> {
 class _LabeledInput extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final bool obscureText;
-  final VoidCallback? onToggleVisibility;
 
-  const _LabeledInput({
-    required this.label,
-    required this.controller,
-    this.obscureText = false,
-    this.onToggleVisibility,
-  });
+  const _LabeledInput({required this.label, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -290,8 +243,7 @@ class _LabeledInput extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          obscureText: obscureText,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),
               borderRadius: BorderRadius.all(Radius.circular(br10)),
@@ -302,22 +254,11 @@ class _LabeledInput extends StatelessWidget {
             ),
             fillColor: whitesmoke,
             filled: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-            suffixIcon: onToggleVisibility == null
-                ? null
-                : IconButton(
-                    onPressed: onToggleVisibility,
-                    icon: Icon(
-                      obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: darkslategray,
-                    ),
-                  ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ],
     );
   }
 }
+

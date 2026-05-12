@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
-import 'package:gerak_mobile_app/locofy/signup_private_tokens.dart';
+import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
 
-class SignUpPrivateStep2 extends StatefulWidget {
-  const SignUpPrivateStep2({super.key});
+class SignUpCommunityStep2View extends StatefulWidget {
+  const SignUpCommunityStep2View({super.key});
 
   @override
-  State<SignUpPrivateStep2> createState() => _SignUpPrivateStep2State();
+  State<SignUpCommunityStep2View> createState() => _SignUpCommunityStep2ViewState();
 }
 
-class _SignUpPrivateStep2State extends State<SignUpPrivateStep2> {
-  String? _gender = 'Laki-Laki';
+class _SignUpCommunityStep2ViewState extends State<SignUpCommunityStep2View> {
   String _month = 'Desember';
   String _day = '10';
   String _year = '2006';
@@ -141,7 +140,7 @@ class _SignUpPrivateStep2State extends State<SignUpPrivateStep2> {
                                   ),
                                   const SizedBox(height: 24),
                                   const Text(
-                                    'Tanggal Lahir',
+                                    'Tanggal Didirikan',
                                     style: TextStyle(
                                       fontSize: fs12,
                                       fontFamily: 'Plus Jakarta Sans',
@@ -237,68 +236,6 @@ class _SignUpPrivateStep2State extends State<SignUpPrivateStep2> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Jenis Kelamin',
-                                    style: TextStyle(
-                                      fontSize: fs12,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      height: 1.33,
-                                      letterSpacing: 1.2,
-                                      color: darkslategray,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  DropdownButtonFormField<String>(
-                                    value: _gender,
-                                    items: const [
-                                      DropdownMenuItem(
-                                        value: 'Laki-Laki',
-                                        child: Text('Laki-Laki'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'Perempuan',
-                                        child: Text('Perempuan'),
-                                      ),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _gender = value;
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          width: 1,
-                                          color: aliceblue,
-                                        ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(br10),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          width: 1,
-                                          color: aliceblue,
-                                        ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(br10),
-                                        ),
-                                      ),
-                                      fillColor: whitesmoke,
-                                      filled: true,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: fs20,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      color: darkslategray,
-                                    ),
-                                    icon: const Icon(Icons.arrow_drop_down),
-                                  ),
                                   const SizedBox(height: 28),
                                   Container(
                                     decoration: const BoxDecoration(
@@ -310,7 +247,7 @@ class _SignUpPrivateStep2State extends State<SignUpPrivateStep2> {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        Get.toNamed(AppRoutes.registerPrivate3);
+                                        Get.offAllNamed(AppRoutes.login);
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
@@ -326,7 +263,7 @@ class _SignUpPrivateStep2State extends State<SignUpPrivateStep2> {
                                         ),
                                       ),
                                       child: const Text(
-                                        'LANJUT',
+                                        'DAFTAR',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontFamily: 'Lexend',
@@ -412,3 +349,4 @@ class _DateBox extends StatelessWidget {
     );
   }
 }
+

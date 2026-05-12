@@ -2,37 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
-import 'package:gerak_mobile_app/locofy/signup_community_tokens.dart';
+import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
 
-class SignUpCommunityStep1 extends StatefulWidget {
-  const SignUpCommunityStep1({super.key});
+class SignUpPrivateStep2View extends StatefulWidget {
+  const SignUpPrivateStep2View({super.key});
 
   @override
-  State<SignUpCommunityStep1> createState() => _SignUpCommunityStep1State();
+  State<SignUpPrivateStep2View> createState() => _SignUpPrivateStep2ViewState();
 }
 
-class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
-  late final TextEditingController _communityNameController;
+class _SignUpPrivateStep2ViewState extends State<SignUpPrivateStep2View> {
+  String? _gender = 'Laki-Laki';
+  String _month = 'Desember';
+  String _day = '10';
+  String _year = '2006';
 
-  @override
-  void initState() {
-    super.initState();
-    _communityNameController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _communityNameController.dispose();
-    super.dispose();
-  }
-
-  void _goNext() {
-    if (_communityNameController.text.trim().isEmpty) {
-      Get.snackbar('Validasi', 'Nama komunitas wajib diisi');
-      return;
-    }
-    Get.toNamed(AppRoutes.registerCommunity2);
-  }
+  static const List<String> _months = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +139,9 @@ class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
                                       color: darkslategray,
                                     ),
                                   ),
-                                  const SizedBox(height: 28),
+                                  const SizedBox(height: 24),
                                   const Text(
-                                    'Nama komunitas',
+                                    'Tanggal Lahir',
                                     style: TextStyle(
                                       fontSize: fs12,
                                       fontFamily: 'Plus Jakarta Sans',
@@ -153,8 +151,121 @@ class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  TextField(
-                                    controller: _communityNameController,
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: _DateBox(
+                                          initialValue: _day,
+                                          onChanged: (value) {
+                                            _day = value;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 4,
+                                        child: DropdownButtonFormField<String>(
+                                          value: _month,
+                                          isExpanded: true,
+                                          items: _months
+                                              .map(
+                                                (month) => DropdownMenuItem(
+                                                  value: month,
+                                                  child: Text(
+                                                    month,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: (value) {
+                                            if (value == null) {
+                                              return;
+                                            }
+                                            setState(() {
+                                              _month = value;
+                                            });
+                                          },
+                                          decoration: const InputDecoration(
+                                            enabledBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                width: 1,
+                                                color: aliceblue,
+                                              ),
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(br10),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                width: 1,
+                                                color: aliceblue,
+                                              ),
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(br10),
+                                              ),
+                                            ),
+                                            fillColor: whitesmoke,
+                                            filled: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 12,
+                                                ),
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: fs16,
+                                            fontFamily: 'Plus Jakarta Sans',
+                                            color: darkslategray,
+                                          ),
+                                          icon: const Icon(
+                                            Icons.arrow_drop_down,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 3,
+                                        child: _DateBox(
+                                          initialValue: _year,
+                                          onChanged: (value) {
+                                            _year = value;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'Jenis Kelamin',
+                                    style: TextStyle(
+                                      fontSize: fs12,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      height: 1.33,
+                                      letterSpacing: 1.2,
+                                      color: darkslategray,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    value: _gender,
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: 'Laki-Laki',
+                                        child: Text('Laki-Laki'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'Perempuan',
+                                        child: Text('Perempuan'),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _gender = value;
+                                      });
+                                    },
                                     decoration: const InputDecoration(
                                       enabledBorder: OutlineInputBorder(
                                         borderSide: BorderSide(
@@ -181,6 +292,12 @@ class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
                                         vertical: 12,
                                       ),
                                     ),
+                                    style: const TextStyle(
+                                      fontSize: fs20,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      color: darkslategray,
+                                    ),
+                                    icon: const Icon(Icons.arrow_drop_down),
                                   ),
                                   const SizedBox(height: 28),
                                   Container(
@@ -192,7 +309,9 @@ class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
                                       ),
                                     ),
                                     child: ElevatedButton(
-                                      onPressed: _goNext,
+                                      onPressed: () {
+                                        Get.toNamed(AppRoutes.registerPrivate3);
+                                      },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
                                         elevation: 0,
@@ -246,3 +365,51 @@ class _SignUpCommunityStep1State extends State<SignUpCommunityStep1> {
     );
   }
 }
+
+class _DateBox extends StatelessWidget {
+  final String initialValue;
+  final ValueChanged<String> onChanged;
+
+  const _DateBox({required this.initialValue, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(width: 1, color: aliceblue),
+          borderRadius: BorderRadius.all(Radius.circular(br10)),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(width: 1, color: aliceblue),
+          borderRadius: BorderRadius.all(Radius.circular(br10)),
+        ),
+        fillColor: whitesmoke,
+        filled: true,
+        hintText: initialValue,
+        hintStyle: const TextStyle(
+          fontSize: fs20,
+          fontFamily: 'Plus Jakarta Sans',
+          color: darkslategray,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 12,
+        ),
+      ),
+      style: const TextStyle(
+        fontSize: fs20,
+        fontFamily: 'Plus Jakarta Sans',
+        color: darkslategray,
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(4),
+      ],
+      onChanged: onChanged,
+      textAlign: TextAlign.center,
+    );
+  }
+}
+

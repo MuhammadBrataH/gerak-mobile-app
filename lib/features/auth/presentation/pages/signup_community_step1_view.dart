@@ -2,39 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
-import 'package:gerak_mobile_app/locofy/signup_private_tokens.dart';
+import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
 
-class SignUpPrivateStep1 extends StatefulWidget {
-  const SignUpPrivateStep1({super.key});
+class SignUpCommunityStep1View extends StatefulWidget {
+  const SignUpCommunityStep1View({super.key});
 
   @override
-  State<SignUpPrivateStep1> createState() => _SignUpPrivateStep1State();
+  State<SignUpCommunityStep1View> createState() => _SignUpCommunityStep1ViewState();
 }
 
-class _SignUpPrivateStep1State extends State<SignUpPrivateStep1> {
-  late final TextEditingController _firstNameController;
-  late final TextEditingController _lastNameController;
+class _SignUpCommunityStep1ViewState extends State<SignUpCommunityStep1View> {
+  late final TextEditingController _communityNameController;
 
   @override
   void initState() {
     super.initState();
-    _firstNameController = TextEditingController();
-    _lastNameController = TextEditingController();
+    _communityNameController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _communityNameController.dispose();
     super.dispose();
   }
 
   void _goNext() {
-    if (_firstNameController.text.trim().isEmpty) {
-      Get.snackbar('Validasi', 'Nama depan wajib diisi');
+    if (_communityNameController.text.trim().isEmpty) {
+      Get.snackbar('Validasi', 'Nama komunitas wajib diisi');
       return;
     }
-    Get.toNamed(AppRoutes.registerPrivate2);
+    Get.toNamed(AppRoutes.registerCommunity2);
   }
 
   @override
@@ -145,14 +142,45 @@ class _SignUpPrivateStep1State extends State<SignUpPrivateStep1> {
                                     ),
                                   ),
                                   const SizedBox(height: 28),
-                                  _LabeledInput(
-                                    label: 'Nama depan',
-                                    controller: _firstNameController,
+                                  const Text(
+                                    'Nama komunitas',
+                                    style: TextStyle(
+                                      fontSize: fs12,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      height: 1.33,
+                                      letterSpacing: 1.2,
+                                      color: darkslategray,
+                                    ),
                                   ),
-                                  const SizedBox(height: 16),
-                                  _LabeledInput(
-                                    label: 'Nama belakang (opsional)',
-                                    controller: _lastNameController,
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: _communityNameController,
+                                    decoration: const InputDecoration(
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          width: 1,
+                                          color: aliceblue,
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(br10),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          width: 1,
+                                          color: aliceblue,
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(br10),
+                                        ),
+                                      ),
+                                      fillColor: whitesmoke,
+                                      filled: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(height: 28),
                                   Container(
@@ -219,45 +247,3 @@ class _SignUpPrivateStep1State extends State<SignUpPrivateStep1> {
   }
 }
 
-class _LabeledInput extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-
-  const _LabeledInput({required this.label, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: fs12,
-            fontFamily: 'Plus Jakarta Sans',
-            height: 1.33,
-            letterSpacing: 1.2,
-            color: darkslategray,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
-              borderRadius: BorderRadius.all(Radius.circular(br10)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
-              borderRadius: BorderRadius.all(Radius.circular(br10)),
-            ),
-            fillColor: whitesmoke,
-            filled: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          ),
-        ),
-      ],
-    );
-  }
-}
