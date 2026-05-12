@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'app_routes.dart';
 import '../../features/auth/presentation/controllers/auth_binding.dart';
+import '../../features/events/presentation/controllers/event_binding.dart';
 import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/signup_select_view.dart';
 import '../../features/auth/presentation/pages/signup_private_step1_view.dart';
@@ -53,7 +54,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.dashboard,
       page: () => DashboardView(),
-      binding: AuthBinding(),
+      bindings: [AuthBinding(), EventBinding()],
     ),
     GetPage(name: AppRoutes.sportsAll, page: () => const SportsAllView()),
     GetPage(name: AppRoutes.community, page: () => const CommunityView()),

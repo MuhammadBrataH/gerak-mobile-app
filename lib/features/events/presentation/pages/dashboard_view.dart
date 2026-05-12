@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../controllers/event_controller.dart';
+import '../../data/models/event_model.dart';
 import '../../../../core/routes/app_routes.dart';
 import './activity_detail_view.dart';
 
@@ -26,6 +28,77 @@ class _HomeViewState extends State<HomeView> {
   String _selectedLocation = 'Bandung';
   DateTime _selectedDate = DateTime.now();
 
+  EventController get _eventController => Get.find<EventController>();
+
+  // Map sport category labels to API sport values
+  static const _categoryToSport = {
+    'SEPAK BOLA': 'football',
+    'BASKET': 'basketball',
+    'BADMINTON': 'badminton',
+    'LARI': 'running',
+    'PADEL': 'padel',
+    'FUTSAL': 'futsal',
+    'VOLLEY': 'volleyball',
+    'MINI SOCCER': 'mini_soccer',
+  };
+
+  // Map sport type to icon asset
+  static const _sportToIcon = {
+    'football': 'assets/icons/soccer.svg',
+    'basketball': 'assets/icons/basketball.svg',
+    'badminton': 'assets/icons/badminton.svg',
+    'running': 'assets/icons/run.svg',
+    'padel': 'assets/icons/padel.svg',
+    'futsal': 'assets/icons/futsal.svg',
+    'volleyball': 'assets/icons/volley.svg',
+    'mini_soccer': 'assets/icons/mini_soccer.svg',
+    'tennis': 'assets/icons/tennis_field.svg',
+  };
+
+  void _applyFilters() {
+    final sports = _selectedCategories
+        .map((label) => _categoryToSport[label])
+        .where((s) => s != null)
+        .toList();
+    _eventController.fetchEventsDebounced(
+      city: _selectedLocation,
+      sport: sports.isNotEmpty ? sports.first : null,
+    );
+  }
+
+  _ActivityCardData _eventToCardData(EventModel event) {
+    final sportLabel = event.sport.toUpperCase();
+    final levelLabel = event.level.toUpperCase();
+    final icon = _sportToIcon[event.sport.toLowerCase()] ?? 'assets/icons/soccer.svg';
+    final startStr = event.startTime != null
+        ? '${event.startTime!.day}/${event.startTime!.month}/${event.startTime!.year} ${event.startTime!.hour.toString().padLeft(2, '0')}:${event.startTime!.minute.toString().padLeft(2, '0')}'
+        : 'TBD';
+    final endStr = event.endTime != null
+        ? '${event.endTime!.hour.toString().padLeft(2, '0')}:${event.endTime!.minute.toString().padLeft(2, '0')}'
+        : '';
+    final timeStr = endStr.isNotEmpty ? '$startStr - $endStr' : startStr;
+    final slots = event.maxSlots != null
+        ? '${event.joinedUsers.length}/${event.maxSlots}'
+        : '${event.joinedUsers.length} joined';
+
+    return _ActivityCardData(
+      id: event.id,
+      label: '$sportLabel • $levelLabel',
+      labelColor: const Color(0xFF2563EB),
+      title: event.name.toUpperCase(),
+      time: timeStr,
+      location: event.location.toUpperCase(),
+      address: '${event.location}, ${event.city}${event.district != null ? ', ${event.district}' : ''}',
+      community: '',
+      description: event.description ?? '',
+      price: '',
+      labelIconAsset: icon,
+      badgeUrl: 'assets/sample 1.jpg',
+      backgroundColor: const Color(0xFFF1F5F9),
+      participants: slots,
+    );
+  }
+
   void _showToast(String message) {
     Get.snackbar(
       'Info',
@@ -49,6 +122,7 @@ class _HomeViewState extends State<HomeView> {
       setState(() {
         _selectedLocation = selected;
       });
+      _eventController.fetchEvents(city: selected);
     }
   }
 
@@ -235,58 +309,6 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final activities = <_ActivityCardData>[
-      _ActivityCardData(
-        id: '1',
-        label: 'FOOTBALL • ELITE TIER',
-        labelColor: const Color(0xFF2563EB),
-        title: 'GIMMICK LEAGUE\nWEEK 3',
-        time: 'Friday, April 17, 20:00 - 22:00',
-        location: 'CIJERAH SOCCER ARENA',
-        address:
-            'Gg. Sari Asih Gg Manunggal, RT.03/RW.09, Cijerah, Kec. Bandung Kulon, Kota Bandung, Jawa Barat',
-        community: 'Playmaker Fun Club',
-        description:
-            '#NambahBugarBukanCedera\n\nKomunitas Sepak Bola Fun Bandung\n\nOpen Public, Newbie Friendly',
-        price: 'IDR 85K',
-        labelIconAsset: 'assets/icons/soccer.svg',
-        badgeUrl: 'assets/sample 1.jpg',
-        backgroundColor: const Color(0xFFF1F5F9),
-      ),
-      _ActivityCardData(
-        id: '2',
-        label: 'RUNNING • SOCIAL',
-        labelColor: const Color(0xFF005F8A),
-        title: 'JOGGING\nBARENG',
-        time: 'Sunday, April 19, 07:00 - 08:30',
-        location: 'TAMAN MALUKU BANDUNG',
-        address: 'Taman Maluku, Bandung, Jawa Barat',
-        community: 'Bandung Runners Club',
-        description:
-            '#SehatItuPenting\n\nKomunitas Lari Bandung\n\nOpen Public, All Levels Welcome',
-        price: 'IDR 25K',
-        labelIconAsset: 'assets/icons/run.svg',
-        badgeUrl: 'assets/sample 1.jpg',
-        backgroundColor: const Color(0xFFB1C8FC),
-      ),
-      _ActivityCardData(
-        id: '3',
-        label: 'PADEL • FUN MATCH',
-        labelColor: const Color(0xFF2563EB),
-        title: 'PLAYPADEL\nBANDUNG',
-        time: 'Saturday, April 18, 19:00 - 21:00',
-        location: 'LARS PADEL BANDUNG',
-        address: 'Jl. Pasteur, Bandung, Jawa Barat',
-        community: 'Padel Community',
-        description:
-            'Mari bermain padel bersama komunitas yang seru!\n\nKomunitas Padel Bandung\n\nOpen Public, Beginner Friendly',
-        price: 'IDR 120K',
-        labelIconAsset: 'assets/icons/padel.svg',
-        badgeUrl: 'assets/sample 1.jpg',
-        backgroundColor: const Color(0xFFF1F5F9),
-      ),
-    ];
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -304,7 +326,12 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(height: 20),
                         const _HeroHeadline(),
                         const SizedBox(height: 18),
-                        _SearchBar(onTap: () => _openSearchSheet(activities)),
+                        Obx(() {
+                          final apiActivities = _eventController.events
+                              .map(_eventToCardData)
+                              .toList();
+                          return _SearchBar(onTap: () => _openSearchSheet(apiActivities));
+                        }),
                         const SizedBox(height: 24),
                         _SectionHeader(
                           title: 'KATEGORI',
@@ -322,6 +349,7 @@ class _HomeViewState extends State<HomeView> {
                                 _selectedCategories.add(label);
                               }
                             });
+                            _applyFilters();
                           },
                         ),
                         const SizedBox(height: 16),
@@ -348,18 +376,64 @@ class _HomeViewState extends State<HomeView> {
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: SliverList.builder(
-                    itemCount: activities.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _ActivityCard(data: activities[index]),
-                      );
-                    },
-                  ),
-                ),
+                // Activity list from API
+                Obx(() {
+                  if (_eventController.isLoading.value && _eventController.events.isEmpty) {
+                    return const SliverFillRemaining(
+                      child: Center(
+                        child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                      ),
+                    );
+                  }
+
+                  final activities = _eventController.events
+                      .map(_eventToCardData)
+                      .toList();
+
+                  if (activities.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Belum ada aktivitas',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontFamily: 'Lexend',
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Coba ubah filter atau lokasi',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[400],
+                                fontFamily: 'Plus Jakarta Sans',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                    sliver: SliverList.builder(
+                      itemCount: activities.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _ActivityCard(data: activities[index]),
+                        );
+                      },
+                    ),
+                  );
+                }),
               ],
             ),
             _BottomNavBar(
@@ -1206,6 +1280,7 @@ class _ActivityCard extends StatelessWidget {
       onTap: () {
         Get.to(
           () => ActivityDetailView(
+            eventId: data.id,
             title: data.title.replaceAll('\n', ' '),
             label: data.label,
             labelColor: data.labelColor,
@@ -1215,7 +1290,7 @@ class _ActivityCard extends StatelessWidget {
             community: data.community,
             description: data.description,
             price: data.price,
-            participants: '8/44',
+            participants: data.participants,
           ),
         );
       },
@@ -1516,6 +1591,7 @@ class _ActivityCardData {
   final String labelIconAsset;
   final String badgeUrl;
   final Color backgroundColor;
+  final String participants;
 
   const _ActivityCardData({
     required this.id,
@@ -1531,6 +1607,7 @@ class _ActivityCardData {
     required this.labelIconAsset,
     required this.badgeUrl,
     required this.backgroundColor,
+    this.participants = '',
   });
 }
 

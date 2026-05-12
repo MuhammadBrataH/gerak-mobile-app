@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -11,9 +12,11 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  String _displayName = 'Jumat Soleh';
-  String _domicile = 'Bogor';
-  String _bio = 'By 1';
+  AuthController get _authController => Get.find<AuthController>();
+
+  String get _displayName => _authController.user.value?.name ?? 'User';
+  String get _domicile => 'Indonesia';
+  String get _bio => '';
 
   void _showToast(String message) {
     Get.snackbar(
@@ -50,7 +53,7 @@ class _ProfileViewState extends State<ProfileView> {
               child: GestureDetector(
                 onTap: () {
                   Get.back();
-                  Get.offAllNamed(AppRoutes.login);
+                  _authController.logout();
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -104,8 +107,8 @@ class _ProfileViewState extends State<ProfileView> {
                   const SizedBox(height: 20),
                   _ProfileActions(
                     onSettingsTap: () => Get.toNamed(AppRoutes.accountSettings),
-                    onEditTap: () async {
-                      final result = await Get.toNamed(
+                    onEditTap: () {
+                      Get.toNamed(
                         AppRoutes.editProfile,
                         arguments: {
                           'name': _displayName,
@@ -113,16 +116,6 @@ class _ProfileViewState extends State<ProfileView> {
                           'bio': _bio,
                         },
                       );
-
-                      if (result is Map) {
-                        setState(() {
-                          _displayName =
-                              (result['name'] as String?) ?? _displayName;
-                          _domicile =
-                              (result['domicile'] as String?) ?? _domicile;
-                          _bio = (result['bio'] as String?) ?? _bio;
-                        });
-                      }
                     },
                   ),
                   const SizedBox(height: 28),

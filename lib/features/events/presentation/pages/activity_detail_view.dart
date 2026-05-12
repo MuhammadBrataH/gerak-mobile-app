@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/event_controller.dart';
 
 class ActivityDetailView extends StatelessWidget {
+  final String eventId;
   final String title;
   final String label;
   final Color labelColor;
@@ -14,6 +16,7 @@ class ActivityDetailView extends StatelessWidget {
   final String participants;
 
   const ActivityDetailView({
+    this.eventId = '',
     required this.title,
     required this.label,
     required this.labelColor,
@@ -342,7 +345,7 @@ class ActivityDetailView extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'PEMAIN (8/44)',
+                          'PEMAIN',
                           style: TextStyle(
                             color: Color(0xFF0F172A),
                             fontSize: 18,
@@ -454,32 +457,7 @@ class ActivityDetailView extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0284C7),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            Get.snackbar(
-                              'Berhasil',
-                              'Anda telah mendaftar aktivitas ini',
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                          },
-                          child: const Text(
-                            'GABUNG AKTIFITAS',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontFamily: 'Lexend',
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ),
+                        child: _JoinButton(eventId: eventId),
                       ),
                       const SizedBox(height: 8),
                       Center(
@@ -649,5 +627,64 @@ class _RequirementItem extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _JoinButton extends StatelessWidget {
+  final String eventId;
+
+  const _JoinButton({required this.eventId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (eventId.isEmpty) {
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0284C7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          elevation: 0,
+        ),
+        onPressed: () {
+          Get.snackbar('Info', 'Event detail not available');
+        },
+        child: const Text(
+          'GABUNG AKTIFITAS',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontFamily: 'Lexend',
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.8,
+          ),
+        ),
+      );
+    }
+
+    final eventController = Get.find<EventController>();
+    return Obx(() {
+      final isLoading = eventController.isEventLoading(eventId);
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0284C7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          elevation: 0,
+        ),
+        onPressed: isLoading ? null : () => eventController.joinEvent(eventId),
+        child: Text(
+          isLoading ? 'LOADING...' : 'GABUNG AKTIFITAS',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontFamily: 'Lexend',
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.8,
+          ),
+        ),
+      );
+    });
   }
 }
