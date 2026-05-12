@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpCommunityStep1View extends StatefulWidget {
   const SignUpCommunityStep1View({super.key});
 
   @override
-  State<SignUpCommunityStep1View> createState() => _SignUpCommunityStep1ViewState();
+  State<SignUpCommunityStep1View> createState() =>
+      _SignUpCommunityStep1ViewState();
 }
 
 class _SignUpCommunityStep1ViewState extends State<SignUpCommunityStep1View> {
@@ -31,6 +33,8 @@ class _SignUpCommunityStep1ViewState extends State<SignUpCommunityStep1View> {
       Get.snackbar('Validasi', 'Nama komunitas wajib diisi');
       return;
     }
+    final controller = Get.find<AuthController>();
+    controller.setSignupName(_communityNameController.text.trim());
     Get.toNamed(AppRoutes.registerCommunity2);
   }
 
@@ -246,4 +250,3 @@ class _SignUpCommunityStep1ViewState extends State<SignUpCommunityStep1View> {
     );
   }
 }
-

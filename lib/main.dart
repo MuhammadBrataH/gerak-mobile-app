@@ -4,6 +4,7 @@ import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(GerakApp());
 }
 

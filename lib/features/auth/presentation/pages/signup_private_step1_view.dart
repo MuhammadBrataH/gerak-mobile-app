@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpPrivateStep1View extends StatefulWidget {
   const SignUpPrivateStep1View({super.key});
@@ -34,6 +35,11 @@ class _SignUpPrivateStep1ViewState extends State<SignUpPrivateStep1View> {
       Get.snackbar('Validasi', 'Nama depan wajib diisi');
       return;
     }
+    final controller = Get.find<AuthController>();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final fullName = lastName.isEmpty ? firstName : '$firstName $lastName';
+    controller.setSignupName(fullName);
     Get.toNamed(AppRoutes.registerPrivate2);
   }
 
@@ -261,4 +267,3 @@ class _LabeledInput extends StatelessWidget {
     );
   }
 }
-

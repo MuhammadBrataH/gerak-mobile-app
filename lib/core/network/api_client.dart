@@ -41,10 +41,23 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _storage.read(key: accessTokenKey);
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
+          final path = options.path;
+          final isAuthRequest =
+              path.startsWith('/auth/login') ||
+              path.startsWith('/auth/register') ||
+              path.startsWith('/auth/refresh');
+
+          if (!isAuthRequest) {
+            try {
+              final token = await _storage.read(key: accessTokenKey);
+              if (token != null && token.isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $token';
+              }
+            } catch (_) {
+              // Skip auth header if storage is unavailable.
+            }
           }
+
           handler.next(options);
         },
         onError: (error, handler) async {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpPrivateStep3View extends StatefulWidget {
   const SignUpPrivateStep3View({super.key});
@@ -13,6 +14,7 @@ class SignUpPrivateStep3View extends StatefulWidget {
 
 class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmPasswordController;
   bool _showPassword = false;
@@ -22,6 +24,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   void initState() {
     super.initState();
     _emailController = TextEditingController();
+    _phoneController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
   }
@@ -29,16 +32,24 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   @override
   void dispose() {
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
   void _submit() {
+    final controller = Get.find<AuthController>();
+    final name = controller.signupName.value?.trim() ?? '';
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
 
+    if (name.isEmpty) {
+      Get.snackbar('Validasi', 'Nama belum diisi');
+      return;
+    }
     if (email.isEmpty) {
       Get.snackbar('Validasi', 'Email wajib diisi');
       return;
@@ -52,11 +63,15 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
       Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
       return;
     }
+    if (phone.isEmpty) {
+      Get.snackbar('Validasi', 'Nomor telepon wajib diisi');
+      return;
+    }
     if (password != confirm) {
       Get.snackbar('Validasi', 'Konfirmasi password tidak sama');
       return;
     }
-    Get.offAllNamed(AppRoutes.login);
+    controller.register(email, password, name, phone);
   }
 
   @override
@@ -173,6 +188,11 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                   ),
                                   const SizedBox(height: 16),
                                   _LabeledInput(
+                                    label: 'Nomor Telepon',
+                                    controller: _phoneController,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _LabeledInput(
                                     label: 'Password',
                                     controller: _passwordController,
                                     obscureText: !_showPassword,
@@ -203,31 +223,39 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                         Radius.circular(br48),
                                       ),
                                     ),
-                                    child: ElevatedButton(
-                                      onPressed: _submit,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        elevation: 0,
-                                        foregroundColor: white200,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(br48),
+                                    child: Obx(() {
+                                      final controller =
+                                          Get.find<AuthController>();
+                                      return ElevatedButton(
+                                        onPressed: controller.isLoading.value
+                                            ? null
+                                            : _submit,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          elevation: 0,
+                                          foregroundColor: white200,
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(br48),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: padding16,
                                           ),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: padding16,
+                                        child: Text(
+                                          controller.isLoading.value
+                                              ? 'Loading...'
+                                              : 'DAFTAR',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontFamily: 'Lexend',
+                                            fontWeight: FontWeight.w800,
+                                            height: 1.56,
+                                          ),
                                         ),
-                                      ),
-                                      child: const Text(
-                                        'DAFTAR',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Lexend',
-                                          fontWeight: FontWeight.w800,
-                                          height: 1.56,
-                                        ),
-                                      ),
-                                    ),
+                                      );
+                                    }),
                                   ),
                                 ],
                               ),
@@ -321,4 +349,3 @@ class _LabeledInput extends StatelessWidget {
     );
   }
 }
-

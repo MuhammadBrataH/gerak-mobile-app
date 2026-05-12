@@ -8,7 +8,8 @@ class SignUpCommunityStep2View extends StatefulWidget {
   const SignUpCommunityStep2View({super.key});
 
   @override
-  State<SignUpCommunityStep2View> createState() => _SignUpCommunityStep2ViewState();
+  State<SignUpCommunityStep2View> createState() =>
+      _SignUpCommunityStep2ViewState();
 }
 
 class _SignUpCommunityStep2ViewState extends State<SignUpCommunityStep2View> {
@@ -247,7 +248,7 @@ class _SignUpCommunityStep2ViewState extends State<SignUpCommunityStep2View> {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        Get.offAllNamed(AppRoutes.login);
+                                        Get.toNamed(AppRoutes.registerPrivate3);
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.transparent,
@@ -349,4 +350,3 @@ class _DateBox extends StatelessWidget {
     );
   }
 }
-
