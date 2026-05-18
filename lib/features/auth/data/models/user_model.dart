@@ -7,6 +7,8 @@ class UserModel {
   final String level;
   final String? photoUrl;
   final String? refreshTokenHash;
+  final String? gender;
+  final DateTime? dateOfBirth;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +21,8 @@ class UserModel {
     required this.level,
     this.photoUrl,
     this.refreshTokenHash,
+    this.gender,
+    this.dateOfBirth,
     this.createdAt,
     this.updatedAt,
   });
@@ -33,6 +37,8 @@ class UserModel {
       level: (json['level'] ?? '').toString(),
       photoUrl: json['photoUrl']?.toString(),
       refreshTokenHash: json['refreshTokenHash']?.toString(),
+      gender: json['gender']?.toString(),
+      dateOfBirth: _parseDate(json['dateOfBirth']),
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
     );
@@ -48,6 +54,8 @@ class UserModel {
       'level': level,
       'photoUrl': photoUrl,
       'refreshTokenHash': refreshTokenHash,
+      'gender': gender,
+      'dateOfBirth': dateOfBirth?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };

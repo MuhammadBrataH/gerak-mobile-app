@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import './community_add_sheet.dart';
 
 class CommunityView extends StatefulWidget {
@@ -53,6 +54,8 @@ class _CommunityViewState extends State<CommunityView> {
   void _showProfileMenu(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final menuWidth = 120.0;
+    final authController = Get.find<AuthController>();
+    final isLoggedIn = authController.user.value != null;
 
     showMenu(
       context: context,
@@ -76,17 +79,25 @@ class _CommunityViewState extends State<CommunityView> {
               child: GestureDetector(
                 onTap: () {
                   Get.back();
-                  Get.offAllNamed(AppRoutes.login);
+                  if (isLoggedIn) {
+                    authController.logout();
+                  } else {
+                    Get.offAllNamed(AppRoutes.login);
+                  }
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.login, color: Color(0xFF2563EB), size: 18),
+                    Icon(
+                      isLoggedIn ? Icons.logout : Icons.login,
+                      color: const Color(0xFF2563EB),
+                      size: 18,
+                    ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
+                    Text(
+                      isLoggedIn ? 'Logout' : 'Login',
+                      style: const TextStyle(
                         color: Color(0xFF2563EB),
                         fontSize: 14,
                         fontFamily: 'Lexend',

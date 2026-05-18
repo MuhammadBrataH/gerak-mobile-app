@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class AccountInfoView extends StatelessWidget {
   const AccountInfoView({super.key});
@@ -16,6 +17,16 @@ class AccountInfoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+    final user = authController.user.value;
+
+    final name = user?.name ?? authController.signupName.value ?? '-';
+    final phone = user?.phone ?? '-';
+    final email = user?.email ?? '-';
+    final gender = user?.gender ?? authController.signupGender.value ?? '-';
+    final dob = user?.dateOfBirth ?? authController.signupDateOfBirth.value;
+    final dobLabel = _formatDate(dob);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -28,21 +39,18 @@ class AccountInfoView extends StatelessWidget {
                 children: [
                   _AccountInfoTopBar(onBackTap: () => Get.back()),
                   const SizedBox(height: 20),
-                  const _AccountInfoField(
-                    label: 'Nama Lengkap',
-                    value: 'Jumat Soleh Alhamdulillah',
-                  ),
+                  _AccountInfoField(label: 'Nama Lengkap', value: name),
                   const SizedBox(height: 12),
                   InkWell(
                     onTap: () => Get.toNamed(
                       AppRoutes.phoneUpdate,
-                      arguments: {'phone': '087421712412'},
+                      arguments: {'phone': phone},
                     ),
                     borderRadius: BorderRadius.circular(10),
-                    child: const _AccountInfoField(
+                    child: _AccountInfoField(
                       label: 'Nomor telepon',
-                      value: '087421712412',
-                      trailing: Icon(
+                      value: phone,
+                      trailing: const Icon(
                         Icons.chevron_right,
                         size: 20,
                         color: Color(0xFF94A3B8),
@@ -53,13 +61,13 @@ class AccountInfoView extends StatelessWidget {
                   InkWell(
                     onTap: () => Get.toNamed(
                       AppRoutes.emailUpdate,
-                      arguments: {'email': 'user@gmail.com'},
+                      arguments: {'email': email},
                     ),
                     borderRadius: BorderRadius.circular(10),
-                    child: const _AccountInfoField(
+                    child: _AccountInfoField(
                       label: 'Email',
-                      value: 'user@gmail.com',
-                      trailing: Icon(
+                      value: email,
+                      trailing: const Icon(
                         Icons.chevron_right,
                         size: 20,
                         color: Color(0xFF94A3B8),
@@ -67,15 +75,9 @@ class AccountInfoView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const _AccountInfoField(
-                    label: 'Tanggal lahir',
-                    value: '10 Desember 2006',
-                  ),
+                  _AccountInfoField(label: 'Tanggal lahir', value: dobLabel),
                   const SizedBox(height: 12),
-                  const _AccountInfoField(
-                    label: 'Jenis kelamin',
-                    value: 'Laki-Laki',
-                  ),
+                  _AccountInfoField(label: 'Jenis kelamin', value: gender),
                 ],
               ),
             ),
@@ -88,6 +90,26 @@ class AccountInfoView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    final monthName = months[date.month - 1];
+    return '${date.day} $monthName ${date.year}';
   }
 }
 

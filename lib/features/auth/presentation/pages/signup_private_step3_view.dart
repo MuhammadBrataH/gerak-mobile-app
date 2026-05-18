@@ -41,6 +41,8 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   void _submit() {
     final controller = Get.find<AuthController>();
     final name = controller.signupName.value?.trim() ?? '';
+    final gender = controller.signupGender.value;
+    final dateOfBirth = controller.signupDateOfBirth.value;
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
@@ -71,7 +73,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
       Get.snackbar('Validasi', 'Konfirmasi password tidak sama');
       return;
     }
-    controller.register(email, password, name, phone);
+    controller.register(email, password, name, phone, gender, dateOfBirth);
   }
 
   @override

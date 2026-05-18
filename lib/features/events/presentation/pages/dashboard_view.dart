@@ -69,7 +69,8 @@ class _HomeViewState extends State<HomeView> {
   _ActivityCardData _eventToCardData(EventModel event) {
     final sportLabel = event.sport.toUpperCase();
     final levelLabel = event.level.toUpperCase();
-    final icon = _sportToIcon[event.sport.toLowerCase()] ?? 'assets/icons/soccer.svg';
+    final icon =
+        _sportToIcon[event.sport.toLowerCase()] ?? 'assets/icons/soccer.svg';
     final startStr = event.startTime != null
         ? '${event.startTime!.day}/${event.startTime!.month}/${event.startTime!.year} ${event.startTime!.hour.toString().padLeft(2, '0')}:${event.startTime!.minute.toString().padLeft(2, '0')}'
         : 'TBD';
@@ -88,7 +89,8 @@ class _HomeViewState extends State<HomeView> {
       title: event.name.toUpperCase(),
       time: timeStr,
       location: event.location.toUpperCase(),
-      address: '${event.location}, ${event.city}${event.district != null ? ', ${event.district}' : ''}',
+      address:
+          '${event.location}, ${event.city}${event.district != null ? ', ${event.district}' : ''}',
       community: '',
       description: event.description ?? '',
       price: '',
@@ -152,6 +154,8 @@ class _HomeViewState extends State<HomeView> {
   void _showProfileMenu(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final menuWidth = 120.0;
+    final authController = Get.find<AuthController>();
+    final isLoggedIn = authController.user.value != null;
 
     showMenu(
       context: context,
@@ -175,17 +179,25 @@ class _HomeViewState extends State<HomeView> {
               child: GestureDetector(
                 onTap: () {
                   Get.back();
-                  Get.offAllNamed(AppRoutes.login);
+                  if (isLoggedIn) {
+                    authController.logout();
+                  } else {
+                    Get.offAllNamed(AppRoutes.login);
+                  }
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.login, color: Color(0xFF2563EB), size: 18),
+                    Icon(
+                      isLoggedIn ? Icons.logout : Icons.login,
+                      color: const Color(0xFF2563EB),
+                      size: 18,
+                    ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
+                    Text(
+                      isLoggedIn ? 'Logout' : 'Login',
+                      style: const TextStyle(
                         color: Color(0xFF2563EB),
                         fontSize: 14,
                         fontFamily: 'Lexend',
@@ -330,7 +342,9 @@ class _HomeViewState extends State<HomeView> {
                           final apiActivities = _eventController.events
                               .map(_eventToCardData)
                               .toList();
-                          return _SearchBar(onTap: () => _openSearchSheet(apiActivities));
+                          return _SearchBar(
+                            onTap: () => _openSearchSheet(apiActivities),
+                          );
                         }),
                         const SizedBox(height: 24),
                         _SectionHeader(
@@ -378,10 +392,13 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 // Activity list from API
                 Obx(() {
-                  if (_eventController.isLoading.value && _eventController.events.isEmpty) {
+                  if (_eventController.isLoading.value &&
+                      _eventController.events.isEmpty) {
                     return const SliverFillRemaining(
                       child: Center(
-                        child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF2563EB),
+                        ),
                       ),
                     );
                   }
@@ -396,7 +413,11 @@ class _HomeViewState extends State<HomeView> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+                            Icon(
+                              Icons.event_busy,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Belum ada aktivitas',

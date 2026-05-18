@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -11,23 +15,42 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
+  final AuthController _authController = Get.find<AuthController>();
   late final TextEditingController _nameController;
   late final TextEditingController _domicileController;
   late final TextEditingController _bioController;
+  final List<String> _selectedSports = [];
 
   @override
   void initState() {
     super.initState();
     final args = Get.arguments as Map?;
+    final fallbackSports = ['SEPAK BOLA', 'BASKET', 'LARI'];
     _nameController = TextEditingController(
-      text: (args?['name'] as String?) ?? 'Jumat Soleh',
+      text:
+          (args?['name'] as String?) ??
+          _authController.user.value?.name ??
+          'Jumat Soleh',
     );
     _domicileController = TextEditingController(
-      text: (args?['domicile'] as String?) ?? 'Cilegon',
+      text:
+          (args?['domicile'] as String?) ??
+          _authController.profileDomicile.value ??
+          'Cilegon',
     );
     _bioController = TextEditingController(
-      text: (args?['bio'] as String?) ?? 'By 1',
+      text:
+          (args?['bio'] as String?) ??
+          _authController.profileBio.value ??
+          'By 1',
     );
+    _selectedSports
+      ..clear()
+      ..addAll(
+        _authController.selectedSports.isNotEmpty
+            ? _authController.selectedSports
+            : fallbackSports,
+      );
   }
 
   @override
@@ -47,6 +70,55 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
+  Future<void> _pickProfilePhoto() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    _authController.setProfilePhotoPath(image.path);
+    setState(() {});
+  }
+
+  Future<void> _openSportsSelector() async {
+    final result = await Get.toNamed(
+      AppRoutes.sportsAll,
+      arguments: {'selected': List<String>.from(_selectedSports)},
+    );
+    if (result is List) {
+      setState(() {
+        _selectedSports
+          ..clear()
+          ..addAll(result.cast<String>());
+      });
+    }
+  }
+
+  void _removeSport(String label) {
+    setState(() {
+      _selectedSports.remove(label);
+    });
+  }
+
+  String _sportIconForLabel(String label) {
+    const map = {
+      'FOOTBALL': 'assets/icons/soccer.svg',
+      'SEPAK BOLA': 'assets/icons/soccer.svg',
+      'FUTSAL': 'assets/icons/futsal.svg',
+      'MINI SOCCER': 'assets/icons/mini_soccer.svg',
+      'BASKET': 'assets/icons/basketball.svg',
+      'BASKETBALL': 'assets/icons/basketball.svg',
+      'BADMINTON': 'assets/icons/badminton.svg',
+      'VOLLEY': 'assets/icons/volley.svg',
+      'LARI': 'assets/icons/run.svg',
+      'RUNNING': 'assets/icons/run.svg',
+      'PADEL': 'assets/icons/padel.svg',
+      'BILLIARD': 'assets/icons/billiard.svg',
+      'CHESS': 'assets/icons/chess.svg',
+      'TABLE TENNIS': 'assets/icons/table_tennis.svg',
+      'TENNIS FIELD': 'assets/icons/tennis_field.svg',
+    };
+    return map[label] ?? 'assets/icons/run.svg';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +134,11 @@ class _EditProfileViewState extends State<EditProfileView> {
                   _EditProfileTopBar(
                     onBackTap: () => Get.back(),
                     onSaveTap: () {
+                      _authController.setProfileDomicile(
+                        _domicileController.text,
+                      );
+                      _authController.setProfileBio(_bioController.text);
+                      _authController.setSelectedSports(_selectedSports);
                       Get.back(
                         result: {
                           'name': _nameController.text.trim(),
@@ -73,7 +150,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                   ),
                   const SizedBox(height: 20),
                   _EditProfileAvatar(
-                    onEditTap: () => _showToast('Edit foto tapped'),
+                    imagePath: _authController.profilePhotoPath.value,
+                    onEditTap: _pickProfilePhoto,
                   ),
                   const SizedBox(height: 20),
                   _EditProfileField(
@@ -100,24 +178,18 @@ class _EditProfileViewState extends State<EditProfileView> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _SportChip(
-                              label: 'SEPAK BOLA',
-                              iconAsset: 'assets/icons/soccer.svg',
-                            ),
-                            _SportChip(
-                              label: 'BASKET',
-                              iconAsset: 'assets/icons/basketball.svg',
-                            ),
-                            _SportChip(
-                              label: 'LARI',
-                              iconAsset: 'assets/icons/run.svg',
-                            ),
+                            for (final sport in _selectedSports)
+                              _SportChip(
+                                label: sport,
+                                iconAsset: _sportIconForLabel(sport),
+                                onRemove: () => _removeSport(sport),
+                              ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 8),
                       InkWell(
-                        onTap: () => _showToast('Lihat semua tapped'),
+                        onTap: _openSportsSelector,
                         borderRadius: BorderRadius.circular(12),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
@@ -236,9 +308,10 @@ class _EditProfileTopBar extends StatelessWidget {
 }
 
 class _EditProfileAvatar extends StatelessWidget {
+  final String? imagePath;
   final VoidCallback onEditTap;
 
-  const _EditProfileAvatar({required this.onEditTap});
+  const _EditProfileAvatar({required this.imagePath, required this.onEditTap});
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +326,17 @@ class _EditProfileAvatar extends StatelessWidget {
               borderRadius: BorderRadius.circular(48),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8)),
+            child: imagePath == null
+                ? const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8))
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: Image.file(
+                      File(imagePath!),
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
           ),
           Positioned(
             right: 8,
@@ -335,8 +418,13 @@ class _EditProfileField extends StatelessWidget {
 class _SportChip extends StatelessWidget {
   final String label;
   final String iconAsset;
+  final VoidCallback onRemove;
 
-  const _SportChip({required this.label, required this.iconAsset});
+  const _SportChip({
+    required this.label,
+    required this.iconAsset,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -369,6 +457,11 @@ class _SportChip extends StatelessWidget {
               height: 1.2,
               letterSpacing: -0.6,
             ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(Icons.close, size: 12, color: Color(0xFFFAFBFF)),
           ),
         ],
       ),
