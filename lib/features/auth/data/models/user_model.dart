@@ -5,6 +5,7 @@ class UserModel {
   final String phone;
   final List<String> sports;
   final String level;
+  final String accountType;
   final String? photoUrl;
   final String? refreshTokenHash;
   final String? gender;
@@ -19,6 +20,7 @@ class UserModel {
     required this.phone,
     required this.sports,
     required this.level,
+    required this.accountType,
     this.photoUrl,
     this.refreshTokenHash,
     this.gender,
@@ -35,6 +37,7 @@ class UserModel {
       phone: (json['phone'] ?? '').toString(),
       sports: _stringList(json['sports']),
       level: (json['level'] ?? '').toString(),
+      accountType: (json['accountType'] ?? 'personal').toString(),
       photoUrl: json['photoUrl']?.toString(),
       refreshTokenHash: json['refreshTokenHash']?.toString(),
       gender: json['gender']?.toString(),
@@ -52,6 +55,7 @@ class UserModel {
       'phone': phone,
       'sports': sports,
       'level': level,
+      'accountType': accountType,
       'photoUrl': photoUrl,
       'refreshTokenHash': refreshTokenHash,
       'gender': gender,

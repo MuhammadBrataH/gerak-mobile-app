@@ -54,6 +54,9 @@ async function request(method, path, body = null, headers = {}) {
             phone: '+6281234567890',
             sports: ['futsal', 'badminton'],
             level: 'intermediate',
+            accountType: 'personal',
+            gender: 'Laki-Laki',
+            dateOfBirth: '2006-01-10T00:00:00.000Z',
         });
         if (res.status !== 201) throw new Error(`Got ${res.status}, expected 201`);
         tokens.adi = res.data.token;

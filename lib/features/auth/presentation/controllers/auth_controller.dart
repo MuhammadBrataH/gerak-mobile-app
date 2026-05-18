@@ -8,6 +8,7 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final Rxn<UserModel> user = Rxn<UserModel>();
   final RxnString signupName = RxnString();
+  final RxnString signupAccountType = RxnString();
   final RxnString signupGender = RxnString();
   final Rxn<DateTime> signupDateOfBirth = Rxn<DateTime>();
   final RxList<String> selectedSports = <String>[].obs;
@@ -20,6 +21,10 @@ class AuthController extends GetxController {
 
   void setSignupName(String name) {
     signupName.value = name.trim();
+  }
+
+  void setSignupAccountType(String accountType) {
+    signupAccountType.value = accountType;
   }
 
   void setSignupGender(String gender) {
@@ -52,6 +57,22 @@ class AuthController extends GetxController {
     profileBio.value = bio.trim();
   }
 
+  void resetSignupFlow() {
+    signupName.value = null;
+    signupAccountType.value = null;
+    signupGender.value = null;
+    signupDateOfBirth.value = null;
+    selectedSports.clear();
+  }
+
+  String _homeRouteForAccountType(String? accountType) {
+    return accountType == 'community'
+        ? AppRoutes.community
+        : AppRoutes.dashboard;
+  }
+
+  String get homeRoute => _homeRouteForAccountType(user.value?.accountType);
+
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       Get.snackbar('Login Failed', 'Email and password cannot be empty');
@@ -81,7 +102,7 @@ class AuthController extends GetxController {
         user.value = UserModel.fromJson(userJson);
       }
 
-      Get.offAllNamed(AppRoutes.dashboard);
+      Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
     } on ApiException catch (error) {
       Get.snackbar('Login Failed', error.message);
     } catch (_) {
@@ -113,6 +134,7 @@ class AuthController extends GetxController {
           'password': password,
           'name': name,
           'phone': phone,
+          'accountType': signupAccountType.value ?? 'personal',
           'gender': gender,
           'dateOfBirth': dateOfBirth?.toIso8601String(),
         },
@@ -135,7 +157,7 @@ class AuthController extends GetxController {
       }
 
       Get.snackbar('Register', 'Registration successful');
-      Get.offAllNamed(AppRoutes.dashboard);
+      Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
     } on ApiException catch (error) {
       Get.snackbar('Register Failed', error.message);
     } catch (_) {

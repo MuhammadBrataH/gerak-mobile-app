@@ -34,6 +34,8 @@ const register = asyncHandler(async (req, res) => {
         sports = [],
         level = 'beginner',
         accountType = 'personal',
+        gender = null,
+        dateOfBirth = null,
         latitude = null,
         longitude = null,
         photoUrl = '',
@@ -65,6 +67,8 @@ const register = asyncHandler(async (req, res) => {
         sports: Array.isArray(sports) ? sports : [],
         level,
         accountType,
+        gender,
+        dateOfBirth,
         latitude,
         longitude,
         photoUrl,
@@ -123,7 +127,7 @@ const me = asyncHandler(async (req, res) => {
 const refreshToken = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id).select('+refreshTokenHash');
 
-    if (!user || !user.refreshTokenHash) {
+    if (!user?.refreshTokenHash) {
         throw new ApiError(401, 'Refresh token is not active');
     }
 

@@ -215,7 +215,7 @@ class _CommunityViewState extends State<CommunityView> {
                   return;
                 }
                 if (label == 'Home') {
-                  Get.offAllNamed(AppRoutes.dashboard);
+                  Get.offAllNamed(Get.find<AuthController>().homeRoute);
                   return;
                 }
                 if (label == 'Profile') {

@@ -47,27 +47,6 @@ class _ProfileViewState extends State<ProfileView> {
       ? _authController.selectedSports
       : const ['BASKET', 'BADMINTON', 'LARI'];
 
-  String _sportIconForLabel(String label) {
-    const map = {
-      'FOOTBALL': 'assets/icons/soccer.svg',
-      'SEPAK BOLA': 'assets/icons/soccer.svg',
-      'FUTSAL': 'assets/icons/futsal.svg',
-      'MINI SOCCER': 'assets/icons/mini_soccer.svg',
-      'BASKET': 'assets/icons/basketball.svg',
-      'BASKETBALL': 'assets/icons/basketball.svg',
-      'BADMINTON': 'assets/icons/badminton.svg',
-      'VOLLEY': 'assets/icons/volley.svg',
-      'LARI': 'assets/icons/run.svg',
-      'RUNNING': 'assets/icons/run.svg',
-      'PADEL': 'assets/icons/padel.svg',
-      'BILLIARD': 'assets/icons/billiard.svg',
-      'CHESS': 'assets/icons/chess.svg',
-      'TABLE TENNIS': 'assets/icons/table_tennis.svg',
-      'TENNIS FIELD': 'assets/icons/tennis_field.svg',
-    };
-    return map[label] ?? 'assets/icons/run.svg';
-  }
-
   void _showToast(String message) {
     Get.snackbar(
       'Info',
@@ -196,7 +175,7 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
             _ProfileBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+              onHomeTap: () => Get.offAllNamed(_authController.homeRoute),
               onCommunityTap: () => Get.offAllNamed(AppRoutes.community),
               onProfileTap: () {},
             ),

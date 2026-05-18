@@ -43,6 +43,14 @@ const userSchema = new mongoose.Schema(
             enum: ['personal', 'community'],
             default: 'personal',
         },
+        gender: {
+            type: String,
+            default: null,
+        },
+        dateOfBirth: {
+            type: Date,
+            default: null,
+        },
         latitude: {
             type: Number,
             default: null,

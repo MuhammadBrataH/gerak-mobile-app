@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class EmailUpdateView extends StatefulWidget {
   const EmailUpdateView({super.key});
@@ -68,7 +69,8 @@ class _EmailUpdateViewState extends State<EmailUpdateView> {
               ),
             ),
             _EmailUpdateBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+              onHomeTap: () =>
+                  Get.offAllNamed(Get.find<AuthController>().homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
               onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
             ),

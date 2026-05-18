@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class DeleteAccountStep1View extends StatefulWidget {
   const DeleteAccountStep1View({super.key});
@@ -102,7 +103,8 @@ class _DeleteAccountStep1ViewState extends State<DeleteAccountStep1View> {
               ),
             ),
             _DeleteAccountBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+              onHomeTap: () =>
+                  Get.offAllNamed(Get.find<AuthController>().homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
               onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
             ),

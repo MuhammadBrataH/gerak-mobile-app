@@ -82,7 +82,7 @@ class AccountInfoView extends StatelessWidget {
               ),
             ),
             _AccountInfoBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+              onHomeTap: () => Get.offAllNamed(authController.homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
               onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
             ),

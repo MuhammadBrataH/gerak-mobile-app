@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpSelectView extends StatelessWidget {
   const SignUpSelectView({super.key});
@@ -130,6 +131,12 @@ class SignUpSelectView extends StatelessWidget {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
+                                        final controller =
+                                            Get.find<AuthController>();
+                                        controller.resetSignupFlow();
+                                        controller.setSignupAccountType(
+                                          'personal',
+                                        );
                                         Get.toNamed(AppRoutes.registerPrivate1);
                                       },
                                       style: ElevatedButton.styleFrom(
@@ -179,6 +186,12 @@ class SignUpSelectView extends StatelessWidget {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
+                                        final controller =
+                                            Get.find<AuthController>();
+                                        controller.resetSignupFlow();
+                                        controller.setSignupAccountType(
+                                          'community',
+                                        );
                                         Get.toNamed(
                                           AppRoutes.registerCommunity1,
                                         );
