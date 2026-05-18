@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -15,8 +17,56 @@ class _ProfileViewState extends State<ProfileView> {
   AuthController get _authController => Get.find<AuthController>();
 
   String get _displayName => _authController.user.value?.name ?? 'User';
-  String get _domicile => 'Indonesia';
-  String get _bio => '';
+  String get _domicile => _authController.profileDomicile.value ?? 'Indonesia';
+  String get _bio => _authController.profileBio.value ?? '';
+
+  String get _genderDisplay =>
+      _authController.user.value?.gender ??
+      _authController.signupGender.value ??
+      'Tidak Diketahui';
+
+  String get _ageLabel {
+    final dob =
+        _authController.user.value?.dateOfBirth ??
+        _authController.signupDateOfBirth.value;
+    if (dob == null) return '-';
+    final today = DateTime.now();
+    int age = today.year - dob.year;
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+    return age > 0 ? age.toString() : '-';
+  }
+
+  bool get _isLoggedIn => _authController.user.value != null;
+
+  String? get _profilePhotoPath => _authController.profilePhotoPath.value;
+
+  List<String> get _sportsDisplay => _authController.selectedSports.isNotEmpty
+      ? _authController.selectedSports
+      : const ['BASKET', 'BADMINTON', 'LARI'];
+
+  String _sportIconForLabel(String label) {
+    const map = {
+      'FOOTBALL': 'assets/icons/soccer.svg',
+      'SEPAK BOLA': 'assets/icons/soccer.svg',
+      'FUTSAL': 'assets/icons/futsal.svg',
+      'MINI SOCCER': 'assets/icons/mini_soccer.svg',
+      'BASKET': 'assets/icons/basketball.svg',
+      'BASKETBALL': 'assets/icons/basketball.svg',
+      'BADMINTON': 'assets/icons/badminton.svg',
+      'VOLLEY': 'assets/icons/volley.svg',
+      'LARI': 'assets/icons/run.svg',
+      'RUNNING': 'assets/icons/run.svg',
+      'PADEL': 'assets/icons/padel.svg',
+      'BILLIARD': 'assets/icons/billiard.svg',
+      'CHESS': 'assets/icons/chess.svg',
+      'TABLE TENNIS': 'assets/icons/table_tennis.svg',
+      'TENNIS FIELD': 'assets/icons/tennis_field.svg',
+    };
+    return map[label] ?? 'assets/icons/run.svg';
+  }
 
   void _showToast(String message) {
     Get.snackbar(
@@ -53,17 +103,25 @@ class _ProfileViewState extends State<ProfileView> {
               child: GestureDetector(
                 onTap: () {
                   Get.back();
-                  _authController.logout();
+                  if (_isLoggedIn) {
+                    _authController.logout();
+                  } else {
+                    Get.offAllNamed(AppRoutes.login);
+                  }
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.login, color: Color(0xFF2563EB), size: 18),
+                    Icon(
+                      _isLoggedIn ? Icons.logout : Icons.login,
+                      color: const Color(0xFF2563EB),
+                      size: 18,
+                    ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
+                    Text(
+                      _isLoggedIn ? 'Logout' : 'Login',
+                      style: const TextStyle(
                         color: Color(0xFF2563EB),
                         fontSize: 14,
                         fontFamily: 'Lexend',
@@ -95,6 +153,7 @@ class _ProfileViewState extends State<ProfileView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _ProfileTopBar(
+                    imagePath: _profilePhotoPath,
                     onAvatarTap: () {
                       _showProfileMenu(context);
                     },
@@ -103,12 +162,16 @@ class _ProfileViewState extends State<ProfileView> {
                   _ProfileHeader(
                     displayName: _displayName,
                     domicile: _domicile,
+                    gender: _genderDisplay,
+                    ageLabel: _ageLabel,
+                    imagePath: _profilePhotoPath,
+                    sports: _sportsDisplay,
                   ),
                   const SizedBox(height: 20),
                   _ProfileActions(
                     onSettingsTap: () => Get.toNamed(AppRoutes.accountSettings),
-                    onEditTap: () {
-                      Get.toNamed(
+                    onEditTap: () async {
+                      await Get.toNamed(
                         AppRoutes.editProfile,
                         arguments: {
                           'name': _displayName,
@@ -116,6 +179,9 @@ class _ProfileViewState extends State<ProfileView> {
                           'bio': _bio,
                         },
                       );
+                      if (mounted) {
+                        setState(() {});
+                      }
                     },
                   ),
                   const SizedBox(height: 28),
@@ -142,9 +208,10 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _ProfileTopBar extends StatelessWidget {
+  final String? imagePath;
   final VoidCallback onAvatarTap;
 
-  const _ProfileTopBar({required this.onAvatarTap});
+  const _ProfileTopBar({required this.imagePath, required this.onAvatarTap});
 
   @override
   Widget build(BuildContext context) {
@@ -166,10 +233,15 @@ class _ProfileTopBar extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onAvatarTap,
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 18,
-              backgroundColor: Color(0xFFE2E8F0),
-              child: Icon(Icons.person, color: Color(0xFF94A3B8)),
+              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundImage: imagePath == null
+                  ? null
+                  : FileImage(File(imagePath!)),
+              child: imagePath == null
+                  ? const Icon(Icons.person, color: Color(0xFF94A3B8))
+                  : null,
             ),
           ),
         ],
@@ -181,8 +253,40 @@ class _ProfileTopBar extends StatelessWidget {
 class _ProfileHeader extends StatelessWidget {
   final String displayName;
   final String domicile;
+  final String gender;
+  final String ageLabel;
+  final String? imagePath;
+  final List<String> sports;
 
-  const _ProfileHeader({required this.displayName, required this.domicile});
+  const _ProfileHeader({
+    required this.displayName,
+    required this.domicile,
+    required this.gender,
+    required this.ageLabel,
+    required this.imagePath,
+    required this.sports,
+  });
+
+  String _sportIconForLabel(String label) {
+    const map = {
+      'FOOTBALL': 'assets/icons/soccer.svg',
+      'SEPAK BOLA': 'assets/icons/soccer.svg',
+      'FUTSAL': 'assets/icons/futsal.svg',
+      'MINI SOCCER': 'assets/icons/mini_soccer.svg',
+      'BASKET': 'assets/icons/basketball.svg',
+      'BASKETBALL': 'assets/icons/basketball.svg',
+      'BADMINTON': 'assets/icons/badminton.svg',
+      'VOLLEY': 'assets/icons/volley.svg',
+      'LARI': 'assets/icons/run.svg',
+      'RUNNING': 'assets/icons/run.svg',
+      'PADEL': 'assets/icons/padel.svg',
+      'BILLIARD': 'assets/icons/billiard.svg',
+      'CHESS': 'assets/icons/chess.svg',
+      'TABLE TENNIS': 'assets/icons/table_tennis.svg',
+      'TENNIS FIELD': 'assets/icons/tennis_field.svg',
+    };
+    return map[label] ?? 'assets/icons/run.svg';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,11 +303,17 @@ class _ProfileHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(48),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: const Icon(
-                Icons.person,
-                size: 64,
-                color: Color(0xFF94A3B8),
-              ),
+              child: imagePath == null
+                  ? const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8))
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: Image.file(
+                        File(imagePath!),
+                        width: 128,
+                        height: 128,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
             ),
             Positioned(
               right: 8,
@@ -234,7 +344,7 @@ class _ProfileHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Laki-Laki • 78 • $domicile',
+          '$gender • $ageLabel • $domicile',
           style: const TextStyle(
             color: Color(0xFF0EA5E9),
             fontSize: 14,
@@ -248,17 +358,14 @@ class _ProfileHeader extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: const [
-            _InterestChip(
-              label: 'BASKET',
-              iconAsset: 'assets/icons/basketball.svg',
-            ),
-            _InterestChip(
-              label: 'BADMINTON',
-              iconAsset: 'assets/icons/badminton.svg',
-            ),
-            _InterestChip(label: 'LARI', iconAsset: 'assets/icons/run.svg'),
-          ],
+          children: sports
+              .map(
+                (sport) => _InterestChip(
+                  label: sport,
+                  iconAsset: _sportIconForLabel(sport),
+                ),
+              )
+              .toList(),
         ),
       ],
     );

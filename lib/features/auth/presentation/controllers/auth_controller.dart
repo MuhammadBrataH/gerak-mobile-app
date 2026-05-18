@@ -8,12 +8,48 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final Rxn<UserModel> user = Rxn<UserModel>();
   final RxnString signupName = RxnString();
+  final RxnString signupGender = RxnString();
+  final Rxn<DateTime> signupDateOfBirth = Rxn<DateTime>();
+  final RxList<String> selectedSports = <String>[].obs;
+  final RxnString profilePhotoPath = RxnString();
+  final RxnString profileDomicile = RxnString();
+  final RxnString profileBio = RxnString();
 
   AuthController({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
   void setSignupName(String name) {
     signupName.value = name.trim();
+  }
+
+  void setSignupGender(String gender) {
+    signupGender.value = gender;
+  }
+
+  void setSignupDateOfBirth(DateTime dateOfBirth) {
+    signupDateOfBirth.value = dateOfBirth;
+  }
+
+  void setSelectedSports(List<String> sports) {
+    selectedSports
+      ..clear()
+      ..addAll(sports);
+  }
+
+  void removeSport(String sport) {
+    selectedSports.remove(sport);
+  }
+
+  void setProfilePhotoPath(String path) {
+    profilePhotoPath.value = path;
+  }
+
+  void setProfileDomicile(String domicile) {
+    profileDomicile.value = domicile.trim();
+  }
+
+  void setProfileBio(String bio) {
+    profileBio.value = bio.trim();
   }
 
   Future<void> login(String email, String password) async {
@@ -60,6 +96,8 @@ class AuthController extends GetxController {
     String password,
     String name,
     String phone,
+    String? gender,
+    DateTime? dateOfBirth,
   ) async {
     if (email.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
       Get.snackbar('Register Failed', 'All fields are required');
@@ -75,6 +113,8 @@ class AuthController extends GetxController {
           'password': password,
           'name': name,
           'phone': phone,
+          'gender': gender,
+          'dateOfBirth': dateOfBirth?.toIso8601String(),
         },
       );
 

@@ -17,7 +17,7 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.137.1:5000';
+  static const String baseUrl = 'http://192.168.101.38:5000';
   static const String accessTokenKey = 'token';
   static const String refreshTokenKey = 'refreshToken';
 

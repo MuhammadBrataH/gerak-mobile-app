@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpPrivateStep2View extends StatefulWidget {
   const SignUpPrivateStep2View({super.key});
@@ -310,6 +311,28 @@ class _SignUpPrivateStep2ViewState extends State<SignUpPrivateStep2View> {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
+                                        // Parse date of birth and store data
+                                        final int dayInt =
+                                            int.tryParse(_day) ?? 1;
+                                        final int monthInt =
+                                            _months.indexOf(_month) + 1;
+                                        final int yearInt =
+                                            int.tryParse(_year) ?? 2000;
+                                        final dateOfBirth = DateTime(
+                                          yearInt,
+                                          monthInt,
+                                          dayInt,
+                                        );
+
+                                        final authController =
+                                            Get.find<AuthController>();
+                                        authController.setSignupGender(
+                                          _gender ?? 'Laki-Laki',
+                                        );
+                                        authController.setSignupDateOfBirth(
+                                          dateOfBirth,
+                                        );
+
                                         Get.toNamed(AppRoutes.registerPrivate3);
                                       },
                                       style: ElevatedButton.styleFrom(
@@ -412,4 +435,3 @@ class _DateBox extends StatelessWidget {
     );
   }
 }
-

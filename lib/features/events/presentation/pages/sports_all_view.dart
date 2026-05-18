@@ -2,12 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-class SportsAllView extends StatelessWidget {
+class SportsAllView extends StatefulWidget {
   const SportsAllView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final sports = <_SportItemData>[
+  State<SportsAllView> createState() => _SportsAllViewState();
+}
+
+class _SportsAllViewState extends State<SportsAllView> {
+  late final List<_SportItemData> _sports;
+  final Set<String> _selected = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _sports = const <_SportItemData>[
       _SportItemData(label: 'FOOTBALL', iconAsset: 'assets/icons/soccer.svg'),
       _SportItemData(label: 'FUTSAL', iconAsset: 'assets/icons/futsal.svg'),
       _SportItemData(
@@ -37,13 +46,42 @@ class SportsAllView extends StatelessWidget {
       ),
     ];
 
+    final args = Get.arguments as Map?;
+    final selected = args?['selected'];
+    if (selected is List) {
+      _selected
+        ..clear()
+        ..addAll(selected.cast<String>());
+    }
+  }
+
+  void _toggleSelection(String label) {
+    setState(() {
+      if (_selected.contains(label)) {
+        _selected.remove(label);
+      } else {
+        _selected.add(label);
+      }
+    });
+  }
+
+  void _saveSelection() {
+    Get.back(result: _selected.toList());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TopBar(title: 'SPORTS', onBackTap: () => Get.back()),
+            _TopBar(
+              title: 'SPORTS',
+              onBackTap: () => Get.back(result: _selected.toList()),
+              onSaveTap: _saveSelection,
+            ),
             const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -64,8 +102,14 @@ class SportsAllView extends StatelessWidget {
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: sports
-                      .map((sport) => _SportChip(data: sport))
+                  children: _sports
+                      .map(
+                        (sport) => _SportChip(
+                          data: sport,
+                          isSelected: _selected.contains(sport.label),
+                          onTap: () => _toggleSelection(sport.label),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -80,8 +124,13 @@ class SportsAllView extends StatelessWidget {
 class _TopBar extends StatelessWidget {
   final String title;
   final VoidCallback onBackTap;
+  final VoidCallback onSaveTap;
 
-  const _TopBar({required this.title, required this.onBackTap});
+  const _TopBar({
+    required this.title,
+    required this.onBackTap,
+    required this.onSaveTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +153,20 @@ class _TopBar extends StatelessWidget {
               color: Color(0xFF0F172A),
             ),
           ),
+          const Spacer(),
+          TextButton(
+            onPressed: onSaveTap,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF2563EB),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontFamily: 'Plus Jakarta Sans',
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
+            ),
+            child: const Text('SIMPAN'),
+          ),
         ],
       ),
     );
@@ -112,20 +175,28 @@ class _TopBar extends StatelessWidget {
 
 class _SportChip extends StatelessWidget {
   final _SportItemData data;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const _SportChip({required this.data});
+  const _SportChip({
+    required this.data,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF475569),
+            color: isSelected
+                ? const Color(0xFF2563EB)
+                : const Color(0xFF475569),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
