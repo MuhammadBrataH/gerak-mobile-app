@@ -12,6 +12,10 @@
 .swiftpm/
 migrate_working_dir/
 
+# Crash & Error Logs
+hs_err_pid*.log
+replay_pid*.log
+
 # IntelliJ related
 *.iml
 *.ipr
