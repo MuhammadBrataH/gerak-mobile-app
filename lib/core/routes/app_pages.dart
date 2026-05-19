@@ -9,6 +9,7 @@ import '../../features/auth/presentation/pages/signup_private_step2_view.dart';
 import '../../features/auth/presentation/pages/signup_private_step3_view.dart';
 import '../../features/auth/presentation/pages/signup_community_step1_view.dart';
 import '../../features/auth/presentation/pages/signup_community_step2_view.dart';
+import '../../features/onboarding/presentation/pages/onboarding_view.dart';
 import '../../features/community/presentation/pages/community_profile_view.dart';
 import '../../features/community/presentation/pages/community_view.dart';
 import '../../features/events/presentation/pages/dashboard_view.dart';
@@ -30,6 +31,7 @@ class AppPages {
       page: () => const LoginView(),
       binding: AuthBinding(),
     ),
+    GetPage(name: AppRoutes.onboarding, page: () => const OnboardingView()),
     GetPage(name: AppRoutes.register, page: () => const SignUpSelectView()),
     GetPage(
       name: AppRoutes.registerPrivate1,

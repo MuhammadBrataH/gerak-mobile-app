@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -334,7 +336,13 @@ class _HomeViewState extends State<HomeView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _TopBar(onProfileTap: () => _showProfileMenu(context)),
+                        Obx(
+                          () => _TopBar(
+                            onProfileTap: () => _showProfileMenu(context),
+                            imagePath: Get.find<AuthController>()
+                                .currentProfilePhotoPath,
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         const _HeroHeadline(),
                         const SizedBox(height: 18),
@@ -463,7 +471,7 @@ class _HomeViewState extends State<HomeView> {
                   return;
                 }
                 if (label == 'Profile') {
-                  Get.toNamed(AppRoutes.profile);
+                  Get.toNamed(Get.find<AuthController>().profileRoute);
                   return;
                 }
                 if (label == 'Community') {
@@ -473,7 +481,8 @@ class _HomeViewState extends State<HomeView> {
                 _showToast('Nav: $label');
               },
             ),
-            _FloatingActionButton(onTap: () => _showToast('Add tapped')),
+            if (Get.find<AuthController>().isCommunityAccount)
+              _FloatingActionButton(onTap: () => _showToast('Add tapped')),
           ],
         ),
       ),
@@ -483,8 +492,9 @@ class _HomeViewState extends State<HomeView> {
 
 class _TopBar extends StatelessWidget {
   final VoidCallback onProfileTap;
+  final String? imagePath;
 
-  const _TopBar({required this.onProfileTap});
+  const _TopBar({required this.onProfileTap, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -507,39 +517,16 @@ class _TopBar extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onProfileTap,
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 16,
-              backgroundImage: AssetImage('assets/sample 1.jpg'),
+              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundImage: imagePath == null
+                  ? null
+                  : FileImage(File(imagePath!)),
+              child: imagePath == null
+                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+                  : null,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroHeadline extends StatelessWidget {
-  const _HeroHeadline();
-
-  @override
-  Widget build(BuildContext context) {
-    return RichText(
-      text: const TextSpan(
-        style: TextStyle(
-          fontSize: 48,
-          fontFamily: 'Lexend',
-          fontWeight: FontWeight.w800,
-          height: 1,
-          letterSpacing: -2.4,
-        ),
-        children: [
-          TextSpan(
-            text: 'PULSE OF\n',
-            style: TextStyle(color: Color(0xFF0F172A)),
-          ),
-          TextSpan(
-            text: 'MOTION.',
-            style: TextStyle(color: Color(0xFF2563EB)),
           ),
         ],
       ),
@@ -583,6 +570,35 @@ class _SearchBar extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HeroHeadline extends StatelessWidget {
+  const _HeroHeadline();
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: const TextSpan(
+        style: TextStyle(
+          fontSize: 48,
+          fontFamily: 'Lexend',
+          fontWeight: FontWeight.w800,
+          height: 1,
+          letterSpacing: -2.4,
+        ),
+        children: [
+          TextSpan(
+            text: 'PULSE OF\n',
+            style: TextStyle(color: Color(0xFF0F172A)),
+          ),
+          TextSpan(
+            text: 'MOTION.',
+            style: TextStyle(color: Color(0xFF2563EB)),
+          ),
+        ],
       ),
     );
   }

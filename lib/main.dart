@@ -15,7 +15,7 @@ class GerakApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Gerak Mobile App',
-      initialRoute: AppRoutes.login,
+      initialRoute: AppRoutes.onboarding,
       getPages: AppPages.pages,
     );
   }

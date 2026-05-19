@@ -16,9 +16,9 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   AuthController get _authController => Get.find<AuthController>();
 
-  String get _displayName => _authController.user.value?.name ?? 'User';
-  String get _domicile => _authController.profileDomicile.value ?? 'Indonesia';
-  String get _bio => _authController.profileBio.value ?? '';
+  String get _displayName => _authController.displayName;
+  String get _domicile => _authController.currentDomicile;
+  String get _bio => _authController.currentBio;
 
   String get _genderDisplay =>
       _authController.user.value?.gender ??
@@ -41,10 +41,10 @@ class _ProfileViewState extends State<ProfileView> {
 
   bool get _isLoggedIn => _authController.user.value != null;
 
-  String? get _profilePhotoPath => _authController.profilePhotoPath.value;
+  String? get _profilePhotoPath => _authController.currentProfilePhotoPath;
 
-  List<String> get _sportsDisplay => _authController.selectedSports.isNotEmpty
-      ? _authController.selectedSports
+  List<String> get _sportsDisplay => _authController.currentSports.isNotEmpty
+      ? _authController.currentSports
       : const ['BASKET', 'BADMINTON', 'LARI'];
 
   void _showToast(String message) {

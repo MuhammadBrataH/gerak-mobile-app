@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class PasswordUpdateView extends StatefulWidget {
   const PasswordUpdateView({super.key});
@@ -96,9 +97,11 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
               ),
             ),
             _PasswordBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+              onHomeTap: () =>
+                  Get.offAllNamed(Get.find<AuthController>().homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
-              onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
+              onProfileTap: () =>
+                  Get.offAllNamed(Get.find<AuthController>().profileRoute),
             ),
           ],
         ),

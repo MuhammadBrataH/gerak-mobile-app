@@ -20,7 +20,7 @@ class AccountInfoView extends StatelessWidget {
     final authController = Get.find<AuthController>();
     final user = authController.user.value;
 
-    final name = user?.name ?? authController.signupName.value ?? '-';
+    final name = authController.displayName;
     final phone = user?.phone ?? '-';
     final email = user?.email ?? '-';
     final gender = user?.gender ?? authController.signupGender.value ?? '-';
@@ -84,7 +84,7 @@ class AccountInfoView extends StatelessWidget {
             _AccountInfoBottomNavBar(
               onHomeTap: () => Get.offAllNamed(authController.homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
-              onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
+              onProfileTap: () => Get.offAllNamed(authController.profileRoute),
             ),
           ],
         ),

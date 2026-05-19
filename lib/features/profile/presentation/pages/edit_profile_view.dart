@@ -27,10 +27,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     final args = Get.arguments as Map?;
     final fallbackSports = ['SEPAK BOLA', 'BASKET', 'LARI'];
     _nameController = TextEditingController(
-      text:
-          (args?['name'] as String?) ??
-          _authController.user.value?.name ??
-          'Jumat Soleh',
+      text: (args?['name'] as String?) ?? _authController.displayName,
     );
     _domicileController = TextEditingController(
       text:
@@ -47,8 +44,8 @@ class _EditProfileViewState extends State<EditProfileView> {
     _selectedSports
       ..clear()
       ..addAll(
-        _authController.selectedSports.isNotEmpty
-            ? _authController.selectedSports
+        _authController.currentSports.isNotEmpty
+            ? _authController.currentSports
             : fallbackSports,
       );
   }
@@ -134,6 +131,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                   _EditProfileTopBar(
                     onBackTap: () => Get.back(),
                     onSaveTap: () {
+                      _authController.setDisplayName(_nameController.text);
                       _authController.setProfileDomicile(
                         _domicileController.text,
                       );
@@ -150,7 +148,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                   ),
                   const SizedBox(height: 20),
                   _EditProfileAvatar(
-                    imagePath: _authController.profilePhotoPath.value,
+                    imagePath: _authController.currentProfilePhotoPath,
                     onEditTap: _pickProfilePhoto,
                   ),
                   const SizedBox(height: 20),
@@ -245,7 +243,7 @@ class _EditProfileViewState extends State<EditProfileView> {
             _EditProfileBottomNavBar(
               onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
               onCommunityTap: () => _showToast('Community tapped'),
-              onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
+              onProfileTap: () => Get.offAllNamed(_authController.profileRoute),
             ),
           ],
         ),

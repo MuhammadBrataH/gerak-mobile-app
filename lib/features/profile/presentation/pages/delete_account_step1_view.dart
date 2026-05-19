@@ -106,7 +106,8 @@ class _DeleteAccountStep1ViewState extends State<DeleteAccountStep1View> {
               onHomeTap: () =>
                   Get.offAllNamed(Get.find<AuthController>().homeRoute),
               onCommunityTap: () => _showToast('Community tapped'),
-              onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
+              onProfileTap: () =>
+                  Get.offAllNamed(Get.find<AuthController>().profileRoute),
             ),
           ],
         ),
