@@ -17,7 +17,8 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.0.101:5000';
+  static const String baseUrl =
+      'https://gerak-mobile-app-production.up.railway.app';
   static const String accessTokenKey = 'token';
   static const String refreshTokenKey = 'refreshToken';
 
