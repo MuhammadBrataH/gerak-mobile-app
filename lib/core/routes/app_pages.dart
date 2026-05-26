@@ -59,10 +59,15 @@ class AppPages {
       bindings: [AuthBinding(), EventBinding()],
     ),
     GetPage(name: AppRoutes.sportsAll, page: () => const SportsAllView()),
-    GetPage(name: AppRoutes.community, page: () => const CommunityView()),
+    GetPage(
+      name: AppRoutes.community,
+      page: () => const CommunityView(),
+      bindings: [EventBinding()],
+    ),
     GetPage(
       name: AppRoutes.communityProfile,
       page: () => const CommunityProfileView(),
+      bindings: [EventBinding()],
     ),
     GetPage(name: AppRoutes.profile, page: () => const ProfileView()),
     GetPage(name: AppRoutes.editProfile, page: () => const EditProfileView()),

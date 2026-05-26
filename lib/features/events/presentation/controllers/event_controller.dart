@@ -121,6 +121,103 @@ class EventController extends GetxController {
     );
   }
 
+  bool _matchesCurrentFilters(EventModel event) {
+    final city = currentCity.value;
+    if (city != null && city.isNotEmpty) {
+      final match = event.city.toLowerCase().contains(city.toLowerCase());
+      if (!match) {
+        return false;
+      }
+    }
+
+    final district = currentDistrict.value;
+    if (district != null && district.isNotEmpty) {
+      final eventDistrict = event.district ?? '';
+      final match = eventDistrict.toLowerCase().contains(
+        district.toLowerCase(),
+      );
+      if (!match) {
+        return false;
+      }
+    }
+
+    final sport = currentSport.value;
+    if (sport != null && sport.isNotEmpty) {
+      if (event.sport.toLowerCase() != sport.toLowerCase()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  Future<EventModel?> createEvent({
+    required String name,
+    required String sport,
+    required String level,
+    required DateTime startTime,
+    required DateTime endTime,
+    required String location,
+    required String city,
+    required String adminPhone,
+    String description = '',
+    String? district,
+    int? maxSlots,
+    int? totalSlots,
+    String? imageUrl,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        'name': name,
+        'description': description,
+        'sport': sport,
+        'level': level,
+        'startTime': startTime.toIso8601String(),
+        'endTime': endTime.toIso8601String(),
+        'location': location,
+        'city': city,
+        'district': district ?? '',
+        'maxSlots': maxSlots,
+        'totalSlots': totalSlots ?? maxSlots,
+        'adminPhone': adminPhone,
+        'imageUrl': imageUrl ?? '',
+      };
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/events',
+        data: payload,
+      );
+
+      final eventJson = response.data?['event'];
+      if (eventJson is! Map<String, dynamic>) {
+        Get.snackbar('Events', 'Failed to create event');
+        return null;
+      }
+
+      final created = EventModel.fromJson(eventJson);
+
+      if (_matchesCurrentFilters(created)) {
+        events.insert(0, created);
+      }
+
+      await fetchEvents(
+        city: currentCity.value,
+        district: currentDistrict.value,
+        sport: currentSport.value,
+        page: 1,
+      );
+
+      Get.snackbar('Events', 'Aktivitas berhasil ditambahkan');
+      return created;
+    } on ApiException catch (error) {
+      Get.snackbar('Events', error.message);
+      return null;
+    } catch (_) {
+      Get.snackbar('Events', 'Gagal menambahkan aktivitas');
+      return null;
+    }
+  }
+
   void fetchEventsDebounced({
     String? city,
     String? district,

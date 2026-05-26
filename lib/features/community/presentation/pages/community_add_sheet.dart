@@ -2,6 +2,8 @@
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../events/presentation/controllers/event_controller.dart';
 
 class CommunityAddSheet extends StatefulWidget {
   const CommunityAddSheet({super.key});
@@ -21,6 +23,25 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
   String _locationLabel = 'Lokasi';
   int _slotCount = 10;
   String _genderLabel = 'Gender';
+  bool _isSubmitting = false;
+
+  static const Map<String, String> _categoryToSport = {
+    'SEPAK BOLA': 'football',
+    'BASKET': 'basketball',
+    'BADMINTON': 'badminton',
+    'LARI': 'running',
+    'PADEL': 'padel',
+    'FUTSAL': 'futsal',
+    'VOLLEY': 'volleyball',
+    'MINI SOCCER': 'mini_soccer',
+  };
+
+  static const _validLevels = <String>{
+    'beginner',
+    'intermediate',
+    'advanced',
+    'mixed',
+  };
 
   @override
   void dispose() {
@@ -34,6 +55,94 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _normalizeLevel(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'mixed';
+    }
+    final normalized = value.trim().toLowerCase();
+    return _validLevels.contains(normalized) ? normalized : 'mixed';
+  }
+
+  Future<void> _submitMatch() async {
+    if (_isSubmitting) {
+      return;
+    }
+
+    final selectedCategory = _selectedCategory;
+    if (selectedCategory == null) {
+      _showInfo('Pilih kategori olahraga terlebih dahulu.');
+      return;
+    }
+
+    final sport = _categoryToSport[selectedCategory];
+    if (sport == null) {
+      _showInfo('Kategori olahraga belum didukung.');
+      return;
+    }
+
+    final title = _matchTitleController.text.trim();
+    if (title.isEmpty) {
+      _showInfo('Judul pertandingan tidak boleh kosong.');
+      return;
+    }
+
+    if (_selectedDate == null || _selectedTime == null) {
+      _showInfo('Tanggal dan jam pertandingan wajib diisi.');
+      return;
+    }
+
+    final location = _locationLabel.trim();
+    if (location.isEmpty || location == 'Lokasi') {
+      _showInfo('Lokasi pertandingan wajib diisi.');
+      return;
+    }
+
+    final authController = Get.find<AuthController>();
+    final user = authController.user.value;
+    final adminPhone = user?.phone ?? '';
+    if (adminPhone.isEmpty) {
+      _showInfo('Nomor admin belum tersedia di akun.');
+      return;
+    }
+
+    final selectedDate = _selectedDate!;
+    final selectedTime = _selectedTime!;
+    final startTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+    final endTime = startTime.add(const Duration(hours: 2));
+
+    setState(() => _isSubmitting = true);
+
+    final eventController = Get.find<EventController>();
+    final created = await eventController.createEvent(
+      name: title,
+      description: _matchDescController.text.trim(),
+      sport: sport,
+      level: _normalizeLevel(user?.level),
+      startTime: startTime,
+      endTime: endTime,
+      location: location,
+      city: authController.currentDomicile,
+      district: '',
+      maxSlots: _slotCount,
+      totalSlots: _slotCount,
+      adminPhone: adminPhone,
+    );
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+    }
+
+    if (created != null && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _pickDate() async {
@@ -216,7 +325,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
                       },
                       genderLabel: _genderLabel,
                       onPickGender: _pickGender,
-                      onSubmit: () => _showInfo('Pertandingan dibuat.'),
+                      onSubmit: _submitMatch,
                       onSeeAllCategories: () =>
                           Get.toNamed(AppRoutes.sportsAll),
                     ),
@@ -1218,4 +1327,3 @@ class _ChipData {
 
   const _ChipData(this.label, this.icon);
 }
-

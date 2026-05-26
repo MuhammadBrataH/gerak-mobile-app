@@ -8,6 +8,7 @@ import '../controllers/event_controller.dart';
 import '../../data/models/event_model.dart';
 import '../../../../core/routes/app_routes.dart';
 import './activity_detail_view.dart';
+import '../../../community/presentation/pages/community_add_sheet.dart';
 
 class DashboardView extends GetView<AuthController> {
   const DashboardView({super.key});
@@ -107,8 +108,20 @@ class _HomeViewState extends State<HomeView> {
     Get.snackbar(
       'Info',
       message,
+      backgroundColor: const Color(0xFF2563EB),
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
+    );
+  }
+
+  Future<void> _openAddSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const CommunityAddSheet();
+      },
     );
   }
 
@@ -126,7 +139,7 @@ class _HomeViewState extends State<HomeView> {
       setState(() {
         _selectedLocation = selected;
       });
-      _eventController.fetchEvents(city: selected);
+      _applyFilters();
     }
   }
 
@@ -482,7 +495,7 @@ class _HomeViewState extends State<HomeView> {
               },
             ),
             if (Get.find<AuthController>().isCommunityAccount)
-              _FloatingActionButton(onTap: () => _showToast('Add tapped')),
+              _FloatingActionButton(onTap: _openAddSheet),
           ],
         ),
       ),

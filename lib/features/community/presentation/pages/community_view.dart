@@ -145,6 +145,9 @@ class _CommunityViewState extends State<CommunityView> {
                         Obx(
                           () => _TopBar(
                             onProfileTap: () => _showProfileMenu(context),
+                            onAddTap: authController.isCommunityAccount
+                                ? _openAddSheet
+                                : null,
                             imagePath: authController.currentProfilePhotoPath,
                           ),
                         ),
@@ -231,8 +234,6 @@ class _CommunityViewState extends State<CommunityView> {
                 _showToast('Nav: $label');
               },
             ),
-            if (Get.find<AuthController>().isCommunityAccount)
-              _FloatingActionButton(onTap: _openAddSheet),
           ],
         ),
       ),
@@ -242,9 +243,14 @@ class _CommunityViewState extends State<CommunityView> {
 
 class _TopBar extends StatelessWidget {
   final VoidCallback onProfileTap;
+  final VoidCallback? onAddTap;
   final String? imagePath;
 
-  const _TopBar({required this.onProfileTap, required this.imagePath});
+  const _TopBar({
+    required this.onProfileTap,
+    required this.onAddTap,
+    required this.imagePath,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -252,17 +258,31 @@ class _TopBar extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'GERAK',
-            style: TextStyle(
-              color: Color(0xFF2563EB),
-              fontSize: 24,
-              fontFamily: 'Lexend',
-              fontWeight: FontWeight.w900,
-              height: 1.33,
-              letterSpacing: -1.2,
+          SizedBox(
+            width: 32,
+            child: onAddTap == null
+                ? const SizedBox.shrink()
+                : IconButton(
+                    onPressed: onAddTap,
+                    icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+          ),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'GERAK',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 24,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w900,
+                  height: 1.33,
+                  letterSpacing: -1.2,
+                ),
+              ),
             ),
           ),
           GestureDetector(
@@ -867,40 +887,6 @@ class _NavItem extends StatelessWidget {
                   ],
                 ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingActionButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _FloatingActionButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      right: 24,
-      bottom: 96,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(9999),
-          child: Ink(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment(0, 0),
-                end: Alignment(1, 1),
-                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-              ),
-              borderRadius: BorderRadius.circular(9999),
-            ),
-            child: const Icon(Icons.add, color: Colors.white),
           ),
         ),
       ),

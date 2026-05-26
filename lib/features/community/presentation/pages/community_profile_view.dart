@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import './community_add_sheet.dart';
 
 class CommunityProfileView extends StatefulWidget {
   const CommunityProfileView({super.key});
@@ -15,6 +16,17 @@ class CommunityProfileView extends StatefulWidget {
 
 class _CommunityProfileViewState extends State<CommunityProfileView> {
   static const _fallbackSports = ['BASKET', 'BADMINTON', 'LARI'];
+
+  Future<void> _openAddSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return const CommunityAddSheet();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +55,14 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                    child: _TopBar(imagePath: imagePath),
+                    child: Obx(
+                      () => _TopBar(
+                        imagePath: imagePath,
+                        onAddTap: authController.isCommunityAccount
+                            ? _openAddSheet
+                            : null,
+                      ),
+                    ),
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -100,8 +119,9 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
 
 class _TopBar extends StatelessWidget {
   final String? imagePath;
+  final VoidCallback? onAddTap;
 
-  const _TopBar({required this.imagePath});
+  const _TopBar({required this.imagePath, required this.onAddTap});
 
   @override
   Widget build(BuildContext context) {
@@ -109,17 +129,31 @@ class _TopBar extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'GERAK',
-            style: TextStyle(
-              color: Color(0xFF2563EB),
-              fontSize: 24,
-              fontFamily: 'Lexend',
-              fontWeight: FontWeight.w900,
-              height: 1.33,
-              letterSpacing: -1.2,
+          SizedBox(
+            width: 32,
+            child: onAddTap == null
+                ? const SizedBox.shrink()
+                : IconButton(
+                    onPressed: onAddTap,
+                    icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+          ),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'GERAK',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 24,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w900,
+                  height: 1.33,
+                  letterSpacing: -1.2,
+                ),
+              ),
             ),
           ),
           CircleAvatar(
