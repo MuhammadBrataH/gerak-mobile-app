@@ -14,6 +14,7 @@ class EventController extends GetxController {
   final RxnString currentCity = RxnString();
   final RxnString currentDistrict = RxnString();
   final RxnString currentSport = RxnString();
+  final RxnString currentActivityType = RxnString('match');
   Timer? _filterDebounce;
 
   EventController({ApiClient? apiClient})
@@ -22,62 +23,93 @@ class EventController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchEvents();
+    fetchEvents(activityType: 'match');
+  }
+
+  Future<({List<EventModel> events, int total})> _fetchEventsPage({
+    String? city,
+    String? district,
+    String? sport,
+    String? createdBy,
+    String? activityType,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final query = <String, dynamic>{'page': page, 'limit': limit};
+    if (city != null && city.isNotEmpty) {
+      query['city'] = city;
+    }
+    if (district != null && district.isNotEmpty) {
+      query['district'] = district;
+    }
+    if (sport != null && sport.isNotEmpty) {
+      query['sport'] = sport;
+    }
+    if (createdBy != null && createdBy.isNotEmpty) {
+      query['createdBy'] = createdBy;
+    }
+    if (activityType != null && activityType.isNotEmpty) {
+      query['activityType'] = activityType;
+    }
+
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/events',
+      queryParameters: query,
+    );
+
+    final data = response.data ?? const <String, dynamic>{};
+    final items = data['events'];
+    final total = data['total'];
+
+    final parsed = items is List
+        ? items
+              .whereType<Map<String, dynamic>>()
+              .map(EventModel.fromJson)
+              .where(
+                (event) =>
+                    event.activityType != 'post' || activityType == 'post',
+              )
+              .toList()
+        : <EventModel>[];
+
+    return (events: parsed, total: total is int ? total : parsed.length);
   }
 
   Future<void> fetchEvents({
     String? city,
     String? district,
     String? sport,
+    String? activityType,
     int page = 1,
   }) async {
     isLoading.value = true;
     try {
+      final effectiveActivityType =
+          activityType ?? currentActivityType.value ?? 'match';
+
       if (page <= 1) {
         currentCity.value = city;
         currentDistrict.value = district;
         currentSport.value = sport;
+        currentActivityType.value = effectiveActivityType;
       }
 
-      final query = <String, dynamic>{'page': page};
-      if (city != null && city.isNotEmpty) {
-        query['city'] = city;
-      }
-      if (district != null && district.isNotEmpty) {
-        query['district'] = district;
-      }
-      if (sport != null && sport.isNotEmpty) {
-        query['sport'] = sport;
-      }
-
-      final response = await _apiClient.get<Map<String, dynamic>>(
-        '/events',
-        queryParameters: query,
+      final result = await _fetchEventsPage(
+        city: city,
+        district: district,
+        sport: sport,
+        activityType: effectiveActivityType,
+        page: page,
       );
 
-      final data = response.data ?? const <String, dynamic>{};
-      final items = data['events'];
-      final total = data['total'];
-
-      final List<EventModel> parsed = items is List
-          ? items
-                .whereType<Map<String, dynamic>>()
-                .map(EventModel.fromJson)
-                .toList()
-          : <EventModel>[];
-
       if (page <= 1) {
-        events.assignAll(parsed);
+        events.assignAll(result.events);
       } else {
-        events.addAll(parsed);
+        events.addAll(result.events);
       }
 
       currentPage.value = page;
-      if (total is int) {
-        hasMore.value = events.length < total;
-      } else {
-        hasMore.value = parsed.isNotEmpty;
-      }
+      hasMore.value = events.length < result.total;
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
     } catch (_) {
@@ -96,6 +128,7 @@ class EventController extends GetxController {
       city: currentCity.value,
       district: currentDistrict.value,
       sport: currentSport.value,
+      activityType: currentActivityType.value,
       page: currentPage.value + 1,
     );
   }
@@ -104,7 +137,8 @@ class EventController extends GetxController {
     currentCity.value = null;
     currentDistrict.value = null;
     currentSport.value = null;
-    await fetchEvents(page: 1);
+    currentActivityType.value = 'match';
+    await fetchEvents(page: 1, activityType: 'match');
   }
 
   Future<void> resetPagination() async {
@@ -117,8 +151,30 @@ class EventController extends GetxController {
       city: currentCity.value,
       district: currentDistrict.value,
       sport: currentSport.value,
+      activityType: currentActivityType.value,
       page: 1,
     );
+  }
+
+  Future<List<EventModel>> fetchEventsAsList({
+    String? city,
+    String? district,
+    String? sport,
+    String? createdBy,
+    String? activityType,
+    int page = 1,
+    int limit = 50,
+  }) async {
+    final result = await _fetchEventsPage(
+      city: city,
+      district: district,
+      sport: sport,
+      createdBy: createdBy,
+      activityType: activityType,
+      page: page,
+      limit: limit,
+    );
+    return result.events;
   }
 
   bool _matchesCurrentFilters(EventModel event) {
@@ -160,6 +216,7 @@ class EventController extends GetxController {
     required String location,
     required String city,
     required String adminPhone,
+    String activityType = 'match',
     String description = '',
     String? district,
     int? maxSlots,
@@ -181,6 +238,7 @@ class EventController extends GetxController {
         'totalSlots': totalSlots ?? maxSlots,
         'adminPhone': adminPhone,
         'imageUrl': imageUrl ?? '',
+        'activityType': activityType,
       };
 
       final response = await _apiClient.post<Map<String, dynamic>>(
@@ -222,11 +280,18 @@ class EventController extends GetxController {
     String? city,
     String? district,
     String? sport,
+    String? activityType,
     int page = 1,
   }) {
     _filterDebounce?.cancel();
     _filterDebounce = Timer(const Duration(milliseconds: 500), () {
-      fetchEvents(city: city, district: district, sport: sport, page: page);
+      fetchEvents(
+        city: city,
+        district: district,
+        sport: sport,
+        activityType: activityType,
+        page: page,
+      );
     });
   }
 

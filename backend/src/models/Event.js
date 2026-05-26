@@ -7,6 +7,12 @@ const eventSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        activityType: {
+            type: String,
+            enum: ['post', 'match'],
+            default: 'match',
+            index: true,
+        },
         description: {
             type: String,
             default: '',

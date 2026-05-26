@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/event_controller.dart';
 import '../../data/models/event_model.dart';
@@ -66,6 +65,7 @@ class _HomeViewState extends State<HomeView> {
     _eventController.fetchEventsDebounced(
       city: _selectedLocation,
       sport: sports.isNotEmpty ? sports.first : null,
+      activityType: 'match',
     );
   }
 
@@ -98,7 +98,7 @@ class _HomeViewState extends State<HomeView> {
       description: event.description ?? '',
       price: '',
       labelIconAsset: icon,
-      badgeUrl: 'assets/sample 1.jpg',
+      badgeUrl: event.imageUrl,
       backgroundColor: const Color(0xFFF1F5F9),
       participants: slots,
     );
@@ -533,9 +533,7 @@ class _TopBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 16,
               backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: imagePath == null
-                  ? null
-                  : FileImage(File(imagePath!)),
+              backgroundImage: buildImageProviderFromSource(imagePath),
               child: imagePath == null
                   ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
                   : null,
@@ -948,7 +946,7 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
                 child: ListView.separated(
                   padding: EdgeInsets.zero,
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (context, index) =>
                       const Divider(height: 1, color: Color(0xFF808080)),
                   itemBuilder: (context, index) {
                     final city = filtered[index];
@@ -1445,7 +1443,7 @@ class _ActivityCard extends StatelessWidget {
                 ),
                 CircleAvatar(
                   radius: 22,
-                  backgroundImage: AssetImage(data.badgeUrl),
+                  backgroundImage: buildImageProviderFromSource(data.badgeUrl),
                 ),
               ],
             ),
@@ -1639,7 +1637,7 @@ class _ActivityCardData {
   final String description;
   final String price;
   final String labelIconAsset;
-  final String badgeUrl;
+  final String? badgeUrl;
   final Color backgroundColor;
   final String participants;
 

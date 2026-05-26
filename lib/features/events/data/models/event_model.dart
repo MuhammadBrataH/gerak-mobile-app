@@ -1,6 +1,7 @@
 class EventModel {
   final String id;
   final String name;
+  final String activityType;
   final String? description;
   final String sport;
   final String level;
@@ -24,6 +25,7 @@ class EventModel {
   const EventModel({
     required this.id,
     required this.name,
+    required this.activityType,
     required this.sport,
     required this.level,
     required this.location,
@@ -49,6 +51,7 @@ class EventModel {
     return EventModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
+      activityType: (json['activityType'] ?? 'match').toString(),
       description: json['description']?.toString(),
       sport: (json['sport'] ?? '').toString(),
       level: (json['level'] ?? '').toString(),
@@ -75,6 +78,7 @@ class EventModel {
     return {
       'id': id,
       'name': name,
+      'activityType': activityType,
       'description': description,
       'sport': sport,
       'level': level,

@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class ProfileView extends StatefulWidget {
@@ -215,9 +214,7 @@ class _ProfileTopBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: imagePath == null
-                  ? null
-                  : FileImage(File(imagePath!)),
+              backgroundImage: buildImageProviderFromSource(imagePath),
               child: imagePath == null
                   ? const Icon(Icons.person, color: Color(0xFF94A3B8))
                   : null,
@@ -286,8 +283,8 @@ class _ProfileHeader extends StatelessWidget {
                   ? const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8))
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(40),
-                      child: Image.file(
-                        File(imagePath!),
+                      child: Image(
+                        image: buildImageProviderFromSource(imagePath),
                         width: 128,
                         height: 128,
                         fit: BoxFit.cover,

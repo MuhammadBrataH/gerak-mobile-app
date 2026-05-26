@@ -1,10 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../events/data/models/event_model.dart';
+import '../../../events/presentation/controllers/event_controller.dart';
 import './community_add_sheet.dart';
 
 class CommunityProfileView extends StatefulWidget {
@@ -16,6 +17,38 @@ class CommunityProfileView extends StatefulWidget {
 
 class _CommunityProfileViewState extends State<CommunityProfileView> {
   static const _fallbackSports = ['BASKET', 'BADMINTON', 'LARI'];
+  late final EventController _eventController;
+  late Future<List<EventModel>> _postEventsFuture;
+  late Future<List<EventModel>> _matchEventsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventController = Get.find<EventController>();
+    _reloadContent();
+  }
+
+  void _reloadContent() {
+    final authController = Get.find<AuthController>();
+    final creatorId = authController.user.value?.id ?? '';
+
+    if (creatorId.isEmpty) {
+      _postEventsFuture = Future.value(const <EventModel>[]);
+      _matchEventsFuture = Future.value(const <EventModel>[]);
+      return;
+    }
+
+    _postEventsFuture = _eventController.fetchEventsAsList(
+      createdBy: creatorId,
+      activityType: 'post',
+      limit: 50,
+    );
+    _matchEventsFuture = _eventController.fetchEventsAsList(
+      createdBy: creatorId,
+      activityType: 'match',
+      limit: 50,
+    );
+  }
 
   Future<void> _openAddSheet() async {
     await showModalBottomSheet<void>(
@@ -26,6 +59,10 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
         return const CommunityAddSheet();
       },
     );
+
+    if (mounted) {
+      setState(_reloadContent);
+    }
   }
 
   @override
@@ -81,7 +118,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                             onEditTap: () async {
                               await Get.toNamed(AppRoutes.editProfile);
                               if (mounted) {
-                                setState(() {});
+                                setState(_reloadContent);
                               }
                             },
                           ),
@@ -92,8 +129,16 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                             height: 540,
                             child: TabBarView(
                               children: [
-                                _PostinganTab(communityName: communityName),
-                                _PertandinganTab(communityName: communityName),
+                                _PostinganTab(
+                                  communityName: communityName,
+                                  avatarPath: imagePath,
+                                  eventsFuture: _postEventsFuture,
+                                ),
+                                _PertandinganTab(
+                                  communityName: communityName,
+                                  avatarPath: imagePath,
+                                  eventsFuture: _matchEventsFuture,
+                                ),
                               ],
                             ),
                           ),
@@ -159,9 +204,7 @@ class _TopBar extends StatelessWidget {
           CircleAvatar(
             radius: 16,
             backgroundColor: const Color(0xFFE2E8F0),
-            backgroundImage: imagePath == null
-                ? null
-                : FileImage(File(imagePath!)),
+            backgroundImage: buildImageProviderFromSource(imagePath),
             child: imagePath == null
                 ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
                 : null,
@@ -237,8 +280,8 @@ class _CommunityHeader extends StatelessWidget {
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(40),
-                        child: Image.file(
-                          File(imagePath!),
+                        child: Image(
+                          image: buildImageProviderFromSource(imagePath),
                           width: 128,
                           height: 128,
                           fit: BoxFit.cover,
@@ -414,89 +457,173 @@ class _ProfileTabs extends StatelessWidget {
 
 class _PostinganTab extends StatelessWidget {
   final String communityName;
+  final String? avatarPath;
+  final Future<List<EventModel>> eventsFuture;
 
-  const _PostinganTab({required this.communityName});
+  const _PostinganTab({
+    required this.communityName,
+    required this.avatarPath,
+    required this.eventsFuture,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final posts = const [
-      _PostData(
-        communityName: 'PLAYMAKER FUN CLUB',
-        timeAgo: '1 minggu yang lalu',
-        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        imageUrl: 'assets/sample 1.jpg',
-        hasReadMore: true,
-      ),
-      _PostData(
-        communityName: 'PLAYMAKER FUN CLUB',
-        timeAgo: '1 minggu yang lalu',
-        content: 'Lorem ipsum dolor sit amet.',
-        imageUrl: 'assets/sample 1.jpg',
-        hasReadMore: false,
-      ),
-    ];
+    return FutureBuilder<List<EventModel>>(
+      future: eventsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+          );
+        }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      itemBuilder: (context, index) => _PostCard(data: posts[index]),
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemCount: posts.length,
+        final events = snapshot.data ?? const <EventModel>[];
+        if (events.isEmpty) {
+          return const Center(
+            child: Text(
+              'Belum ada postingan',
+              style: TextStyle(
+                color: Color(0xFF475569),
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 14,
+              ),
+            ),
+          );
+        }
+
+        final posts = events.map((event) {
+          return _PostData(
+            communityName: communityName,
+            timeAgo: _formatRelativeTime(event.createdAt),
+            content: event.description?.trim().isNotEmpty == true
+                ? event.description!.trim()
+                : event.name,
+            mediaUrl: event.imageUrl,
+            avatarProvider: _buildAvatarProvider(avatarPath),
+            hasReadMore: (event.description?.trim().length ?? 0) > 96,
+          );
+        }).toList();
+
+        return ListView.separated(
+          padding: EdgeInsets.zero,
+          itemBuilder: (context, index) => _PostCard(data: posts[index]),
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemCount: posts.length,
+        );
+      },
     );
   }
 }
 
 class _PertandinganTab extends StatelessWidget {
   final String communityName;
+  final String? avatarPath;
+  final Future<List<EventModel>> eventsFuture;
 
-  const _PertandinganTab({required this.communityName});
+  const _PertandinganTab({
+    required this.communityName,
+    required this.avatarPath,
+    required this.eventsFuture,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final matches = const [
-      _MatchData(
-        sportLabel: 'FOOTBALL',
-        title: 'GIMMICK LEAGUE\nWEEK 3',
-        dateTime: 'TODAY, 20:00',
-        location: 'CIJERAH SOCCER ARENA',
-        avatarUrl: 'assets/sample 1.jpg',
-      ),
-      _MatchData(
-        sportLabel: 'FOOTBALL',
-        title: 'GIMMICK LEAGUE\nWEEK 3',
-        dateTime: 'TODAY, 20:00',
-        location: 'CIJERAH SOCCER ARENA',
-        avatarUrl: 'assets/sample 1.jpg',
-      ),
-      _MatchData(
-        sportLabel: 'FOOTBALL',
-        title: 'GIMMICK LEAGUE\nWEEK 3',
-        dateTime: 'TODAY, 20:00',
-        location: 'CIJERAH SOCCER ARENA',
-        avatarUrl: 'assets/sample 1.jpg',
-      ),
-    ];
+    return FutureBuilder<List<EventModel>>(
+      future: eventsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+          );
+        }
 
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      itemBuilder: (context, index) => _MatchCard(data: matches[index]),
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemCount: matches.length,
+        final events = snapshot.data ?? const <EventModel>[];
+        if (events.isEmpty) {
+          return const Center(
+            child: Text(
+              'Belum ada pertandingan',
+              style: TextStyle(
+                color: Color(0xFF475569),
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 14,
+              ),
+            ),
+          );
+        }
+
+        final matches = events.map((event) {
+          return _MatchData(
+            sportLabel: event.sport.toUpperCase(),
+            title: event.name,
+            dateTime: _formatMatchDateTime(event.startTime),
+            location: event.location,
+            avatarProvider: _buildAvatarProvider(event.imageUrl ?? avatarPath),
+          );
+        }).toList();
+
+        return ListView.separated(
+          padding: EdgeInsets.zero,
+          itemBuilder: (context, index) => _MatchCard(data: matches[index]),
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemCount: matches.length,
+        );
+      },
     );
   }
+}
+
+String _formatRelativeTime(DateTime? value) {
+  if (value == null) {
+    return 'Baru saja';
+  }
+
+  final difference = DateTime.now().difference(value);
+  if (difference.inMinutes < 1) {
+    return 'Baru saja';
+  }
+  if (difference.inHours < 1) {
+    return '${difference.inMinutes} menit yang lalu';
+  }
+  if (difference.inDays < 1) {
+    return '${difference.inHours} jam yang lalu';
+  }
+  if (difference.inDays < 7) {
+    return '${difference.inDays} hari yang lalu';
+  }
+  final weeks = (difference.inDays / 7).floor();
+  return '$weeks minggu yang lalu';
+}
+
+String _formatMatchDateTime(DateTime? value) {
+  if (value == null) {
+    return 'TBD';
+  }
+
+  final day = value.day.toString().padLeft(2, '0');
+  final month = value.month.toString().padLeft(2, '0');
+  final hour = value.hour.toString().padLeft(2, '0');
+  final minute = value.minute.toString().padLeft(2, '0');
+  return '$day/$month/${value.year} • $hour:$minute';
+}
+
+ImageProvider _buildAvatarProvider(String? path) {
+  return buildImageProviderFromSource(path);
 }
 
 class _PostData {
   final String communityName;
   final String timeAgo;
   final String content;
-  final String imageUrl;
+  final String? mediaUrl;
+  final ImageProvider avatarProvider;
   final bool hasReadMore;
 
   const _PostData({
     required this.communityName,
     required this.timeAgo,
     required this.content,
-    required this.imageUrl,
+    required this.mediaUrl,
+    required this.avatarProvider,
     required this.hasReadMore,
   });
 }
@@ -522,7 +649,7 @@ class _PostCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: AssetImage(data.imageUrl),
+                backgroundImage: data.avatarProvider,
                 backgroundColor: const Color(0xFFE2E8F0),
               ),
               const SizedBox(width: 10),
@@ -584,11 +711,10 @@ class _PostCard extends StatelessWidget {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Image.asset(
-              data.imageUrl,
+            child: SizedBox(
               width: double.infinity,
               height: 150,
-              fit: BoxFit.cover,
+              child: buildMediaPreviewFromSource(data.mediaUrl),
             ),
           ),
         ],
@@ -602,14 +728,14 @@ class _MatchData {
   final String title;
   final String dateTime;
   final String location;
-  final String avatarUrl;
+  final ImageProvider avatarProvider;
 
   const _MatchData({
     required this.sportLabel,
     required this.title,
     required this.dateTime,
     required this.location,
-    required this.avatarUrl,
+    required this.avatarProvider,
   });
 }
 
@@ -711,7 +837,7 @@ class _MatchCard extends StatelessWidget {
               ),
               CircleAvatar(
                 radius: 20,
-                backgroundImage: AssetImage(data.avatarUrl),
+                backgroundImage: data.avatarProvider,
                 backgroundColor: const Color(0xFFE2E8F0),
               ),
             ],

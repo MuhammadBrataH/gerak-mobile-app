@@ -1,6 +1,10 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../events/presentation/controllers/event_controller.dart';
@@ -14,9 +18,15 @@ class CommunityAddSheet extends StatefulWidget {
 
 class _CommunityAddSheetState extends State<CommunityAddSheet> {
   int _activeTab = 0; // 0 = Postingan, 1 = Pertandingan
+  final ImagePicker _imagePicker = ImagePicker();
+  final TextEditingController _postTitleController = TextEditingController();
   final TextEditingController _postDescController = TextEditingController();
   final TextEditingController _matchTitleController = TextEditingController();
   final TextEditingController _matchDescController = TextEditingController();
+  Uint8List? _postMediaBytes;
+  String? _postMediaName;
+  Uint8List? _matchMediaBytes;
+  String? _matchMediaName;
   String? _selectedCategory;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -45,6 +55,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
 
   @override
   void dispose() {
+    _postTitleController.dispose();
     _postDescController.dispose();
     _matchTitleController.dispose();
     _matchDescController.dispose();
@@ -52,9 +63,12 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
   }
 
   void _showInfo(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    Get.snackbar(
+      'Info',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+    );
   }
 
   String _normalizeLevel(String? value) {
@@ -65,8 +79,53 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
     return _validLevels.contains(normalized) ? normalized : 'mixed';
   }
 
+  String? _buildDataUri(Uint8List? bytes, String? fileName) {
+    if (bytes == null || bytes.isEmpty) {
+      return null;
+    }
+
+    final lowerName = fileName?.toLowerCase() ?? '';
+    final mimeType = lowerName.endsWith('.png')
+        ? 'image/png'
+        : lowerName.endsWith('.gif')
+        ? 'image/gif'
+        : 'image/jpeg';
+    return 'data:$mimeType;base64,${base64Encode(bytes)}';
+  }
+
+  Future<void> _pickMedia({required bool isMatch}) async {
+    final picked = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked == null) {
+      return;
+    }
+
+    final bytes = await picked.readAsBytes();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (isMatch) {
+        _matchMediaBytes = bytes;
+        _matchMediaName = picked.name;
+      } else {
+        _postMediaBytes = bytes;
+        _postMediaName = picked.name;
+      }
+    });
+  }
+
   Future<void> _submitMatch() async {
     if (_isSubmitting) {
+      return;
+    }
+
+    final authController = Get.find<AuthController>();
+    if (!authController.isCommunityAccount) {
+      _showInfo('Hanya akun komunitas yang dapat membuat pertandingan.');
       return;
     }
 
@@ -99,7 +158,6 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       return;
     }
 
-    final authController = Get.find<AuthController>();
     final user = authController.user.value;
     final adminPhone = user?.phone ?? '';
     if (adminPhone.isEmpty) {
@@ -134,6 +192,67 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       maxSlots: _slotCount,
       totalSlots: _slotCount,
       adminPhone: adminPhone,
+      imageUrl: _buildDataUri(_matchMediaBytes, _matchMediaName),
+    );
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+    }
+
+    if (created != null && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _submitPost() async {
+    if (_isSubmitting) {
+      return;
+    }
+
+    final authController = Get.find<AuthController>();
+    if (!authController.isCommunityAccount) {
+      _showInfo('Hanya akun komunitas yang dapat membuat postingan.');
+      return;
+    }
+
+    final title = _postTitleController.text.trim();
+    final content = _postDescController.text.trim();
+
+    if (title.isEmpty) {
+      _showInfo('Judul postingan tidak boleh kosong.');
+      return;
+    }
+
+    if (content.isEmpty) {
+      _showInfo('Isi postingan tidak boleh kosong.');
+      return;
+    }
+
+    final user = authController.user.value;
+    final adminPhone = user?.phone ?? '';
+    if (adminPhone.isEmpty) {
+      _showInfo('Nomor admin belum tersedia di akun.');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final eventController = Get.find<EventController>();
+    final created = await eventController.createEvent(
+      name: title,
+      description: content,
+      sport: user?.sports.isNotEmpty == true ? user!.sports.first : 'general',
+      level: 'mixed',
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
+      location: 'Postingan Komunitas',
+      city: authController.currentDomicile,
+      district: '',
+      maxSlots: 1,
+      totalSlots: 1,
+      adminPhone: adminPhone,
+      activityType: 'post',
+      imageUrl: _buildDataUri(_postMediaBytes, _postMediaName),
     );
 
     if (mounted) {
@@ -287,10 +406,11 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
                   const SizedBox(height: 18),
                   if (_activeTab == 0)
                     _AddPostForm(
+                      titleController: _postTitleController,
                       descriptionController: _postDescController,
-                      onPickMedia: () =>
-                          _showInfo('Upload media belum dibuat.'),
-                      onSubmit: () => _showInfo('Postingan dibuat.'),
+                      mediaBytes: _postMediaBytes,
+                      onPickMedia: () => _pickMedia(isMatch: false),
+                      onSubmit: _submitPost,
                     )
                   else
                     _AddMatchForm(
@@ -298,8 +418,8 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
                       onCategoryTap: (value) {
                         setState(() => _selectedCategory = value);
                       },
-                      onPickMedia: () =>
-                          _showInfo('Upload media belum dibuat.'),
+                      mediaBytes: _matchMediaBytes,
+                      onPickMedia: () => _pickMedia(isMatch: true),
                       titleController: _matchTitleController,
                       descriptionController: _matchDescController,
                       dateLabel: _selectedDate == null
@@ -420,12 +540,16 @@ class _TabButton extends StatelessWidget {
 }
 
 class _AddPostForm extends StatelessWidget {
+  final TextEditingController titleController;
   final TextEditingController descriptionController;
+  final Uint8List? mediaBytes;
   final VoidCallback onPickMedia;
   final VoidCallback onSubmit;
 
   const _AddPostForm({
+    required this.titleController,
     required this.descriptionController,
+    required this.mediaBytes,
     required this.onPickMedia,
     required this.onSubmit,
   });
@@ -435,6 +559,8 @@ class _AddPostForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _TextField(controller: titleController, placeholder: 'Judul Postingan'),
+        const SizedBox(height: 12),
         const Text(
           'Tambahkan Foto/Video',
           style: TextStyle(
@@ -451,7 +577,7 @@ class _AddPostForm extends StatelessWidget {
           children: [
             _UploadBox(onTap: onPickMedia),
             const SizedBox(width: 12),
-            _PreviewThumb(),
+            _PreviewThumb(mediaBytes: mediaBytes),
           ],
         ),
         const SizedBox(height: 16),
@@ -470,6 +596,7 @@ class _AddMatchForm extends StatelessWidget {
   final String? selectedCategory;
   final ValueChanged<String> onCategoryTap;
   final VoidCallback onPickMedia;
+  final Uint8List? mediaBytes;
   final TextEditingController titleController;
   final TextEditingController descriptionController;
   final String dateLabel;
@@ -490,6 +617,7 @@ class _AddMatchForm extends StatelessWidget {
     required this.selectedCategory,
     required this.onCategoryTap,
     required this.onPickMedia,
+    required this.mediaBytes,
     required this.titleController,
     required this.descriptionController,
     required this.dateLabel,
@@ -590,7 +718,7 @@ class _AddMatchForm extends StatelessWidget {
           children: [
             _UploadBox(onTap: onPickMedia),
             const SizedBox(width: 12),
-            _PreviewThumb(),
+            _PreviewThumb(mediaBytes: mediaBytes),
           ],
         ),
         const SizedBox(height: 16),
@@ -718,18 +846,34 @@ class _UploadBox extends StatelessWidget {
 }
 
 class _PreviewThumb extends StatelessWidget {
+  final Uint8List? mediaBytes;
+
+  const _PreviewThumb({this.mediaBytes});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: Image.asset(
-            'assets/sample 1.jpg',
-            width: 74,
-            height: 85,
-            fit: BoxFit.cover,
-          ),
+          child: mediaBytes == null
+              ? Container(
+                  width: 74,
+                  height: 85,
+                  color: const Color(0xFFE2E8F0),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_outlined,
+                    color: Color(0xFF94A3B8),
+                    size: 28,
+                  ),
+                )
+              : Image.memory(
+                  mediaBytes!,
+                  width: 74,
+                  height: 85,
+                  fit: BoxFit.cover,
+                ),
         ),
         Positioned(
           right: 4,

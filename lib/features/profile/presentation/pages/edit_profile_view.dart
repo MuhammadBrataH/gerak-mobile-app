@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -328,8 +327,8 @@ class _EditProfileAvatar extends StatelessWidget {
                 ? const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8))
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(32),
-                    child: Image.file(
-                      File(imagePath!),
+                    child: Image(
+                      image: buildImageProviderFromSource(imagePath),
                       width: 120,
                       height: 120,
                       fit: BoxFit.cover,

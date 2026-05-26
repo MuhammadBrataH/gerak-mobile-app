@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import './community_add_sheet.dart';
 
@@ -290,9 +289,7 @@ class _TopBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 16,
               backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: imagePath == null
-                  ? null
-                  : FileImage(File(imagePath!)),
+              backgroundImage: buildImageProviderFromSource(imagePath),
               child: imagePath == null
                   ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
                   : null,
@@ -661,7 +658,7 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
                 child: ListView.separated(
                   padding: EdgeInsets.zero,
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (context, index) =>
                       const Divider(height: 1, color: Color(0xFF808080)),
                   itemBuilder: (context, index) {
                     final city = filtered[index];

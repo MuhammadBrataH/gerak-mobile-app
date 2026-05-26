@@ -32,6 +32,53 @@ function parseNumber(value, fallback = null) {
     return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizeCreateEventPayload(user, body) {
+    const {
+        name,
+        description = '',
+        sport,
+        level,
+        startTime,
+        endTime,
+        location,
+        city,
+        district = '',
+        coordinates,
+        maxSlots,
+        totalSlots,
+        adminPhone,
+        imageUrl = '',
+        activityType = 'match',
+    } = body;
+
+    const isPost = activityType === 'post';
+    const normalizedStartTime = isPost ? new Date() : startTime;
+    const normalizedEndTime = isPost ? new Date() : endTime;
+    const normalizedSport = isPost ? sport || user.sports?.[0] || 'general' : sport;
+    const normalizedLevel = isPost ? 'mixed' : level;
+    const normalizedLocation = isPost ? location || 'Postingan Komunitas' : location;
+    const normalizedTotalSlotsInput = isPost ? 1 : totalSlots;
+    const normalizedMaxSlotsInput = isPost ? 1 : maxSlots;
+
+    return {
+        name,
+        description,
+        sport: normalizedSport || 'general',
+        level: normalizedLevel || 'mixed',
+        startTime: normalizedStartTime,
+        endTime: normalizedEndTime,
+        location: normalizedLocation,
+        city,
+        district,
+        coordinates,
+        totalSlots: parseNumber(normalizedTotalSlotsInput, parseNumber(normalizedMaxSlotsInput, 0)),
+        maxSlots: parseNumber(normalizedMaxSlotsInput, parseNumber(normalizedTotalSlotsInput, 0)),
+        adminPhone: adminPhone || user.phone,
+        imageUrl,
+        activityType,
+    };
+}
+
 async function populateEvent(event) {
     if (!event) {
         return null;
@@ -51,6 +98,8 @@ const listEvents = asyncHandler(async (req, res) => {
         level,
         city,
         district,
+        createdBy,
+        activityType,
         page = 1,
         limit = 10,
     } = req.query;
@@ -73,13 +122,23 @@ const listEvents = asyncHandler(async (req, res) => {
         query.district = { $regex: district, $options: 'i' };
     }
 
-    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNumber = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    if (createdBy) {
+        query.createdBy = createdBy;
+    }
+
+    if (activityType) {
+        query.activityType = activityType;
+    }
+
+    const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.min(Math.max(Number.parseInt(limit, 10) || 10, 1), 100);
     const skip = (pageNumber - 1) * limitNumber;
+
+    const sort = activityType === 'post' ? { created_at: -1 } : { startTime: 1 };
 
     const [events, total] = await Promise.all([
         Event.find(query)
-            .sort({ startTime: 1 })
+            .sort(sort)
             .skip(skip)
             .limit(limitNumber),
         Event.countDocuments(query),
@@ -104,51 +163,30 @@ const getEventById = asyncHandler(async (req, res) => {
 
 const createEvent = asyncHandler(async (req, res) => {
     // Only community accounts (organizers) can create events
-    if (!req.user || req.user.accountType !== 'community') {
+    if (req.user?.accountType !== 'community') {
         throw new ApiError(403, 'Only community accounts can create events');
     }
-    const {
-        name,
-        description = '',
-        sport,
-        level,
-        startTime,
-        endTime,
-        location,
-        city,
-        district = '',
-        coordinates,
-        maxSlots,
-        totalSlots,
-        adminPhone,
-        imageUrl = '',
-    } = req.body;
 
-    if (!name || !sport || !level || !startTime || !endTime || !location || !city || !adminPhone) {
+    const payload = normalizeCreateEventPayload(req.user, req.body);
+
+    if (!['post', 'match'].includes(payload.activityType)) {
+        throw new ApiError(400, 'activityType must be either "post" or "match"');
+    }
+
+    if (!payload.name || !payload.city || !payload.adminPhone) {
+        throw new ApiError(400, 'name, city, and adminPhone are required');
+    }
+
+    if (payload.activityType === 'match' && (!payload.sport || !payload.level || !payload.startTime || !payload.endTime || !payload.location)) {
         throw new ApiError(400, 'name, sport, level, startTime, endTime, location, city, and adminPhone are required');
     }
 
-    const normalizedTotalSlots = parseNumber(totalSlots, parseNumber(maxSlots, 0));
-    const normalizedMaxSlots = parseNumber(maxSlots, normalizedTotalSlots);
-
-    if (!normalizedTotalSlots || !normalizedMaxSlots) {
+    if (!payload.totalSlots || !payload.maxSlots) {
         throw new ApiError(400, 'totalSlots or maxSlots must be greater than zero');
     }
 
     const eventData = {
-        name,
-        description,
-        sport,
-        level,
-        startTime,
-        endTime,
-        location,
-        city,
-        district,
-        totalSlots: normalizedTotalSlots,
-        maxSlots: normalizedMaxSlots,
-        adminPhone,
-        imageUrl,
+        ...payload,
         createdBy: req.user._id,
     };
 
