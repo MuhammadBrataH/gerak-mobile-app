@@ -30,7 +30,9 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
 
   void _reloadContent() {
     final authController = Get.find<AuthController>();
-    final creatorId = authController.user.value?.id ?? '';
+    final args = Get.arguments as Map<String, dynamic>? ?? {};
+    final creatorId =
+        (args['id'] as String?) ?? authController.user.value?.id ?? '';
 
     if (creatorId.isEmpty) {
       _postEventsFuture = Future.value(const <EventModel>[]);

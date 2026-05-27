@@ -53,6 +53,29 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
     'mixed',
   };
 
+  static const List<String> _availableCities = [
+    'Ambon',
+    'Balikpapan',
+    'Bandung',
+    'Banjarmasin',
+    'Batam',
+    'Bekasi',
+    'Bogor',
+    'Cilegon',
+    'Denpasar',
+    'Jakarta',
+    'Makassar',
+    'Malang',
+    'Manado',
+    'Medan',
+    'Padang',
+    'Palembang',
+    'Pekanbaru',
+    'Semarang',
+    'Surabaya',
+    'Yogyakarta',
+  ];
+
   @override
   void dispose() {
     _postTitleController.dispose();
@@ -96,7 +119,9 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
   Future<void> _pickMedia({required bool isMatch}) async {
     final picked = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80,
+      imageQuality: 60,
+      maxWidth: 1280,
+      maxHeight: 1280,
     );
     if (picked == null) {
       return;
@@ -187,7 +212,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       startTime: startTime,
       endTime: endTime,
       location: location,
-      city: authController.currentDomicile,
+      city: location,
       district: '',
       maxSlots: _slotCount,
       totalSlots: _slotCount,
@@ -291,30 +316,18 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
   }
 
   Future<void> _pickLocation() async {
-    final controller = TextEditingController(text: _locationLabel);
-    final result = await showDialog<String>(
+    final result = await showModalBottomSheet<String>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Lokasi'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Masukkan lokasi'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, controller.text),
-              child: const Text('Simpan'),
-            ),
-          ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.9),
+      builder: (context) {
+        return _LocationPickerSheet(
+          cities: _availableCities,
+          initialValue: _locationLabel == 'Lokasi' ? '' : _locationLabel,
         );
       },
     );
-    controller.dispose();
     if (result == null || result.trim().isEmpty) {
       return;
     }
@@ -1459,6 +1472,132 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationPickerSheet extends StatefulWidget {
+  final List<String> cities;
+  final String initialValue;
+
+  const _LocationPickerSheet({
+    required this.cities,
+    required this.initialValue,
+  });
+
+  @override
+  State<_LocationPickerSheet> createState() => _LocationPickerSheetState();
+}
+
+class _LocationPickerSheetState extends State<_LocationPickerSheet> {
+  late final TextEditingController _searchController;
+  late String _query;
+
+  @override
+  void initState() {
+    super.initState();
+    _query = widget.initialValue;
+    _searchController = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredCities = widget.cities
+        .where((city) => city.toLowerCase().contains(_query.toLowerCase()))
+        .toList();
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(50),
+              topRight: Radius.circular(50),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 102,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9199A5),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Pilih Lokasi',
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 24,
+                      fontFamily: 'Lexend',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => setState(() => _query = value),
+                  decoration: const InputDecoration(
+                    hintText: 'Cari kota',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1, color: Color(0x33000000)),
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: filteredCities.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, color: Color(0xFF808080)),
+                  itemBuilder: (context, index) {
+                    final city = filteredCities[index];
+                    return ListTile(
+                      title: Text(
+                        city,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 18,
+                          fontFamily: 'Lexend',
+                        ),
+                      ),
+                      onTap: () => Get.back(result: city),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

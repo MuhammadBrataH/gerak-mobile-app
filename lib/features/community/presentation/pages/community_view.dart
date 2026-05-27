@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import './community_add_sheet.dart';
@@ -16,6 +17,43 @@ class CommunityView extends StatefulWidget {
 class _CommunityViewState extends State<CommunityView> {
   final Set<String> _selectedCategories = {};
   String _selectedLocation = 'Bandung';
+  final ApiClient _apiClient = ApiClient();
+  List<_CommunityCardData> _communities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCommunities();
+  }
+
+  Future<void> _loadCommunities() async {
+    try {
+      final resp = await _apiClient.get<Map<String, dynamic>>(
+        '/auth/communities',
+      );
+      final data = resp.data ?? {};
+      final items = data['communities'];
+      if (items is List) {
+        setState(() {
+          _communities = items.whereType<Map<String, dynamic>>().map((m) {
+            return _CommunityCardData(
+              id: m['_id']?.toString() ?? '',
+              name: (m['name'] ?? '').toString(),
+              categories:
+                  (m['sports'] is List && (m['sports'] as List).isNotEmpty)
+                  ? (m['sports'] as List).join(' • ').toUpperCase()
+                  : 'GENERAL',
+              badgeUrl: m['photoUrl'] is String && m['photoUrl']!.isNotEmpty
+                  ? m['photoUrl'] as String
+                  : 'assets/sample 1.jpg',
+            );
+          }).toList();
+        });
+      }
+    } catch (_) {
+      // ignore
+    }
+  }
 
   void _showToast(String message) {
     Get.snackbar(
@@ -120,13 +158,15 @@ class _CommunityViewState extends State<CommunityView> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final communities = <_CommunityCardData>[
-      _CommunityCardData(
-        name: 'PLAYMAKER FUN CLUB',
-        categories: 'FOOTBALL • PADEL',
-        badgeUrl: 'assets/sample 1.jpg',
-      ),
-    ];
+    final communities = _communities.isNotEmpty
+        ? _communities
+        : <_CommunityCardData>[
+            _CommunityCardData(
+              name: 'PLAYMAKER FUN CLUB',
+              categories: 'FOOTBALL • PADEL',
+              badgeUrl: 'assets/sample 1.jpg',
+            ),
+          ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -205,6 +245,7 @@ class _CommunityViewState extends State<CommunityView> {
                           onTap: () => Get.toNamed(
                             AppRoutes.communityProfile,
                             arguments: {
+                              'id': communities[index].id,
                               'name': communities[index].name,
                               'badgeUrl': communities[index].badgeUrl,
                               'categories': communities[index].categories,
@@ -892,11 +933,13 @@ class _NavItem extends StatelessWidget {
 }
 
 class _CommunityCardData {
+  final String id;
   final String name;
   final String categories;
   final String badgeUrl;
 
   const _CommunityCardData({
+    this.id = '',
     required this.name,
     required this.categories,
     required this.badgeUrl,

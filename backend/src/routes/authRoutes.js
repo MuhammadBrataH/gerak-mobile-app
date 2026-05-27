@@ -9,6 +9,7 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/logout', authenticate(['access']), authController.logout);
 router.get('/me', authenticate(['access']), authController.me);
+router.get('/communities', authController.listCommunities);
 router.post('/refresh-token', authenticate(['refresh']), authController.refreshToken);
 
 module.exports = router;

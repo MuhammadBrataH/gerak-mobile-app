@@ -253,8 +253,9 @@ class AuthController extends GetxController {
     String name,
     String phone,
     String? gender,
-    DateTime? dateOfBirth,
-  ) async {
+    DateTime? dateOfBirth, {
+    String? accountType,
+  }) async {
     if (email.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
       Get.snackbar('Register Failed', 'All fields are required');
       return;
@@ -269,7 +270,7 @@ class AuthController extends GetxController {
           'password': password,
           'name': name,
           'phone': phone,
-          'accountType': signupAccountType.value ?? 'personal',
+          'accountType': accountType ?? signupAccountType.value ?? 'personal',
           'gender': gender,
           'dateOfBirth': dateOfBirth?.toIso8601String(),
         },

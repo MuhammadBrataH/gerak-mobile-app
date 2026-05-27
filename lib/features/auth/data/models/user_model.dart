@@ -30,14 +30,16 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final email = (json['email'] ?? '').toString();
+    final name = (json['name'] ?? '').toString();
     return UserModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
-      email: (json['email'] ?? '').toString(),
-      name: (json['name'] ?? '').toString(),
+      email: email,
+      name: name,
       phone: (json['phone'] ?? '').toString(),
       sports: _stringList(json['sports']),
       level: (json['level'] ?? '').toString(),
-      accountType: (json['accountType'] ?? 'personal').toString(),
+      accountType: _resolveAccountType(json['accountType'], name, email),
       photoUrl: json['photoUrl']?.toString(),
       refreshTokenHash: json['refreshTokenHash']?.toString(),
       gender: json['gender']?.toString(),
@@ -77,5 +79,18 @@ class UserModel {
       return DateTime.tryParse(value);
     }
     return null;
+  }
+
+  static String _resolveAccountType(dynamic value, String name, String email) {
+    final String accountType = value == null ? '' : value.toString();
+    if (accountType == 'personal' || accountType == 'community') {
+      return accountType;
+    }
+
+    final haystack = '$name $email'.toLowerCase();
+    const communityKeywords = ['xtc', 'polban', 'usf'];
+    return communityKeywords.any((keyword) => haystack.contains(keyword))
+        ? 'community'
+        : 'personal';
   }
 }

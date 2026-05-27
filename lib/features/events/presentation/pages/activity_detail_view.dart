@@ -1,21 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/event_controller.dart';
 
 class ActivityDetailView extends StatelessWidget {
-  final String eventId;
-  final String title;
-  final String label;
-  final Color labelColor;
-  final String time;
-  final String location;
-  final String address;
-  final String community;
-  final String description;
-  final String price;
-  final String participants;
-
   const ActivityDetailView({
+    super.key,
     this.eventId = '',
     required this.title,
     required this.label,
@@ -27,7 +18,57 @@ class ActivityDetailView extends StatelessWidget {
     required this.description,
     required this.price,
     required this.participants,
+    required this.adminPhone,
   });
+
+  final String eventId;
+  final String title;
+  final String label;
+  final Color labelColor;
+  final String time;
+  final String location;
+  final String address;
+  final String community;
+  final String description;
+  final String price;
+  final String participants;
+  final String adminPhone;
+
+  Future<void> _openWhatsApp() async {
+    String normalizePhone(String raw) {
+      var s = raw.replaceAll(RegExp(r'[^0-9+]'), '');
+      if (s.startsWith('+')) {
+        s = s.substring(1);
+      }
+      if (s.startsWith('0')) {
+        // Indonesian local numbers like 0812... -> 62812...
+        s = '62' + s.substring(1);
+      } else if (s.startsWith('8')) {
+        // Missing leading zero (e.g. 812...) -> assume Indonesian
+        s = '62' + s;
+      }
+      return s;
+    }
+
+    final organizerPhone = normalizePhone(adminPhone);
+    if (organizerPhone.isEmpty) {
+      Get.snackbar('WhatsApp', 'Nomor organizer belum tersedia');
+      return;
+    }
+
+    final userName = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>().displayName
+        : 'peserta';
+    final message = Uri.encodeComponent(
+      'Halo, saya $userName ingin join "$title".',
+    );
+    final uri = Uri.parse('https://wa.me/$organizerPhone?text=$message');
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!launched) {
+      Get.snackbar('WhatsApp', 'Gagal membuka WhatsApp');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -458,6 +499,33 @@ class ActivityDetailView extends StatelessWidget {
                         width: double.infinity,
                         height: 56,
                         child: _JoinButton(eventId: eventId),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: _openWhatsApp,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF25D366)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.chat_bubble_outline,
+                            color: Color(0xFF25D366),
+                          ),
+                          label: const Text(
+                            'Hubungi WhatsApp',
+                            style: TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 16,
+                              fontFamily: 'Lexend',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Center(

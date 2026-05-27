@@ -27,7 +27,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final Set<String> _selectedCategories = {};
-  String _selectedLocation = 'Bandung';
+  String _selectedLocation = '';
   DateTime _selectedDate = DateTime.now();
 
   EventController get _eventController => Get.find<EventController>();
@@ -63,7 +63,7 @@ class _HomeViewState extends State<HomeView> {
         .where((s) => s != null)
         .toList();
     _eventController.fetchEventsDebounced(
-      city: _selectedLocation,
+      city: _selectedLocation.isNotEmpty ? _selectedLocation : null,
       sport: sports.isNotEmpty ? sports.first : null,
       activityType: 'match',
     );
@@ -99,6 +99,7 @@ class _HomeViewState extends State<HomeView> {
       price: '',
       labelIconAsset: icon,
       badgeUrl: event.imageUrl,
+      adminPhone: event.adminPhone,
       backgroundColor: const Color(0xFFF1F5F9),
       participants: slots,
     );
@@ -316,7 +317,8 @@ class _HomeViewState extends State<HomeView> {
                                 community: activity.community,
                                 description: activity.description,
                                 price: activity.price,
-                                participants: '8/44',
+                                participants: activity.participants,
+                                adminPhone: activity.adminPhone,
                               ),
                             );
                           },
@@ -389,7 +391,9 @@ class _HomeViewState extends State<HomeView> {
                         ),
                         const SizedBox(height: 16),
                         _FilterRow(
-                          locationLabel: _selectedLocation,
+                          locationLabel: _selectedLocation.isEmpty
+                              ? 'Lokasi'
+                              : _selectedLocation,
                           dateLabel: _formatDateLabel(_selectedDate),
                           onLocationTap: _openLocationSheet,
                           onDateTap: _openDateSheet,
@@ -1339,6 +1343,7 @@ class _ActivityCard extends StatelessWidget {
             description: data.description,
             price: data.price,
             participants: data.participants,
+            adminPhone: data.adminPhone,
           ),
         );
       },
@@ -1638,6 +1643,7 @@ class _ActivityCardData {
   final String price;
   final String labelIconAsset;
   final String? badgeUrl;
+  final String adminPhone;
   final Color backgroundColor;
   final String participants;
 
@@ -1654,6 +1660,7 @@ class _ActivityCardData {
     required this.price,
     required this.labelIconAsset,
     required this.badgeUrl,
+    required this.adminPhone,
     required this.backgroundColor,
     this.participants = '',
   });

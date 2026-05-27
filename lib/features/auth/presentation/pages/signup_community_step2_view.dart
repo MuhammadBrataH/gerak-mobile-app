@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
 import 'package:gerak_mobile_app/core/constants/signup_tokens.dart';
+import '../controllers/auth_controller.dart';
 
 class SignUpCommunityStep2View extends StatefulWidget {
   const SignUpCommunityStep2View({super.key});
@@ -248,6 +249,11 @@ class _SignUpCommunityStep2ViewState extends State<SignUpCommunityStep2View> {
                                     ),
                                     child: ElevatedButton(
                                       onPressed: () {
+                                        final controller =
+                                            Get.find<AuthController>();
+                                        controller.setSignupAccountType(
+                                          'community',
+                                        );
                                         Get.toNamed(AppRoutes.registerPrivate3);
                                       },
                                       style: ElevatedButton.styleFrom(

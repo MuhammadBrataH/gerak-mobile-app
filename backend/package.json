@@ -6,7 +6,8 @@
     "main": "src/server.js",
     "scripts": {
         "start": "node src/server.js",
-        "dev": "node src/server.js"
+        "dev": "node src/server.js",
+        "migrate:account-type": "node migrate-account-type.js"
     },
     "keywords": [
         "gerak",

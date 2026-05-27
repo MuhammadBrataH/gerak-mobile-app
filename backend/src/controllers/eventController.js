@@ -191,8 +191,8 @@ const createEvent = asyncHandler(async (req, res) => {
     };
 
     // Coordinates are optional for MVP (will be for phase 2 GPS feature)
-    if (coordinates) {
-        const parsedCoordinates = parseCoordinates(coordinates);
+    if (payload.coordinates) {
+        const parsedCoordinates = parseCoordinates(payload.coordinates);
         if (parsedCoordinates) {
             eventData.coordinates = {
                 type: 'Point',

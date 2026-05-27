@@ -47,6 +47,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
+    final accountType = controller.accountType;
 
     if (name.isEmpty) {
       Get.snackbar('Validasi', 'Nama belum diisi');
@@ -73,7 +74,15 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
       Get.snackbar('Validasi', 'Konfirmasi password tidak sama');
       return;
     }
-    controller.register(email, password, name, phone, gender, dateOfBirth);
+    controller.register(
+      email,
+      password,
+      name,
+      phone,
+      gender,
+      dateOfBirth,
+      accountType: accountType,
+    );
   }
 
   @override

@@ -25,6 +25,19 @@ function sanitizeUser(user) {
     return user.toJSON ? user.toJSON() : user;
 }
 
+const COMMUNITY_KEYWORDS = ['xtc', 'polban', 'usf'];
+
+function inferAccountType(name, email, accountType) {
+    if (['personal', 'community'].includes(accountType)) {
+        return accountType;
+    }
+
+    const haystack = `${name || ''} ${email || ''}`.toLowerCase();
+    return COMMUNITY_KEYWORDS.some((keyword) => haystack.includes(keyword))
+        ? 'community'
+        : 'personal';
+}
+
 const register = asyncHandler(async (req, res) => {
     const {
         email,
@@ -33,7 +46,7 @@ const register = asyncHandler(async (req, res) => {
         phone,
         sports = [],
         level = 'beginner',
-        accountType = 'personal',
+        accountType = null,
         gender = null,
         dateOfBirth = null,
         latitude = null,
@@ -49,9 +62,7 @@ const register = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Password must be at least 8 characters and contain letters and numbers');
     }
 
-    if (!['personal', 'community'].includes(accountType)) {
-        throw new ApiError(400, 'accountType must be either "personal" or "community"');
-    }
+    const normalizedAccountType = inferAccountType(name, email, accountType);
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -66,7 +77,7 @@ const register = asyncHandler(async (req, res) => {
         phone,
         sports: Array.isArray(sports) ? sports : [],
         level,
-        accountType,
+        accountType: normalizedAccountType,
         gender,
         dateOfBirth,
         latitude,
@@ -124,6 +135,11 @@ const me = asyncHandler(async (req, res) => {
     res.status(200).json({ user: req.user });
 });
 
+const listCommunities = asyncHandler(async (req, res) => {
+    const communities = await User.find({ accountType: 'community' }).select('name photoUrl sports');
+    res.status(200).json({ communities });
+});
+
 const refreshToken = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id).select('+refreshTokenHash');
 
@@ -152,5 +168,6 @@ module.exports = {
     login,
     logout,
     me,
+    listCommunities,
     refreshToken,
 };
