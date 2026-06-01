@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
 
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
@@ -8,6 +9,9 @@ const {
     issueRefreshToken,
     hashToken,
 } = require('../utils/tokens');
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 
 function validatePasswordStrength(password) {
     return typeof password === 'string' && password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
@@ -23,6 +27,24 @@ function buildAuthPayload(user, accessToken, refreshToken) {
 
 function sanitizeUser(user) {
     return user.toJSON ? user.toJSON() : user;
+}
+
+async function verifyGoogleIdToken(idToken) {
+    if (!googleClient) {
+        throw new ApiError(500, 'Google client ID is not configured');
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: googleClientId,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.email || payload.email_verified !== true) {
+        throw new ApiError(401, 'Google email is not verified');
+    }
+
+    return payload;
 }
 
 const register = asyncHandler(async (req, res) => {
@@ -147,10 +169,52 @@ const refreshToken = asyncHandler(async (req, res) => {
     });
 });
 
+const googleLogin = asyncHandler(async (req, res) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+        throw new ApiError(400, 'idToken is required');
+    }
+
+    const payload = await verifyGoogleIdToken(idToken);
+    const email = payload.email.toLowerCase();
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(200).json({
+            needsRegistration: true,
+            profile: {
+                email,
+                name: payload.name || '',
+                photoUrl: payload.picture || '',
+            },
+        });
+    }
+
+    if (!user.photoUrl && payload.picture) {
+        user.photoUrl = payload.picture;
+    }
+    if (!user.name && payload.name) {
+        user.name = payload.name;
+    }
+
+    const accessToken = issueAccessToken(user._id);
+    const refreshToken = issueRefreshToken(user._id);
+
+    user.refreshTokenHash = hashToken(refreshToken);
+    await user.save({ validateBeforeSave: false });
+
+    const safeUser = await User.findById(user._id).select('-password');
+    return res.status(200).json(
+        buildAuthPayload(sanitizeUser(safeUser), accessToken, refreshToken)
+    );
+});
+
 module.exports = {
     register,
     login,
     logout,
     me,
     refreshToken,
+    googleLogin,
 };
