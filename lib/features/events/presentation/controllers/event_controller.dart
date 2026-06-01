@@ -13,7 +13,8 @@ class EventController extends GetxController {
   final RxBool hasMore = true.obs;
   final RxnString currentCity = RxnString();
   final RxnString currentDistrict = RxnString();
-  final RxnString currentSport = RxnString();
+  final RxSet<String> currentSports = <String>{}.obs;
+  final Rxn<DateTime> currentDate = Rxn<DateTime>();
   final RxnString currentActivityType = RxnString('match');
   Timer? _filterDebounce;
 
@@ -78,7 +79,8 @@ class EventController extends GetxController {
   Future<void> fetchEvents({
     String? city,
     String? district,
-    String? sport,
+    Set<String>? sports,
+    DateTime? date,
     String? activityType,
     int page = 1,
   }) async {
@@ -86,26 +88,40 @@ class EventController extends GetxController {
     try {
       final effectiveActivityType =
           activityType ?? currentActivityType.value ?? 'match';
+      final effectiveSports = sports ?? currentSports.toSet();
+      final effectiveDate = date ?? currentDate.value;
+      final apiSport = effectiveSports.length == 1
+          ? effectiveSports.first
+          : null;
 
       if (page <= 1) {
         currentCity.value = city;
         currentDistrict.value = district;
-        currentSport.value = sport;
+        currentSports
+          ..clear()
+          ..addAll(effectiveSports);
+        currentDate.value = effectiveDate;
         currentActivityType.value = effectiveActivityType;
       }
 
       final result = await _fetchEventsPage(
         city: city,
         district: district,
-        sport: sport,
+        sport: apiSport,
         activityType: effectiveActivityType,
         page: page,
       );
 
+      final filtered = _applyLocalFilters(
+        result.events,
+        sports: effectiveSports,
+        date: effectiveDate,
+      );
+
       if (page <= 1) {
-        events.assignAll(result.events);
+        events.assignAll(filtered);
       } else {
-        events.addAll(result.events);
+        events.addAll(filtered);
       }
 
       currentPage.value = page;
@@ -127,7 +143,8 @@ class EventController extends GetxController {
     await fetchEvents(
       city: currentCity.value,
       district: currentDistrict.value,
-      sport: currentSport.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
       activityType: currentActivityType.value,
       page: currentPage.value + 1,
     );
@@ -136,7 +153,8 @@ class EventController extends GetxController {
   Future<void> resetFilters() async {
     currentCity.value = null;
     currentDistrict.value = null;
-    currentSport.value = null;
+    currentSports.clear();
+    currentDate.value = null;
     currentActivityType.value = 'match';
     await fetchEvents(page: 1, activityType: 'match');
   }
@@ -150,7 +168,8 @@ class EventController extends GetxController {
     await fetchEvents(
       city: currentCity.value,
       district: currentDistrict.value,
-      sport: currentSport.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
       activityType: currentActivityType.value,
       page: 1,
     );
@@ -159,7 +178,8 @@ class EventController extends GetxController {
   Future<List<EventModel>> fetchEventsAsList({
     String? city,
     String? district,
-    String? sport,
+    Set<String>? sports,
+    DateTime? date,
     String? createdBy,
     String? activityType,
     int page = 1,
@@ -168,13 +188,45 @@ class EventController extends GetxController {
     final result = await _fetchEventsPage(
       city: city,
       district: district,
-      sport: sport,
+      sport: sports != null && sports.length == 1 ? sports.first : null,
       createdBy: createdBy,
       activityType: activityType,
       page: page,
       limit: limit,
     );
-    return result.events;
+    return _applyLocalFilters(result.events, sports: sports, date: date);
+  }
+
+  List<EventModel> _applyLocalFilters(
+    List<EventModel> source, {
+    Set<String>? sports,
+    DateTime? date,
+  }) {
+    final normalizedSports = sports
+        ?.map((sport) => sport.toLowerCase())
+        .toSet();
+
+    return source.where((event) {
+      if (normalizedSports != null && normalizedSports.isNotEmpty) {
+        if (!normalizedSports.contains(event.sport.toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (date != null) {
+        final start = event.startTime;
+        if (start == null) {
+          return false;
+        }
+        if (start.year != date.year ||
+            start.month != date.month ||
+            start.day != date.day) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
   }
 
   bool _matchesCurrentFilters(EventModel event) {
@@ -197,14 +249,78 @@ class EventController extends GetxController {
       }
     }
 
-    final sport = currentSport.value;
-    if (sport != null && sport.isNotEmpty) {
-      if (event.sport.toLowerCase() != sport.toLowerCase()) {
+    if (currentSports.isNotEmpty) {
+      final normalized = currentSports
+          .map((sport) => sport.toLowerCase())
+          .toSet();
+      if (!normalized.contains(event.sport.toLowerCase())) {
+        return false;
+      }
+    }
+
+    final date = currentDate.value;
+    if (date != null) {
+      final start = event.startTime;
+      if (start == null) {
+        return false;
+      }
+      if (start.year != date.year ||
+          start.month != date.month ||
+          start.day != date.day) {
         return false;
       }
     }
 
     return true;
+  }
+
+  void setSelectedSports(Set<String> sports) {
+    currentSports
+      ..clear()
+      ..addAll(sports);
+    fetchEventsDebounced(
+      city: currentCity.value,
+      district: currentDistrict.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
+      activityType: currentActivityType.value,
+    );
+  }
+
+  void toggleSportSelection(String sportKey) {
+    if (currentSports.contains(sportKey)) {
+      currentSports.remove(sportKey);
+    } else {
+      currentSports.add(sportKey);
+    }
+    fetchEventsDebounced(
+      city: currentCity.value,
+      district: currentDistrict.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
+      activityType: currentActivityType.value,
+    );
+  }
+
+  void setSelectedDate(DateTime? date) {
+    currentDate.value = date;
+    fetchEventsDebounced(
+      city: currentCity.value,
+      district: currentDistrict.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
+      activityType: currentActivityType.value,
+    );
+  }
+
+  void applyFilters({String? city, String? district}) {
+    fetchEventsDebounced(
+      city: city ?? currentCity.value,
+      district: district ?? currentDistrict.value,
+      sports: currentSports.toSet(),
+      date: currentDate.value,
+      activityType: currentActivityType.value,
+    );
   }
 
   Future<EventModel?> createEvent({
@@ -261,7 +377,8 @@ class EventController extends GetxController {
       await fetchEvents(
         city: currentCity.value,
         district: currentDistrict.value,
-        sport: currentSport.value,
+        sports: currentSports.toSet(),
+        date: currentDate.value,
         page: 1,
       );
 
@@ -279,7 +396,8 @@ class EventController extends GetxController {
   void fetchEventsDebounced({
     String? city,
     String? district,
-    String? sport,
+    Set<String>? sports,
+    DateTime? date,
     String? activityType,
     int page = 1,
   }) {
@@ -288,7 +406,8 @@ class EventController extends GetxController {
       fetchEvents(
         city: city,
         district: district,
-        sport: sport,
+        sports: sports,
+        date: date,
         activityType: activityType,
         page: page,
       );

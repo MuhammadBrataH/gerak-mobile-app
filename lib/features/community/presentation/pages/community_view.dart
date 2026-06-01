@@ -190,7 +190,7 @@ class _CommunityViewState extends State<CommunityView> {
                             imagePath: authController.currentProfilePhotoPath,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        
                         _SearchBar(onTap: () => _showToast('Search tapped')),
                         const SizedBox(height: 24),
                         _SectionHeader(
@@ -299,17 +299,17 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          SizedBox(
-            width: 32,
-            child: onAddTap == null
-                ? const SizedBox.shrink()
-                : IconButton(
-                    onPressed: onAddTap,
-                    icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-          ),
+          // SizedBox(
+          //   width: 32,
+          //   child: onAddTap == null
+          //       ? const SizedBox.shrink()
+          //       : IconButton(
+          //           onPressed: onAddTap,
+          //           icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+          //           padding: EdgeInsets.zero,
+          //           constraints: const BoxConstraints(),
+          //         ),
+          // ),
           Expanded(
             child: Center(
               child: const Text(
@@ -325,17 +325,17 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: onProfileTap,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: buildImageProviderFromSource(imagePath),
-              child: imagePath == null
-                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-                  : null,
-            ),
-          ),
+          // GestureDetector(
+          //   onTap: onProfileTap,
+          //   child: CircleAvatar(
+          //     radius: 16,
+          //     backgroundColor: const Color(0xFFE2E8F0),
+          //     backgroundImage: buildImageProviderFromSource(imagePath),
+          //     child: imagePath == null
+          //         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+          //         : null,
+          //   ),
+          // ),
         ],
       ),
     );

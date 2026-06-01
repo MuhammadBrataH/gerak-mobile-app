@@ -26,9 +26,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  final Set<String> _selectedCategories = {};
   String _selectedLocation = '';
-  DateTime _selectedDate = DateTime.now();
 
   EventController get _eventController => Get.find<EventController>();
 
@@ -58,14 +56,8 @@ class _HomeViewState extends State<HomeView> {
   };
 
   void _applyFilters() {
-    final sports = _selectedCategories
-        .map((label) => _categoryToSport[label])
-        .where((s) => s != null)
-        .toList();
-    _eventController.fetchEventsDebounced(
+    _eventController.applyFilters(
       city: _selectedLocation.isNotEmpty ? _selectedLocation : null,
-      sport: sports.isNotEmpty ? sports.first : null,
-      activityType: 'match',
     );
   }
 
@@ -136,7 +128,7 @@ class _HomeViewState extends State<HomeView> {
         return const _LocationFilterSheet();
       },
     );
-    if (selected != null && selected.isNotEmpty) {
+    if (selected != null) {
       setState(() {
         _selectedLocation = selected;
       });
@@ -145,107 +137,38 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _openDateSheet() async {
+    final initialDate = _eventController.currentDate.value ?? DateTime.now();
     final selected = await showModalBottomSheet<DateTime>(
       context: context,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.9),
       isScrollControlled: true,
       builder: (context) {
-        return _DateFilterSheet(initialDate: _selectedDate);
+        return _DateFilterSheet(initialDate: initialDate);
       },
     );
     if (selected != null) {
-      setState(() {
-        _selectedDate = selected;
-      });
+      _eventController.setSelectedDate(selected);
     }
   }
 
-  String _formatDateLabel(DateTime date) {
+  String _formatDateLabel(DateTime? date) {
+    if (date == null) {
+      return 'Tanggal';
+    }
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     return '$day-$month-${date.year}';
   }
 
-  void _showProfileMenu(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final menuWidth = 120.0;
-    final authController = Get.find<AuthController>();
-    final isLoggedIn = authController.user.value != null;
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Container(
-            width: 120,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: const EdgeInsets.all(14),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: GestureDetector(
-                onTap: () {
-                  Get.back();
-                  if (isLoggedIn) {
-                    authController.logout();
-                  } else {
-                    Get.offAllNamed(AppRoutes.login);
-                  }
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isLoggedIn ? Icons.logout : Icons.login,
-                      color: const Color(0xFF2563EB),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isLoggedIn ? 'Logout' : 'Login',
-                      style: const TextStyle(
-                        color: Color(0xFF2563EB),
-                        fontSize: 14,
-                        fontFamily: 'Lexend',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-      elevation: 0,
-      color: Colors.transparent,
-    );
-  }
-
-  void _openSearchSheet(List<_ActivityCardData> activities) {
+  void _openSearchSheet() {
+    final activities = _eventController.events.map(_eventToCardData).toList();
     final textController = TextEditingController();
     List<_ActivityCardData> filteredActivities = activities;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -253,81 +176,221 @@ class _HomeViewState extends State<HomeView> {
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: TextField(
-                      controller: textController,
-                      onChanged: (value) {
-                        setState(() {
-                          filteredActivities = activities
-                              .where(
-                                (activity) =>
-                                    activity.title.toLowerCase().contains(
-                                      value.toLowerCase(),
-                                    ) ||
-                                    activity.location.toLowerCase().contains(
-                                      value.toLowerCase(),
-                                    ) ||
-                                    activity.label.toLowerCase().contains(
-                                      value.toLowerCase(),
-                                    ),
-                              )
-                              .toList();
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Cari aktivitas...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 64,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECF2FA),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                  ),
-                  Flexible(
-                    child: ListView.builder(
-                      itemCount: filteredActivities.length,
-                      itemBuilder: (context, index) {
-                        final activity = filteredActivities[index];
-                        return ListTile(
-                          leading: SvgPicture.asset(
-                            activity.labelIconAsset,
-                            width: 40,
-                            height: 40,
-                          ),
-                          title: Text(activity.title.replaceAll('\n', ' ')),
-                          subtitle: Text(activity.location),
-                          onTap: () {
-                            Get.back();
-                            Get.to(
-                              () => ActivityDetailView(
-                                title: activity.title.replaceAll('\n', ' '),
-                                label: activity.label,
-                                labelColor: activity.labelColor,
-                                time: activity.time,
-                                location: activity.location,
-                                address: activity.address,
-                                community: activity.community,
-                                description: activity.description,
-                                price: activity.price,
-                                participants: activity.participants,
-                                adminPhone: activity.adminPhone,
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: textController,
+                              onChanged: (value) {
+                                setState(() {
+                                  final q = value.toLowerCase();
+                                  filteredActivities = activities
+                                      .where(
+                                        (activity) =>
+                                            activity.title
+                                                .toLowerCase()
+                                                .contains(q) ||
+                                            activity.location
+                                                .toLowerCase()
+                                                .contains(q) ||
+                                            activity.label
+                                                .toLowerCase()
+                                                .contains(q),
+                                      )
+                                      .toList();
+                                });
+                              },
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Lexend',
+                                color: Color(0xFF0F172A),
                               ),
-                            );
-                          },
-                        );
-                      },
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: const Color(0xFFF7FAFC),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                hintText: 'Cari aktivitas...',
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              textController.clear();
+                              setState(() {
+                                filteredActivities = activities;
+                              });
+                            },
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: filteredActivities.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 48,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Tidak ada hasil',
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 14,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              itemCount: filteredActivities.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final activity = filteredActivities[index];
+                                return InkWell(
+                                  onTap: () {
+                                    Get.back();
+                                    Get.to(
+                                      () => ActivityDetailView(
+                                        title: activity.title.replaceAll(
+                                          '\n',
+                                          ' ',
+                                        ),
+                                        label: activity.label,
+                                        labelColor: activity.labelColor,
+                                        time: activity.time,
+                                        location: activity.location,
+                                        address: activity.address,
+                                        community: activity.community,
+                                        description: activity.description,
+                                        price: activity.price,
+                                        participants: activity.participants,
+                                        adminPhone: activity.adminPhone,
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEFF6FF),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(6),
+                                            child: SvgPicture.asset(
+                                              activity.labelIconAsset,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                activity.title.replaceAll(
+                                                  '\n',
+                                                  ' ',
+                                                ),
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontFamily: 'Lexend',
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF0F172A),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                activity.location,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             );
           },
@@ -340,6 +403,10 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: _TopBar(onAddTap: _openAddSheet, onSearchTap: _openSearchSheet),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -347,56 +414,44 @@ class _HomeViewState extends State<HomeView> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Obx(
-                          () => _TopBar(
-                            onProfileTap: () => _showProfileMenu(context),
-                            imagePath: Get.find<AuthController>()
-                                .currentProfilePhotoPath,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const _HeroHeadline(),
-                        const SizedBox(height: 18),
-                        Obx(() {
-                          final apiActivities = _eventController.events
-                              .map(_eventToCardData)
-                              .toList();
-                          return _SearchBar(
-                            onTap: () => _openSearchSheet(apiActivities),
-                          );
-                        }),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 4),
+                        // const _HeroHeadline(),
+                        // const SizedBox(height: 20),
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
                           onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
-                        _CategoryChips(
-                          selectedLabels: _selectedCategories,
-                          onCategoryTap: (label) {
-                            setState(() {
-                              if (_selectedCategories.contains(label)) {
-                                _selectedCategories.remove(label);
-                              } else {
-                                _selectedCategories.add(label);
+                        Obx(
+                          () => _CategoryChips(
+                            selectedSports: _eventController.currentSports,
+                            labelToSportKey: _categoryToSport,
+                            onCategoryTap: (label) {
+                              final sportKey = _categoryToSport[label];
+                              if (sportKey == null) {
+                                return;
                               }
-                            });
-                            _applyFilters();
-                          },
+                              _eventController.toggleSportSelection(sportKey);
+                            },
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        _FilterRow(
-                          locationLabel: _selectedLocation.isEmpty
-                              ? 'Lokasi'
-                              : _selectedLocation,
-                          dateLabel: _formatDateLabel(_selectedDate),
-                          onLocationTap: _openLocationSheet,
-                          onDateTap: _openDateSheet,
+                        Obx(
+                          () => _FilterRow(
+                            locationLabel: _selectedLocation.isEmpty
+                                ? 'Lokasi'
+                                : _selectedLocation,
+                            dateLabel: _formatDateLabel(
+                              _eventController.currentDate.value,
+                            ),
+                            onLocationTap: _openLocationSheet,
+                            onDateTap: _openDateSheet,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         const Text(
@@ -468,12 +523,12 @@ class _HomeViewState extends State<HomeView> {
                   }
 
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
                     sliver: SliverList.builder(
                       itemCount: activities.length,
                       itemBuilder: (context, index) {
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.only(bottom: 14),
                           child: _ActivityCard(data: activities[index]),
                         );
                       },
@@ -498,8 +553,6 @@ class _HomeViewState extends State<HomeView> {
                 _showToast('Nav: $label');
               },
             ),
-            if (Get.find<AuthController>().isCommunityAccount)
-              _FloatingActionButton(onTap: _openAddSheet),
           ],
         ),
       ),
@@ -508,83 +561,49 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onProfileTap;
-  final String? imagePath;
+  final VoidCallback onAddTap;
+  final VoidCallback onSearchTap;
 
-  const _TopBar({required this.onProfileTap, required this.imagePath});
+  const _TopBar({required this.onAddTap, required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'GERAK',
-            style: TextStyle(
-              color: Color(0xFF2563EB),
-              fontSize: 24,
-              fontFamily: 'Lexend',
-              fontWeight: FontWeight.w900,
-              height: 1.33,
-              letterSpacing: -1.2,
-            ),
-          ),
-          GestureDetector(
-            onTap: onProfileTap,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: buildImageProviderFromSource(imagePath),
-              child: imagePath == null
-                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-                  : null,
-            ),
-          ),
-        ],
+    return AppBar(
+      automaticallyImplyLeading: false,
+      centerTitle: true,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 56,
+      titleSpacing: 0,
+      leadingWidth: 56,
+      leading: IconButton(
+        onPressed: onAddTap,
+        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
+        tooltip: 'Tambah',
       ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _SearchBar({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(48),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(48),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: const [
-              Icon(Icons.search, color: Color(0xFF94A3B8)),
-              SizedBox(width: 12),
-              Text(
-                'CARI AKTIVITAS',
-                style: TextStyle(
-                  color: Color(0x99475569),
-                  fontSize: 16,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.6,
-                ),
-              ),
-            ],
-          ),
+      title: const Text(
+        'GERAK',
+        style: TextStyle(
+          color: Color(0xFF2563EB),
+          fontSize: 24,
+          fontFamily: 'Lexend',
+          fontWeight: FontWeight.w900,
+          height: 1.33,
+          letterSpacing: -1.2,
         ),
+      ),
+      actions: [
+        IconButton(
+          onPressed: onSearchTap,
+          icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
+          tooltip: 'Cari',
+        ),
+      ],
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: SizedBox.shrink(),
       ),
     );
   }
@@ -598,19 +617,21 @@ class _HeroHeadline extends StatelessWidget {
     return RichText(
       text: const TextSpan(
         style: TextStyle(
-          fontSize: 48,
+          fontSize: 16,
           fontFamily: 'Lexend',
           fontWeight: FontWeight.w800,
-          height: 1,
-          letterSpacing: -2.4,
+          height: 1.3,
+          letterSpacing: 2.4,
+          
         ),
+        
         children: [
           TextSpan(
-            text: 'PULSE OF\n',
-            style: TextStyle(color: Color(0xFF0F172A)),
+            text: 'GO ',
+            style: TextStyle(color: Color(0xFF475569)),
           ),
           TextSpan(
-            text: 'MOTION.',
+            text: 'ACTIVITY!',
             style: TextStyle(color: Color(0xFF2563EB)),
           ),
         ],
@@ -666,11 +687,13 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _CategoryChips extends StatelessWidget {
-  final Set<String> selectedLabels;
+  final Set<String> selectedSports;
+  final Map<String, String> labelToSportKey;
   final ValueChanged<String> onCategoryTap;
 
   const _CategoryChips({
-    required this.selectedLabels,
+    required this.selectedSports,
+    required this.labelToSportKey,
     required this.onCategoryTap,
   });
 
@@ -691,7 +714,8 @@ class _CategoryChips extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: categories.map((category) {
-        final isActive = selectedLabels.contains(category.label);
+        final sportKey = labelToSportKey[category.label];
+        final isActive = sportKey != null && selectedSports.contains(sportKey);
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -911,7 +935,24 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
+              // Default option: Semua Lokasi
+              ListTile(
+                leading: const Icon(
+                  Icons.location_on_outlined,
+                  color: Color(0xFF2563EB),
+                ),
+                title: const Text(
+                  'Semua Lokasi',
+                  style: TextStyle(
+                    fontFamily: 'Lexend',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: const Text('Tampilkan semua lokasi'),
+                onTap: () => Get.back(result: ''),
+              ),
+              const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: TextField(
@@ -1088,7 +1129,7 @@ class _DateFilterSheetState extends State<_DateFilterSheet> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
               decoration: const BoxDecoration(
                 color: Color(0xFF2563EB),
                 borderRadius: BorderRadius.only(
@@ -1109,7 +1150,26 @@ class _DateFilterSheetState extends State<_DateFilterSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  // Default option: Semua Tanggal
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Get.find<EventController>().setSelectedDate(null);
+                        Get.back();
+                      },
+                      child: const Text(
+                        'Semua Tanggal',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Lexend',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   const Text(
                     'Pilih Tanggal',
                     style: TextStyle(
@@ -1125,7 +1185,7 @@ class _DateFilterSheetState extends State<_DateFilterSheet> {
                     _formatHeader(_selectedDate),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 28,
+                      fontSize: 24,
                       fontFamily: 'Lexend',
                       fontWeight: FontWeight.w700,
                       height: 1.29,
@@ -1495,8 +1555,8 @@ class _BottomNavBar extends StatelessWidget {
               onTap: () => onTap('Community'),
             ),
             _NavItem(
-              label: 'HOME',
-              icon: Icons.home_filled,
+              label: 'ACTIVITY',
+              icon: Icons.local_activity,
               isActive: true,
               onTap: () => onTap('Home'),
             ),
@@ -1589,40 +1649,6 @@ class _NavItem extends StatelessWidget {
                   ],
                 ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingActionButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _FloatingActionButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      right: 24,
-      bottom: 96,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(9999),
-          child: Ink(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment(0, 0),
-                end: Alignment(1, 1),
-                colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-              ),
-              borderRadius: BorderRadius.circular(9999),
-            ),
-            child: const Icon(Icons.add, color: Colors.white),
           ),
         ),
       ),

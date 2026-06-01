@@ -143,8 +143,8 @@ class _LoginViewState extends State<LoginView> {
                                   ),
                                   const SizedBox(height: gap40),
                                   _LabeledField(
-                                    label: 'USERNAME',
-                                    hintText: 'muhammadbrata06@gmail.com',
+                                    label: 'GMAIL',
+                                    hintText: 'example@gmail.com',
                                     controller: _emailController,
                                   ),
                                   const SizedBox(height: 24),
@@ -500,6 +500,18 @@ class _PasswordFieldState extends State<_PasswordField> {
                 color: darkslategray100,
               ),
             ),
+          ),
+        ),
+        //teks "Password must be at least 8 characters, contain uppercase, lowercase, and a number" 
+        const SizedBox(height: 8),
+        const Text(
+          '*Password must be at least 8 characters, contain uppercase, lowercase, and a number',
+          style: TextStyle(
+            fontSize: fs10,
+            fontFamily: 'Plus Jakarta Sans',
+            height: 1.5,
+            letterSpacing: 1,
+            color: darkslategray200,
           ),
         ),
       ],

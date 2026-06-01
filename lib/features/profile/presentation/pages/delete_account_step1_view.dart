@@ -86,19 +86,19 @@ class _DeleteAccountStep1ViewState extends State<DeleteAccountStep1View> {
                     label: 'Lanjut',
                     onTap: () => Get.toNamed(AppRoutes.deleteAccountStep2),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => _showToast('Lewati tapped'),
-                    child: const Text(
-                      'Lewati',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 12,
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                  // const SizedBox(height: 8),
+                  // TextButton(
+                  //   onPressed: () => _showToast('Lewati tapped'),
+                  //   child: const Text(
+                  //     'Lewati',
+                  //     style: TextStyle(
+                  //       color: Color(0xFF94A3B8),
+                  //       fontSize: 12,
+                  //       fontFamily: 'Plus Jakarta Sans',
+                  //       fontWeight: FontWeight.w600,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

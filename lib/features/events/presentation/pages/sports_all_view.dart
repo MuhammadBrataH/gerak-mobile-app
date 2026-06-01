@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import '../controllers/event_controller.dart';
 
 class SportsAllView extends StatefulWidget {
   const SportsAllView({super.key});
@@ -11,62 +12,77 @@ class SportsAllView extends StatefulWidget {
 
 class _SportsAllViewState extends State<SportsAllView> {
   late final List<_SportItemData> _sports;
-  final Set<String> _selected = {};
+  EventController get _eventController => Get.find<EventController>();
 
   @override
   void initState() {
     super.initState();
     _sports = const <_SportItemData>[
-      _SportItemData(label: 'FOOTBALL', iconAsset: 'assets/icons/soccer.svg'),
-      _SportItemData(label: 'FUTSAL', iconAsset: 'assets/icons/futsal.svg'),
+      _SportItemData(
+        label: 'FOOTBALL',
+        key: 'football',
+        iconAsset: 'assets/icons/soccer.svg',
+      ),
+      _SportItemData(
+        label: 'FUTSAL',
+        key: 'futsal',
+        iconAsset: 'assets/icons/futsal.svg',
+      ),
       _SportItemData(
         label: 'MINI SOCCER',
+        key: 'mini_soccer',
         iconAsset: 'assets/icons/mini_soccer.svg',
       ),
       _SportItemData(
         label: 'BASKETBALL',
+        key: 'basketball',
         iconAsset: 'assets/icons/basketball.svg',
       ),
       _SportItemData(
         label: 'BADMINTON',
+        key: 'badminton',
         iconAsset: 'assets/icons/badminton.svg',
       ),
-      _SportItemData(label: 'VOLLEY', iconAsset: 'assets/icons/volley.svg'),
-      _SportItemData(label: 'RUNNING', iconAsset: 'assets/icons/run.svg'),
-      _SportItemData(label: 'PADEL', iconAsset: 'assets/icons/padel.svg'),
-      _SportItemData(label: 'BILLIARD', iconAsset: 'assets/icons/billiard.svg'),
-      _SportItemData(label: 'CHESS', iconAsset: 'assets/icons/chess.svg'),
+      _SportItemData(
+        label: 'VOLLEY',
+        key: 'volleyball',
+        iconAsset: 'assets/icons/volley.svg',
+      ),
+      _SportItemData(
+        label: 'RUNNING',
+        key: 'running',
+        iconAsset: 'assets/icons/run.svg',
+      ),
+      _SportItemData(
+        label: 'PADEL',
+        key: 'padel',
+        iconAsset: 'assets/icons/padel.svg',
+      ),
+      _SportItemData(
+        label: 'BILLIARD',
+        key: 'billiard',
+        iconAsset: 'assets/icons/billiard.svg',
+      ),
+      _SportItemData(
+        label: 'CHESS',
+        key: 'chess',
+        iconAsset: 'assets/icons/chess.svg',
+      ),
       _SportItemData(
         label: 'TABLE TENNIS',
+        key: 'table_tennis',
         iconAsset: 'assets/icons/table_tennis.svg',
       ),
       _SportItemData(
         label: 'TENNIS FIELD',
+        key: 'tennis',
         iconAsset: 'assets/icons/tennis_field.svg',
       ),
     ];
-
-    final args = Get.arguments as Map?;
-    final selected = args?['selected'];
-    if (selected is List) {
-      _selected
-        ..clear()
-        ..addAll(selected.cast<String>());
-    }
   }
 
-  void _toggleSelection(String label) {
-    setState(() {
-      if (_selected.contains(label)) {
-        _selected.remove(label);
-      } else {
-        _selected.add(label);
-      }
-    });
-  }
-
-  void _saveSelection() {
-    Get.back(result: _selected.toList());
+  void _toggleSelection(String sportKey) {
+    _eventController.toggleSportSelection(sportKey);
   }
 
   @override
@@ -79,8 +95,8 @@ class _SportsAllViewState extends State<SportsAllView> {
           children: [
             _TopBar(
               title: 'SPORTS',
-              onBackTap: () => Get.back(result: _selected.toList()),
-              onSaveTap: _saveSelection,
+              onBackTap: () => Get.back(),
+              onSaveTap: () => Get.back(),
             ),
             const SizedBox(height: 8),
             const Padding(
@@ -104,10 +120,14 @@ class _SportsAllViewState extends State<SportsAllView> {
                   runSpacing: 8,
                   children: _sports
                       .map(
-                        (sport) => _SportChip(
-                          data: sport,
-                          isSelected: _selected.contains(sport.label),
-                          onTap: () => _toggleSelection(sport.label),
+                        (sport) => Obx(
+                          () => _SportChip(
+                            data: sport,
+                            isSelected: _eventController.currentSports.contains(
+                              sport.key,
+                            ),
+                            onTap: () => _toggleSelection(sport.key),
+                          ),
                         ),
                       )
                       .toList(),
@@ -233,7 +253,12 @@ class _SportChip extends StatelessWidget {
 
 class _SportItemData {
   final String label;
+  final String key;
   final String iconAsset;
 
-  const _SportItemData({required this.label, required this.iconAsset});
+  const _SportItemData({
+    required this.label,
+    required this.key,
+    required this.iconAsset,
+  });
 }
