@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/user_model.dart';
@@ -11,6 +12,7 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final Rxn<UserModel> user = Rxn<UserModel>();
   final RxnString signupName = RxnString();
+  final RxnString signupEmail = RxnString();
   final RxnString signupAccountType = RxnString();
   final RxnString signupGender = RxnString();
   final Rxn<DateTime> signupDateOfBirth = Rxn<DateTime>();
@@ -25,12 +27,22 @@ class AuthController extends GetxController {
   final RxMap<String, List<String>> _sportsByUserId =
       <String, List<String>>{}.obs;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _googleServerClientId =
+      '1094874822851-msflctkmeq7h85hhbf206168gei8menh.apps.googleusercontent.com';
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    serverClientId: _googleServerClientId,
+  );
 
   AuthController({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
   void setSignupName(String name) {
     signupName.value = name.trim();
+  }
+
+  void setSignupEmail(String email) {
+    signupEmail.value = email.trim();
   }
 
   void setSignupAccountType(String accountType) {
@@ -125,6 +137,7 @@ class AuthController extends GetxController {
 
   void resetSignupFlow() {
     signupName.value = null;
+    signupEmail.value = null;
     signupAccountType.value = null;
     signupGender.value = null;
     signupDateOfBirth.value = null;
@@ -247,6 +260,77 @@ class AuthController extends GetxController {
       Get.snackbar('Login Failed', error.message);
     } catch (_) {
       Get.snackbar('Login Failed', 'Unexpected error occurred');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    if (isLoading.value) {
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) {
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        Get.snackbar('Google Login', 'Gagal mendapatkan token Google');
+        return;
+      }
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/google',
+        data: {'idToken': idToken},
+      );
+
+      final data = response.data ?? const <String, dynamic>{};
+      final needsRegistration = data['needsRegistration'] == true;
+
+      if (needsRegistration) {
+        final profile = data['profile'];
+        if (profile is Map<String, dynamic>) {
+          final email = (profile['email'] ?? '').toString();
+          final name = (profile['name'] ?? '').toString();
+          if (email.isNotEmpty) {
+            setSignupEmail(email);
+          }
+          if (name.isNotEmpty) {
+            setSignupName(name);
+          }
+        }
+
+        Get.toNamed(AppRoutes.register);
+        return;
+      }
+
+      final userJson = data['user'];
+      final token = data['token'];
+      final refreshToken = data['refreshToken'];
+
+      if (token is String && refreshToken is String) {
+        await _apiClient.setTokens(
+          accessToken: token,
+          refreshToken: refreshToken,
+        );
+      }
+
+      if (userJson is Map<String, dynamic>) {
+        user.value = UserModel.fromJson(userJson);
+        await _loadProfileCacheForUser();
+        _syncProfileCacheForUser();
+      }
+
+      Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
+    } on ApiException catch (error) {
+      Get.snackbar('Google Login', error.message);
+    } catch (_) {
+      Get.snackbar('Google Login', 'Login Google gagal');
     } finally {
       isLoading.value = false;
     }

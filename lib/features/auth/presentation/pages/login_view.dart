@@ -289,45 +289,44 @@ class _LoginViewState extends State<LoginView> {
                                     ],
                                   ),
                                   const SizedBox(height: 20),
-                                  SizedBox(
-                                    height: 46,
-                                    child: OutlinedButton.icon(
-                                      onPressed: () {
-                                        Get.snackbar(
-                                          'Google Login',
-                                          'Gunakan akun Gmail untuk login atau daftar.',
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.g_mobiledata,
-                                        size: 22,
-                                        color: darkslategray200,
-                                      ),
-                                      label: const Text(
-                                        'GOOGLE',
-                                        style: TextStyle(
-                                          fontSize: fs12,
-                                          fontFamily: 'Plus Jakarta Sans',
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.33,
-                                          letterSpacing: 1.2,
+                                  Obx(
+                                    () => SizedBox(
+                                      height: 46,
+                                      child: OutlinedButton.icon(
+                                        onPressed: controller.isLoading.value
+                                            ? null
+                                            : controller.loginWithGoogle,
+                                        icon: const Icon(
+                                          Icons.g_mobiledata,
+                                          size: 22,
+                                          color: darkslategray200,
                                         ),
-                                      ),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: darkslategray200,
-                                        backgroundColor: white200,
-                                        side: const BorderSide(
-                                          width: 1,
-                                          color: aliceblue,
-                                        ),
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(br48),
+                                        label: const Text(
+                                          'GOOGLE',
+                                          style: TextStyle(
+                                            fontSize: fs12,
+                                            fontFamily: 'Plus Jakarta Sans',
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.33,
+                                            letterSpacing: 1.2,
                                           ),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 22,
-                                          vertical: padding12,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: darkslategray200,
+                                          backgroundColor: white200,
+                                          side: const BorderSide(
+                                            width: 1,
+                                            color: aliceblue,
+                                          ),
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(br48),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 22,
+                                            vertical: padding12,
+                                          ),
                                         ),
                                       ),
                                     ),

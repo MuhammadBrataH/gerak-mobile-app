@@ -20,6 +20,12 @@ class _SignUpCommunityStep1ViewState extends State<SignUpCommunityStep1View> {
   void initState() {
     super.initState();
     _communityNameController = TextEditingController();
+
+    final controller = Get.find<AuthController>();
+    final name = controller.signupName.value;
+    if (name != null && name.trim().isNotEmpty) {
+      _communityNameController.text = name.trim();
+    }
   }
 
   @override

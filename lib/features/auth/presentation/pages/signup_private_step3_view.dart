@@ -34,6 +34,12 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
     _phoneController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+
+    final controller = Get.find<AuthController>();
+    final email = controller.signupEmail.value;
+    if (email != null && email.isNotEmpty) {
+      _emailController.text = email;
+    }
   }
 
   @override
