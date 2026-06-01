@@ -20,6 +20,13 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
+  bool _isAllowedEmailDomain(String email) {
+    final lower = email.trim().toLowerCase();
+    return lower.endsWith('@gmail.com') ||
+        lower.endsWith('@googlemail.com') ||
+        lower.endsWith('@polban.ac.id');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -62,12 +69,16 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
       Get.snackbar('Validasi', 'Format email tidak valid');
       return;
     }
-    if (password.isEmpty || confirm.isEmpty) {
-      Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
-      return;
-    }
     if (phone.isEmpty) {
       Get.snackbar('Validasi', 'Nomor telepon wajib diisi');
+      return;
+    }
+    if (!_isAllowedEmailDomain(email)) {
+      Get.snackbar('Validasi', 'Gunakan email yang valid');
+      return;
+    }
+    if (password.isEmpty || confirm.isEmpty) {
+      Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
       return;
     }
     if (password != confirm) {
@@ -225,7 +236,18 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                       });
                                     },
                                   ),
-                                  const SizedBox(height: 28),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '*Password must be at least 8 characters, contain uppercase, lowercase, and a number',
+                                    style: TextStyle(
+                                      fontSize: fs12,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      height: 1.5,
+                                      letterSpacing: 0.6,
+                                      color: darkslategray,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
                                   Container(
                                     decoration: const BoxDecoration(
                                       boxShadow: shadowDrop,

@@ -16,6 +16,46 @@ class _LoginViewState extends State<LoginView> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
+  void _showForgotPasswordDialog(AuthController controller) {
+    final emailController = TextEditingController(
+      text: _emailController.text.trim(),
+    );
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Lupa Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Masukkan email terdaftar untuk verifikasi akun.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(hintText: 'name@domain.com'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () async {
+              final ok = await controller.requestPasswordReset(
+                emailController.text,
+              );
+              if (ok) {
+                Get.back();
+              }
+            },
+            child: const Text('Kirim'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -150,6 +190,9 @@ class _LoginViewState extends State<LoginView> {
                                   const SizedBox(height: 24),
                                   _PasswordField(
                                     controller: _passwordController,
+                                    onForgotPassword: () {
+                                      _showForgotPasswordDialog(controller);
+                                    },
                                   ),
                                   const SizedBox(height: 24),
                                   Container(
@@ -249,7 +292,12 @@ class _LoginViewState extends State<LoginView> {
                                   SizedBox(
                                     height: 46,
                                     child: OutlinedButton.icon(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Get.snackbar(
+                                          'Google Login',
+                                          'Gunakan akun Gmail untuk login atau daftar.',
+                                        );
+                                      },
                                       icon: const Icon(
                                         Icons.g_mobiledata,
                                         size: 22,
@@ -411,8 +459,12 @@ class _LabeledField extends StatelessWidget {
 
 class _PasswordField extends StatefulWidget {
   final TextEditingController controller;
+  final VoidCallback onForgotPassword;
 
-  const _PasswordField({required this.controller});
+  const _PasswordField({
+    required this.controller,
+    required this.onForgotPassword,
+  });
 
   @override
   State<_PasswordField> createState() => _PasswordFieldState();
@@ -436,8 +488,8 @@ class _PasswordFieldState extends State<_PasswordField> {
           padding: const EdgeInsets.symmetric(horizontal: padding4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 'PASSWORD',
                 style: TextStyle(
                   fontSize: fs12,
@@ -447,14 +499,23 @@ class _PasswordFieldState extends State<_PasswordField> {
                   color: darkslategray200,
                 ),
               ),
-              Text(
-                'FORGOT?',
-                style: TextStyle(
-                  fontSize: fs10,
-                  fontFamily: 'Plus Jakarta Sans',
-                  height: 1.5,
-                  letterSpacing: 1,
-                  color: royalblue100,
+              InkWell(
+                onTap: () {
+                  widget.onForgotPassword();
+                },
+                borderRadius: BorderRadius.circular(6),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Text(
+                    'FORGOT?',
+                    style: TextStyle(
+                      fontSize: fs10,
+                      fontFamily: 'Plus Jakarta Sans',
+                      height: 1.5,
+                      letterSpacing: 1,
+                      color: royalblue100,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -500,18 +561,6 @@ class _PasswordFieldState extends State<_PasswordField> {
                 color: darkslategray100,
               ),
             ),
-          ),
-        ),
-        //teks "Password must be at least 8 characters, contain uppercase, lowercase, and a number" 
-        const SizedBox(height: 8),
-        const Text(
-          '*Password must be at least 8 characters, contain uppercase, lowercase, and a number',
-          style: TextStyle(
-            fontSize: fs10,
-            fontFamily: 'Plus Jakarta Sans',
-            height: 1.5,
-            letterSpacing: 1,
-            color: darkslategray200,
           ),
         ),
       ],

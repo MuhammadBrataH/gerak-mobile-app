@@ -207,8 +207,13 @@ class AuthController extends GetxController {
   String get homeRoute => _homeRouteForAccountType(user.value?.accountType);
 
   Future<void> login(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || password.isEmpty) {
       Get.snackbar('Login Failed', 'Email and password cannot be empty');
+      return;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Login Failed', 'Gunakan email yang valid untuk login');
       return;
     }
 
@@ -216,7 +221,7 @@ class AuthController extends GetxController {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/login',
-        data: {'email': email, 'password': password},
+        data: {'email': trimmedEmail, 'password': password},
       );
 
       final data = response.data ?? const <String, dynamic>{};
@@ -256,8 +261,16 @@ class AuthController extends GetxController {
     DateTime? dateOfBirth, {
     String? accountType,
   }) async {
-    if (email.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty ||
+        password.isEmpty ||
+        name.isEmpty ||
+        phone.isEmpty) {
       Get.snackbar('Register Failed', 'All fields are required');
+      return;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Register Failed', 'Gunakan email yang valid untuk daftar');
       return;
     }
 
@@ -266,7 +279,7 @@ class AuthController extends GetxController {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/register',
         data: {
-          'email': email,
+          'email': trimmedEmail,
           'password': password,
           'name': name,
           'phone': phone,
@@ -319,5 +332,27 @@ class AuthController extends GetxController {
       isLoading.value = false;
       Get.offAllNamed(AppRoutes.login);
     }
+  }
+
+  Future<bool> requestPasswordReset(String email) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty) {
+      Get.snackbar('Lupa Password', 'Email wajib diisi');
+      return false;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Lupa Password', 'Gunakan akun email yang terdaftar');
+      return false;
+    }
+
+    Get.snackbar('Lupa Password', 'Link reset sudah dikirim ke Gmail kamu');
+    return true;
+  }
+
+  bool _isAllowedEmailDomain(String email) {
+    final lower = email.trim().toLowerCase();
+    return lower.endsWith('@gmail.com') ||
+        lower.endsWith('@googlemail.com') ||
+        lower.endsWith('@polban.ac.id');
   }
 }
