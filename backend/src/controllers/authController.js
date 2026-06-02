@@ -162,6 +162,51 @@ const refreshToken = asyncHandler(async (req, res) => {
         refreshToken: newRefreshToken,
     });
 });
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = asyncHandler(async (req, res) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+        throw new ApiError(400, 'idToken is required');
+    }
+
+    // Verifikasi token dari Google
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    // Cari user, kalau belum ada auto-register
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+        const normalizedAccountType = inferAccountType(name, email, null);
+        user = await User.create({
+            email: email.toLowerCase(),
+            name,
+            photoUrl: picture || '',
+            googleId,
+            phone: '',
+            password: '',
+            accountType: normalizedAccountType,
+            sports: [],
+            level: 'beginner',
+        });
+    }
+
+    const accessToken = issueAccessToken(user._id);
+    const refreshToken = issueRefreshToken(user._id);
+
+    user.refreshTokenHash = hashToken(refreshToken);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json(buildAuthPayload(sanitizeUser(user), accessToken, refreshToken));
+});
 
 module.exports = {
     register,
@@ -170,4 +215,5 @@ module.exports = {
     me,
     listCommunities,
     refreshToken,
+    googleLogin,
 };

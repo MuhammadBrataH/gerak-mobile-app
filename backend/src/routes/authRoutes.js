@@ -12,6 +12,5 @@ router.post('/logout', authenticate(['access']), authController.logout);
 router.get('/me', authenticate(['access']), authController.me);
 router.get('/communities', authController.listCommunities);
 router.post('/refresh-token', authenticate(['refresh']), authController.refreshToken);
-router.post('/google', authController.verifyGoogleIdToken);
 
 module.exports = router;
