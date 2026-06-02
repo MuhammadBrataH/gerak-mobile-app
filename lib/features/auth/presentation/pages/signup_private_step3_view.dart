@@ -19,6 +19,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   late final TextEditingController _confirmPasswordController;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _isFromGoogle = false;
 
   bool _isAllowedEmailDomain(String email) {
     final lower = email.trim().toLowerCase();
@@ -39,6 +40,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
     final email = controller.signupEmail.value;
     if (email != null && email.isNotEmpty) {
       _emailController.text = email;
+      _isFromGoogle = true;
     }
   }
 
@@ -213,6 +215,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                   _LabeledInput(
                                     label: 'Email',
                                     controller: _emailController,
+                                    readOnly: _isFromGoogle,
                                   ),
                                   const SizedBox(height: 16),
                                   _LabeledInput(
@@ -331,12 +334,14 @@ class _LabeledInput extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
   final VoidCallback? onToggleVisibility;
+  final bool readOnly;
 
   const _LabeledInput({
     required this.label,
     required this.controller,
     this.obscureText = false,
     this.onToggleVisibility,
+    this.readOnly = false,
   });
 
   @override
@@ -358,6 +363,7 @@ class _LabeledInput extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          readOnly: readOnly,
           decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),
@@ -367,7 +373,7 @@ class _LabeledInput extends StatelessWidget {
               borderSide: BorderSide(width: 1, color: aliceblue),
               borderRadius: BorderRadius.all(Radius.circular(br10)),
             ),
-            fillColor: whitesmoke,
+            fillColor: readOnly ? Colors.grey.shade200 : whitesmoke,
             filled: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
