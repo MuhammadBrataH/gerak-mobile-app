@@ -272,6 +272,7 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
+      await _googleSignIn.signOut();
       final account = await _googleSignIn.signIn();
       if (account == null) {
         return;

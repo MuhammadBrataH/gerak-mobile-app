@@ -185,19 +185,11 @@ const googleLogin = asyncHandler(async (req, res) => {
     let user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-        const normalizedAccountType = inferAccountType(name, email, null);
-        user = await User.create({
-            email: email.toLowerCase(),
-            name,
-            photoUrl: picture || '',
-            googleId,
-            phone: '',
-            password: '',
-            accountType: normalizedAccountType,
-            sports: [],
-            level: 'beginner',
-        });
-    }
+    return res.status(200).json({
+        needsRegistration: true,
+        profile: { email, name, picture },
+    });
+}
 
     const accessToken = issueAccessToken(user._id);
     const refreshToken = issueRefreshToken(user._id);
