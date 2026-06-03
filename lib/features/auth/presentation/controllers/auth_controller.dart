@@ -206,6 +206,20 @@ class AuthController extends GetxController {
 
   String get homeRoute => _homeRouteForAccountType(user.value?.accountType);
 
+  Future<bool> get isLoggedIn async {
+    final token = await _storage.read(key: 'token');
+    return token != null && token.isNotEmpty;
+  }
+
+  Future<bool> get hasCompletedOnboarding async {
+    final completed = await _storage.read(key: 'onboarding_completed');
+    return completed == 'true';
+  }
+
+  Future<void> markOnboardingCompleted() async {
+    await _storage.write(key: 'onboarding_completed', value: 'true');
+  }
+
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       Get.snackbar('Login Failed', 'Email and password cannot be empty');
