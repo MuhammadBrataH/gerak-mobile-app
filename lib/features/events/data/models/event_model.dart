@@ -16,6 +16,8 @@ class EventModel {
   final List<String> joinedUsers;
   final String adminPhone;
   final String? imageUrl;
+  final String? creatorName;
+  final String? creatorPhotoUrl;
   final double? averageRating;
   final int? reviewCount;
   final String? createdBy;
@@ -40,6 +42,8 @@ class EventModel {
     this.totalSlots,
     this.joinedUsers = const <String>[],
     this.imageUrl,
+    this.creatorName,
+    this.creatorPhotoUrl,
     this.averageRating,
     this.reviewCount,
     this.createdBy,
@@ -48,6 +52,17 @@ class EventModel {
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
+    final createdByValue = json['createdBy'];
+    final createdById = createdByValue is Map
+        ? (createdByValue['_id'] ?? createdByValue['id'] ?? '').toString()
+        : (createdByValue ?? '').toString();
+    final creatorName = createdByValue is Map
+        ? (createdByValue['name'] ?? '').toString()
+        : null;
+    final creatorPhotoUrl = createdByValue is Map
+        ? createdByValue['photoUrl']?.toString()
+        : null;
+
     return EventModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
@@ -66,9 +81,11 @@ class EventModel {
       joinedUsers: _stringList(json['joinedUsers']),
       adminPhone: (json['adminPhone'] ?? '').toString(),
       imageUrl: json['imageUrl']?.toString(),
+      creatorName: creatorName,
+      creatorPhotoUrl: creatorPhotoUrl,
       averageRating: _toDouble(json['averageRating']),
       reviewCount: _toInt(json['reviewCount']),
-      createdBy: json['createdBy']?.toString(),
+      createdBy: createdById,
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
     );
@@ -100,6 +117,10 @@ class EventModel {
       'updatedAt': updatedAt?.toIso8601String(),
     };
   }
+
+  String get communityName => creatorName ?? '';
+
+  String get organizerLogo => creatorPhotoUrl ?? '';
 
   static List<String> _stringList(dynamic value) {
     if (value is List) {

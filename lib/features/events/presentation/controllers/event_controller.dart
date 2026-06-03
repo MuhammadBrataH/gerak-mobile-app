@@ -393,6 +393,47 @@ class EventController extends GetxController {
     }
   }
 
+  Future<EventModel?> updateEventSlots(
+    String eventId, {
+    required int maxSlots,
+    required int totalSlots,
+  }) async {
+    if (eventId.isEmpty) {
+      return null;
+    }
+
+    if (_isEventLoading(eventId)) {
+      return null;
+    }
+
+    _setEventLoading(eventId, true);
+    try {
+      final response = await _apiClient.put<Map<String, dynamic>>(
+        '/events/$eventId',
+        data: {'maxSlots': maxSlots, 'totalSlots': totalSlots},
+      );
+
+      final eventJson = response.data?['event'];
+      if (eventJson is! Map<String, dynamic>) {
+        Get.snackbar('Events', 'Failed to update event slots');
+        return null;
+      }
+
+      final updated = EventModel.fromJson(eventJson);
+      _replaceEvent(updated);
+      Get.snackbar('Events', 'Slot berhasil diperbarui');
+      return updated;
+    } on ApiException catch (error) {
+      Get.snackbar('Events', error.message);
+      return null;
+    } catch (_) {
+      Get.snackbar('Events', 'Gagal memperbarui slot');
+      return null;
+    } finally {
+      _setEventLoading(eventId, false);
+    }
+  }
+
   void fetchEventsDebounced({
     String? city,
     String? district,
@@ -467,6 +508,10 @@ class EventController extends GetxController {
     }
 
     final updated = EventModel.fromJson(eventJson);
+    _replaceEvent(updated);
+  }
+
+  void _replaceEvent(EventModel updated) {
     final index = events.indexWhere((event) => event.id == updated.id);
     if (index == -1) {
       return;
