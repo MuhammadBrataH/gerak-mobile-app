@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import '../controllers/event_controller.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class SportsAllView extends StatefulWidget {
   const SportsAllView({super.key});
@@ -12,11 +12,32 @@ class SportsAllView extends StatefulWidget {
 
 class _SportsAllViewState extends State<SportsAllView> {
   late final List<_SportItemData> _sports;
-  EventController get _eventController => Get.find<EventController>();
+  final Set<String> _selectedLabels = {};
+
+  static const _labelNormalization = {
+    'SEPAK BOLA': 'FOOTBALL',
+    'BASKET': 'BASKETBALL',
+    'LARI': 'RUNNING',
+  };
 
   @override
   void initState() {
     super.initState();
+    final args = Get.arguments as Map?;
+    final selected = args?['selected'];
+    if (selected is List) {
+      for (final item in selected) {
+        final label = item.toString().toUpperCase();
+        final normalized = _labelNormalization[label] ?? label;
+        _selectedLabels.add(normalized);
+      }
+    } else if (Get.isRegistered<AuthController>()) {
+      for (final item in Get.find<AuthController>().currentSports) {
+        final label = item.toString().toUpperCase();
+        final normalized = _labelNormalization[label] ?? label;
+        _selectedLabels.add(normalized);
+      }
+    }
     _sports = const <_SportItemData>[
       _SportItemData(
         label: 'FOOTBALL',
@@ -81,8 +102,23 @@ class _SportsAllViewState extends State<SportsAllView> {
     ];
   }
 
-  void _toggleSelection(String sportKey) {
-    _eventController.toggleSportSelection(sportKey);
+  void _toggleSelection(String label) {
+    setState(() {
+      if (_selectedLabels.contains(label)) {
+        _selectedLabels.remove(label);
+        return;
+      }
+      if (_selectedLabels.length >= 3) {
+        Get.snackbar(
+          'Info',
+          'Maksimal pilih 3 olahraga',
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+      _selectedLabels.add(label);
+    });
   }
 
   @override
@@ -96,7 +132,7 @@ class _SportsAllViewState extends State<SportsAllView> {
             _TopBar(
               title: 'SPORTS',
               onBackTap: () => Get.back(),
-              onSaveTap: () => Get.back(),
+              onSaveTap: () => Get.back(result: _selectedLabels.toList()),
             ),
             const SizedBox(height: 8),
             const Padding(
@@ -120,14 +156,10 @@ class _SportsAllViewState extends State<SportsAllView> {
                   runSpacing: 8,
                   children: _sports
                       .map(
-                        (sport) => Obx(
-                          () => _SportChip(
-                            data: sport,
-                            isSelected: _eventController.currentSports.contains(
-                              sport.key,
-                            ),
-                            onTap: () => _toggleSelection(sport.key),
-                          ),
+                        (sport) => _SportChip(
+                          data: sport,
+                          isSelected: _selectedLabels.contains(sport.label),
+                          onTap: () => _toggleSelection(sport.label),
                         ),
                       )
                       .toList(),

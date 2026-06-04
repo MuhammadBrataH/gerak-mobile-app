@@ -16,7 +16,7 @@ class CommunityProfileView extends StatefulWidget {
 }
 
 class _CommunityProfileViewState extends State<CommunityProfileView> {
-  static const _fallbackSports = ['BASKET', 'BADMINTON', 'LARI'];
+  static const _fallbackSports = <String>[];
   late final EventController _eventController;
   late Future<List<EventModel>> _postEventsFuture;
   late Future<List<EventModel>> _matchEventsFuture;
