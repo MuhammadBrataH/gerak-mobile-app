@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../events/presentation/controllers/event_controller.dart';
 import './community_add_sheet.dart';
 
 class CommunityView extends StatefulWidget {
@@ -15,7 +15,7 @@ class CommunityView extends StatefulWidget {
 }
 
 class _CommunityViewState extends State<CommunityView> {
-  final Set<String> _selectedCategories = {};
+  String _searchQuery = '';
   String _selectedLocation = 'Bandung';
   final ApiClient _apiClient = ApiClient();
   List<_CommunityCardData> _communities = [];
@@ -158,15 +158,9 @@ class _CommunityViewState extends State<CommunityView> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final communities = _communities.isNotEmpty
-        ? _communities
-        : <_CommunityCardData>[
-            _CommunityCardData(
-              name: 'PLAYMAKER FUN CLUB',
-              categories: 'FOOTBALL • PADEL',
-              badgeUrl: 'assets/sample 1.jpg',
-            ),
-          ];
+    final eventController = Get.isRegistered<EventController>()
+        ? Get.find<EventController>()
+        : Get.put(EventController());
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -191,7 +185,13 @@ class _CommunityViewState extends State<CommunityView> {
                           ),
                         ),
                         
-                        _SearchBar(onTap: () => _showToast('Search tapped')),
+                        _SearchBar(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
                         const SizedBox(height: 24),
                         _SectionHeader(
                           title: 'KATEGORI',
@@ -199,17 +199,14 @@ class _CommunityViewState extends State<CommunityView> {
                           onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
-                        _CategoryChips(
-                          selectedLabels: _selectedCategories,
-                          onCategoryTap: (label) {
-                            setState(() {
-                              if (_selectedCategories.contains(label)) {
-                                _selectedCategories.remove(label);
-                              } else {
-                                _selectedCategories.add(label);
-                              }
-                            });
-                          },
+                        Obx(
+                          () => _CategoryChips(
+                            selectedLabels: eventController.currentSports.toSet(),
+                            onCategoryTap: (label) {
+                              final key = _getSportKeyFromLabel(label);
+                              eventController.toggleSportSelection(key);
+                            },
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _FilterRow(
@@ -235,26 +232,70 @@ class _CommunityViewState extends State<CommunityView> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: SliverList.builder(
-                    itemCount: communities.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _CommunityCard(
-                          data: communities[index],
-                          onTap: () => Get.toNamed(
-                            AppRoutes.communityProfile,
-                            arguments: {
-                              'id': communities[index].id,
-                              'name': communities[index].name,
-                              'badgeUrl': communities[index].badgeUrl,
-                              'categories': communities[index].categories,
-                            },
+                  sliver: Obx(() {
+                    final selectedSports = eventController.currentSports.toSet();
+                    
+                    final filteredCommunities = _communities.where((c) {
+                      // Filter by search
+                      if (_searchQuery.isNotEmpty && 
+                          !c.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
+                        return false;
+                      }
+                      
+                      // Filter by category
+                      if (selectedSports.isNotEmpty) {
+                        final cCats = c.categories.split(' • ').map((e) => e.toLowerCase().trim());
+                        bool hasMatch = false;
+                        for (var sel in selectedSports) {
+                          if (cCats.contains(sel.toLowerCase())) {
+                            hasMatch = true;
+                            break;
+                          }
+                        }
+                        if (!hasMatch) return false;
+                      }
+                      return true;
+                    }).toList();
+
+                    if (filteredCommunities.isEmpty) {
+                      return const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 40),
+                            child: Text(
+                              'Tidak ada komunitas ditemukan.',
+                              style: TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 14,
+                                fontFamily: 'Plus Jakarta Sans',
+                              ),
+                            ),
                           ),
                         ),
                       );
-                    },
-                  ),
+                    }
+
+                    return SliverList.builder(
+                      itemCount: filteredCommunities.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _CommunityCard(
+                            data: filteredCommunities[index],
+                            onTap: () => Get.toNamed(
+                              AppRoutes.communityProfile,
+                              arguments: {
+                                'id': filteredCommunities[index].id,
+                                'name': filteredCommunities[index].name,
+                                'badgeUrl': filteredCommunities[index].badgeUrl,
+                                'categories': filteredCommunities[index].categories,
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
                 ),
               ],
             ),
@@ -278,6 +319,29 @@ class _CommunityViewState extends State<CommunityView> {
         ),
       ),
     );
+  }
+
+  String _getSportKeyFromLabel(String label) {
+    switch (label) {
+      case 'SEPAK BOLA':
+        return 'football';
+      case 'BASKET':
+        return 'basketball';
+      case 'BADMINTON':
+        return 'badminton';
+      case 'LARI':
+        return 'running';
+      case 'PADEL':
+        return 'padel';
+      case 'FUTSAL':
+        return 'futsal';
+      case 'VOLLEY':
+        return 'volleyball';
+      case 'MINI SOCCER':
+        return 'mini_soccer';
+      default:
+        return label.toLowerCase();
+    }
   }
 }
 
@@ -343,41 +407,49 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SearchBar extends StatelessWidget {
-  final VoidCallback onTap;
+  final ValueChanged<String> onChanged;
 
-  const _SearchBar({required this.onTap});
+  const _SearchBar({required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(48),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(48),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: const [
-              Icon(Icons.search, color: Color(0xFF94A3B8)),
-              SizedBox(width: 12),
-              Text(
-                'CARI KOMUNITAS',
-                style: TextStyle(
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              onChanged: onChanged,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 16,
+                fontFamily: 'Lexend',
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.6,
+              ),
+              decoration: const InputDecoration(
+                hintText: 'CARI KOMUNITAS',
+                hintStyle: TextStyle(
                   color: Color(0x99475569),
                   fontSize: 16,
                   fontFamily: 'Lexend',
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.6,
                 ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -461,7 +533,21 @@ class _CategoryChips extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: categories.map((chip) {
-        final isActive = selectedLabels.contains(chip.label);
+        // Map Indonesian label to backend key for checking selection
+        String sportKey = '';
+        switch (chip.label) {
+          case 'SEPAK BOLA': sportKey = 'football'; break;
+          case 'BASKET': sportKey = 'basketball'; break;
+          case 'BADMINTON': sportKey = 'badminton'; break;
+          case 'LARI': sportKey = 'running'; break;
+          case 'PADEL': sportKey = 'padel'; break;
+          case 'FUTSAL': sportKey = 'futsal'; break;
+          case 'VOLLEY': sportKey = 'volleyball'; break;
+          case 'MINI SOCCER': sportKey = 'mini_soccer'; break;
+          default: sportKey = chip.label.toLowerCase();
+        }
+        
+        final isActive = selectedLabels.contains(sportKey);
         return Material(
           color: Colors.transparent,
           child: InkWell(
