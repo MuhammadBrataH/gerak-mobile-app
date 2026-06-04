@@ -17,6 +17,7 @@ class CommunityView extends StatefulWidget {
 class _CommunityViewState extends State<CommunityView> {
   String _searchQuery = '';
   String _selectedLocation = 'Bandung';
+  final Set<String> _selectedSports = {};
   final ApiClient _apiClient = ApiClient();
   List<_CommunityCardData> _communities = [];
 
@@ -90,6 +91,214 @@ class _CommunityViewState extends State<CommunityView> {
     );
   }
 
+  void _openSearchSheet() {
+    final textController = TextEditingController(text: _searchQuery);
+    List<_CommunityCardData> filteredCommunities = _communities;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            final q = textController.text.toLowerCase();
+            filteredCommunities = _communities.where((c) {
+              if (q.isNotEmpty && !c.name.toLowerCase().contains(q)) return false;
+              return true;
+            }).toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 64,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECF2FA),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: textController,
+                              onChanged: (value) {
+                                setStateSheet(() {});
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                              },
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Lexend',
+                                color: Color(0xFF0F172A),
+                              ),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: const Color(0xFFF7FAFC),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                hintText: 'Cari komunitas...',
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              textController.clear();
+                              setStateSheet(() {});
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: filteredCommunities.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 48,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Tidak ada hasil',
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 14,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              itemCount: filteredCommunities.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final comm = filteredCommunities[index];
+                                return InkWell(
+                                  onTap: () {
+                                    Get.back();
+                                    Get.toNamed(
+                                      AppRoutes.communityProfile,
+                                      arguments: {
+                                        'id': comm.id,
+                                        'name': comm.name,
+                                        'badgeUrl': comm.badgeUrl,
+                                        'categories': comm.categories,
+                                      },
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8FAFC),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 22,
+                                          backgroundImage: AssetImage(comm.badgeUrl),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                comm.name,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontFamily: 'Lexend',
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF0F172A),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                comm.categories,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showProfileMenu(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final menuWidth = 120.0;
@@ -158,12 +367,16 @@ class _CommunityViewState extends State<CommunityView> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final eventController = Get.isRegistered<EventController>()
-        ? Get.find<EventController>()
-        : Get.put(EventController());
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: _TopBar(
+          onAddTap: authController.isCommunityAccount ? _openAddSheet : () {},
+          onSearchTap: _openSearchSheet,
+        ),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -175,38 +388,45 @@ class _CommunityViewState extends State<CommunityView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Obx(
-                          () => _TopBar(
-                            onProfileTap: () => _showProfileMenu(context),
-                            onAddTap: authController.isCommunityAccount
-                                ? _openAddSheet
-                                : null,
-                            imagePath: authController.currentProfilePhotoPath,
-                          ),
-                        ),
-                        
-                        _SearchBar(
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
-                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
+                          onActionTap: () async {
+                            final result = await Get.toNamed(
+                              AppRoutes.sportsAll,
+                              arguments: {
+                                'selected': _selectedSports.toList(),
+                              },
+                            );
+                            if (result is List) {
+                              final mappedKeys = result.map((e) {
+                                final label = e.toString().toUpperCase();
+                                if (label == 'TENNIS FIELD') return 'tennis';
+                                if (label == 'MINI SOCCER') return 'mini_soccer';
+                                if (label == 'TABLE TENNIS') return 'table_tennis';
+                                return label.toLowerCase();
+                              }).toSet();
+                              setState(() {
+                                _selectedSports.clear();
+                                _selectedSports.addAll(mappedKeys);
+                              });
+                            }
+                          },
                         ),
                         const SizedBox(height: 12),
-                        Obx(
-                          () => _CategoryChips(
-                            selectedLabels: eventController.currentSports.toSet(),
-                            onCategoryTap: (label) {
-                              final key = _getSportKeyFromLabel(label);
-                              eventController.toggleSportSelection(key);
-                            },
-                          ),
+                        _CategoryChips(
+                          selectedLabels: _selectedSports,
+                          onCategoryTap: (label) {
+                            final key = _getSportKeyFromLabel(label);
+                            setState(() {
+                              if (_selectedSports.contains(key)) {
+                                _selectedSports.remove(key);
+                              } else {
+                                _selectedSports.add(key);
+                              }
+                            });
+                          },
                         ),
                         const SizedBox(height: 16),
                         _FilterRow(
@@ -232,8 +452,8 @@ class _CommunityViewState extends State<CommunityView> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: Obx(() {
-                    final selectedSports = eventController.currentSports.toSet();
+                  sliver: Builder(builder: (context) {
+                    final selectedSports = _selectedSports;
                     
                     final filteredCommunities = _communities.where((c) {
                       // Filter by search
@@ -346,110 +566,49 @@ class _CommunityViewState extends State<CommunityView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onProfileTap;
-  final VoidCallback? onAddTap;
-  final String? imagePath;
+  final VoidCallback onAddTap;
+  final VoidCallback onSearchTap;
 
-  const _TopBar({
-    required this.onProfileTap,
-    required this.onAddTap,
-    required this.imagePath,
-  });
+  const _TopBar({required this.onAddTap, required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          // SizedBox(
-          //   width: 32,
-          //   child: onAddTap == null
-          //       ? const SizedBox.shrink()
-          //       : IconButton(
-          //           onPressed: onAddTap,
-          //           icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
-          //           padding: EdgeInsets.zero,
-          //           constraints: const BoxConstraints(),
-          //         ),
-          // ),
-          Expanded(
-            child: Center(
-              child: const Text(
-                'GERAK',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 24,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w900,
-                  height: 1.33,
-                  letterSpacing: -1.2,
-                ),
-              ),
-            ),
-          ),
-          // GestureDetector(
-          //   onTap: onProfileTap,
-          //   child: CircleAvatar(
-          //     radius: 16,
-          //     backgroundColor: const Color(0xFFE2E8F0),
-          //     backgroundImage: buildImageProviderFromSource(imagePath),
-          //     child: imagePath == null
-          //         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-          //         : null,
-          //   ),
-          // ),
-        ],
+    return AppBar(
+      automaticallyImplyLeading: false,
+      centerTitle: true,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 56,
+      titleSpacing: 0,
+      leadingWidth: 56,
+      leading: IconButton(
+        onPressed: onAddTap,
+        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
+        tooltip: 'Tambah',
       ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(48),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+      title: const Text(
+        'GERAK',
+        style: TextStyle(
+          color: Color(0xFF2563EB),
+          fontSize: 24,
+          fontFamily: 'Lexend',
+          fontWeight: FontWeight.w900,
+          height: 1.33,
+          letterSpacing: -1.2,
+        ),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.search, color: Color(0xFF94A3B8)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              onChanged: onChanged,
-              style: const TextStyle(
-                color: Color(0xFF0F172A),
-                fontSize: 16,
-                fontFamily: 'Lexend',
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.6,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'CARI KOMUNITAS',
-                hintStyle: TextStyle(
-                  color: Color(0x99475569),
-                  fontSize: 16,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.6,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 10),
-              ),
-            ),
-          ),
-        ],
+      actions: [
+        IconButton(
+          onPressed: onSearchTap,
+          icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
+          tooltip: 'Cari',
+        ),
+      ],
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: SizedBox.shrink(),
       ),
     );
   }
