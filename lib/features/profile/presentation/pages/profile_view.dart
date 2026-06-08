@@ -81,6 +81,43 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
+  void _showProfileMenu() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final menuWidth = 140.0;
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        screenWidth - menuWidth - 16,
+        56,
+        16,
+        0,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'logout',
+          child: Row(
+            children: const [
+              Icon(Icons.logout, size: 18, color: Color(0xFF0F172A)),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ).then((value) {
+      if (value == 'logout') _showLogoutConfirm();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,7 +132,7 @@ class _ProfileViewState extends State<ProfileView> {
                 children: [
                   _ProfileTopBar(
                     imagePath: _profilePhotoPath,
-                    onAvatarTap: _showLogoutConfirm,
+                    onAvatarTap: _showProfileMenu,
                   ),
                   const SizedBox(height: 24),
                   _ProfileHeader(

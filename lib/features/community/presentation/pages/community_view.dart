@@ -20,6 +20,7 @@ class _CommunityViewState extends State<CommunityView> {
   final Set<String> _selectedSports = {};
   final ApiClient _apiClient = ApiClient();
   List<_CommunityCardData> _communities = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _CommunityViewState extends State<CommunityView> {
   }
 
   Future<void> _loadCommunities() async {
+    setState(() => _isLoading = true);
     try {
       final resp = await _apiClient.get<Map<String, dynamic>>(
         '/auth/communities',
@@ -53,6 +55,8 @@ class _CommunityViewState extends State<CommunityView> {
       }
     } catch (_) {
       // ignore
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -373,7 +377,7 @@ class _CommunityViewState extends State<CommunityView> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(56),
         child: _TopBar(
-          onAddTap: authController.isCommunityAccount ? _openAddSheet : () {},
+          onAddTap: authController.isCommunityAccount ? _openAddSheet : null,
           onSearchTap: _openSearchSheet,
         ),
       ),
@@ -388,7 +392,7 @@ class _CommunityViewState extends State<CommunityView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 4),
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
@@ -453,6 +457,17 @@ class _CommunityViewState extends State<CommunityView> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
                   sliver: Builder(builder: (context) {
+                    // Show spinner while loading
+                    if (_isLoading) {
+                      return const SliverFillRemaining(
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                      );
+                    }
+
                     final selectedSports = _selectedSports;
                     
                     final filteredCommunities = _communities.where((c) {
@@ -478,7 +493,7 @@ class _CommunityViewState extends State<CommunityView> {
                     }).toList();
 
                     if (filteredCommunities.isEmpty) {
-                      return const SliverToBoxAdapter(
+                      return const SliverFillRemaining(
                         child: Center(
                           child: Padding(
                             padding: EdgeInsets.only(top: 40),
@@ -566,7 +581,7 @@ class _CommunityViewState extends State<CommunityView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onAddTap;
+  final VoidCallback? onAddTap;
   final VoidCallback onSearchTap;
 
   const _TopBar({required this.onAddTap, required this.onSearchTap});
@@ -582,12 +597,14 @@ class _TopBar extends StatelessWidget {
       scrolledUnderElevation: 0,
       toolbarHeight: 56,
       titleSpacing: 0,
-      leadingWidth: 56,
-      leading: IconButton(
-        onPressed: onAddTap,
-        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
-        tooltip: 'Tambah',
-      ),
+      leadingWidth: onAddTap != null ? 56 : 0,
+      leading: onAddTap != null
+          ? IconButton(
+              onPressed: onAddTap,
+              icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
+              tooltip: 'Tambah',
+            )
+          : null,
       title: const Text(
         'GERAK',
         style: TextStyle(

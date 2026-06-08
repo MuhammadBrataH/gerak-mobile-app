@@ -71,17 +71,39 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-    final displayName = authController.displayName;
-    final communityName = displayName.isNotEmpty
-        ? displayName
-        : (args['name'] as String?) ?? 'Komunitas';
+
+    // If navigated from community list, use the community's own data from args.
+    // Only fall back to authController data if it's the user's own profile page.
+    final communityIdFromArgs = args['id'] as String?;
+    final isViewingOtherCommunity =
+        communityIdFromArgs != null &&
+        communityIdFromArgs.isNotEmpty &&
+        communityIdFromArgs != (authController.user.value?.id ?? '');
+
+    final communityName = isViewingOtherCommunity
+        ? (args['name'] as String?) ?? 'Komunitas'
+        : (authController.displayName.isNotEmpty
+            ? authController.displayName
+            : (args['name'] as String?) ?? 'Komunitas');
+
     final est = (args['est'] as String?) ?? 'EST. 2019';
     final memberCount = (args['members'] as int?) ?? 500;
-    final imagePath = authController.currentProfilePhotoPath;
 
-    final sports = authController.currentSports.isNotEmpty
-        ? authController.currentSports
-        : _fallbackSports;
+    // For image: use args badgeUrl if viewing another community
+    final String? imagePath = isViewingOtherCommunity
+        ? (args['badgeUrl'] as String?)
+        : authController.currentProfilePhotoPath;
+
+    // For sports: parse from args categories if viewing another community
+    final List<String> sports = isViewingOtherCommunity
+        ? ((args['categories'] as String?) ?? '')
+            .split(' \u2022 ')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList()
+        : (authController.currentSports.isNotEmpty
+            ? authController.currentSports
+            : _fallbackSports);
 
     return DefaultTabController(
       length: 2,
@@ -115,14 +137,17 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                             est: est,
                             sports: sports,
                             memberCount: memberCount,
-                            onSettingsTap: () =>
-                                Get.toNamed(AppRoutes.accountSettings),
-                            onEditTap: () async {
-                              await Get.toNamed(AppRoutes.editProfile);
-                              if (mounted) {
-                                setState(_reloadContent);
-                              }
-                            },
+                            onSettingsTap: isViewingOtherCommunity
+                                ? null
+                                : () => Get.toNamed(AppRoutes.accountSettings),
+                            onEditTap: isViewingOtherCommunity
+                                ? null
+                                : () async {
+                                    await Get.toNamed(AppRoutes.editProfile);
+                                    if (mounted) {
+                                      setState(_reloadContent);
+                                    }
+                                  },
                           ),
                           const SizedBox(height: 16),
                           const _ProfileTabs(),
@@ -223,8 +248,8 @@ class _CommunityHeader extends StatelessWidget {
   final String est;
   final List<String> sports;
   final int memberCount;
-  final VoidCallback onSettingsTap;
-  final VoidCallback onEditTap;
+  final VoidCallback? onSettingsTap;
+  final VoidCallback? onEditTap;
 
   const _CommunityHeader({
     required this.imagePath,
@@ -371,62 +396,63 @@ class _CommunityHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: onSettingsTap,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0F172A),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9999),
-                  ),
-                  backgroundColor: const Color(0xFFE2E8F0),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.settings, size: 18, color: Color(0xFF0F172A)),
-                    SizedBox(width: 8),
-                    Text(
-                      'Settings',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontWeight: FontWeight.w700,
-                      ),
+        if (onSettingsTap != null || onEditTap != null)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onSettingsTap,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0F172A),
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(9999),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: onEditTap,
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9999),
+                    backgroundColor: const Color(0xFFE2E8F0),
                   ),
-                  backgroundColor: const Color(0xFF2563EB),
-                ),
-                child: const Text(
-                  'Edit Profil',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontWeight: FontWeight.w700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.settings, size: 18, color: Color(0xFF0F172A)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Settings',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onEditTap,
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(9999),
+                    ),
+                    backgroundColor: const Color(0xFF2563EB),
+                  ),
+                  child: const Text(
+                    'Edit Profil',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
