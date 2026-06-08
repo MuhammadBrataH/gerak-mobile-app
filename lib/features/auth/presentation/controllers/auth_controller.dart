@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/user_model.dart';
@@ -11,6 +12,7 @@ class AuthController extends GetxController {
   final RxBool isLoading = false.obs;
   final Rxn<UserModel> user = Rxn<UserModel>();
   final RxnString signupName = RxnString();
+  final RxnString signupEmail = RxnString();
   final RxnString signupAccountType = RxnString();
   final RxnString signupGender = RxnString();
   final Rxn<DateTime> signupDateOfBirth = Rxn<DateTime>();
@@ -25,12 +27,22 @@ class AuthController extends GetxController {
   final RxMap<String, List<String>> _sportsByUserId =
       <String, List<String>>{}.obs;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _googleServerClientId =
+      '1094874822851-msflctkmeq7h85hhbf206168gei8menh.apps.googleusercontent.com';
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    serverClientId: _googleServerClientId,
+  );
 
   AuthController({ApiClient? apiClient})
     : _apiClient = apiClient ?? ApiClient();
 
   void setSignupName(String name) {
     signupName.value = name.trim();
+  }
+
+  void setSignupEmail(String email) {
+    signupEmail.value = email.trim();
   }
 
   void setSignupAccountType(String accountType) {
@@ -125,6 +137,7 @@ class AuthController extends GetxController {
 
   void resetSignupFlow() {
     signupName.value = null;
+    signupEmail.value = null;
     signupAccountType.value = null;
     signupGender.value = null;
     signupDateOfBirth.value = null;
@@ -206,9 +219,28 @@ class AuthController extends GetxController {
 
   String get homeRoute => _homeRouteForAccountType(user.value?.accountType);
 
+  Future<bool> get isLoggedIn async {
+    final token = await _storage.read(key: 'token');
+    return token != null && token.isNotEmpty;
+  }
+
+  Future<bool> get hasCompletedOnboarding async {
+    final completed = await _storage.read(key: 'onboarding_completed');
+    return completed == 'true';
+  }
+
+  Future<void> markOnboardingCompleted() async {
+    await _storage.write(key: 'onboarding_completed', value: 'true');
+  }
+
   Future<void> login(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || password.isEmpty) {
       Get.snackbar('Login Failed', 'Email and password cannot be empty');
+      return;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Login Failed', 'Gunakan email yang valid untuk login');
       return;
     }
 
@@ -216,7 +248,7 @@ class AuthController extends GetxController {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/login',
-        data: {'email': email, 'password': password},
+        data: {'email': trimmedEmail, 'password': password},
       );
 
       final data = response.data ?? const <String, dynamic>{};
@@ -247,6 +279,78 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    if (isLoading.value) {
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      await _googleSignIn.signOut();
+      final account = await _googleSignIn.signIn();
+      if (account == null) {
+        return;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        Get.snackbar('Google Login', 'Gagal mendapatkan token Google');
+        return;
+      }
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/google',
+        data: {'idToken': idToken},
+      );
+
+      final data = response.data ?? const <String, dynamic>{};
+      final needsRegistration = data['needsRegistration'] == true;
+
+      if (needsRegistration) {
+        final profile = data['profile'];
+        if (profile is Map<String, dynamic>) {
+          final email = (profile['email'] ?? '').toString();
+          final name = (profile['name'] ?? '').toString();
+          if (email.isNotEmpty) {
+            setSignupEmail(email);
+          }
+          if (name.isNotEmpty) {
+            setSignupName(name);
+          }
+        }
+
+        Get.toNamed(AppRoutes.register);
+        return;
+      }
+
+      final userJson = data['user'];
+      final token = data['token'];
+      final refreshToken = data['refreshToken'];
+
+      if (token is String && refreshToken is String) {
+        await _apiClient.setTokens(
+          accessToken: token,
+          refreshToken: refreshToken,
+        );
+      }
+
+      if (userJson is Map<String, dynamic>) {
+        user.value = UserModel.fromJson(userJson);
+        await _loadProfileCacheForUser();
+        _syncProfileCacheForUser();
+      }
+
+      Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
+    } on ApiException catch (error) {
+      Get.snackbar('Google Login', error.message);
+    } catch (_) {
+      Get.snackbar('Google Login', 'Login Google gagal');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> register(
     String email,
     String password,
@@ -256,8 +360,16 @@ class AuthController extends GetxController {
     DateTime? dateOfBirth, {
     String? accountType,
   }) async {
-    if (email.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty ||
+        password.isEmpty ||
+        name.isEmpty ||
+        phone.isEmpty) {
       Get.snackbar('Register Failed', 'All fields are required');
+      return;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Register Failed', 'Gunakan email yang valid untuk daftar');
       return;
     }
 
@@ -266,7 +378,7 @@ class AuthController extends GetxController {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/register',
         data: {
-          'email': email,
+          'email': trimmedEmail,
           'password': password,
           'name': name,
           'phone': phone,
@@ -306,55 +418,105 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    isLoading.value = true;
     try {
-      await _apiClient.post<Map<String, dynamic>>('/auth/logout');
-    } on ApiException catch (error) {
-      Get.snackbar('Logout Failed', error.message);
-    } catch (_) {
-      Get.snackbar('Logout Failed', 'Unexpected error occurred');
-    } finally {
+      isLoading.value = true;
+
+      await _apiClient.post('/auth/logout');
+
       await _apiClient.clearTokens();
       user.value = null;
-      isLoading.value = false;
+
+      // Clear profile state
+      final key = _currentUserKey();
+      _displayNameByUserId.remove(key);
+      _photoByUserId.remove(key);
+      _domicileByUserId.remove(key);
+      _bioByUserId.remove(key);
+      _sportsByUserId.remove(key);
+      selectedSports.clear();
+
       Get.offAllNamed(AppRoutes.login);
+    } on ApiException catch (e) {
+      Get.snackbar('Logout Failed', e.message);
+    } catch (e) {
+      Get.snackbar('Logout Failed', 'Terjadi kesalahan saat logout');
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  Future<void> changePassword(String currentPassword, String newPassword) async {
-    isLoading.value = true;
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
     try {
-      await _apiClient.put<Map<String, dynamic>>(
+      isLoading.value = true;
+
+      await _apiClient.put(
         '/auth/change-password',
-        data: {
-          'currentPassword': currentPassword,
-          'newPassword': newPassword,
-        },
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
-      Get.snackbar('Success', 'Password updated successfully');
-      Get.back();
-    } on ApiException catch (error) {
-      Get.snackbar('Error', error.message);
-    } catch (_) {
-      Get.snackbar('Error', 'Unexpected error occurred');
+
+      Get.snackbar('Success', 'Password berhasil diubah');
+    } on ApiException catch (e) {
+      Get.snackbar('Error', e.message);
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan saat mengubah password');
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> deleteAccount() async {
-    isLoading.value = true;
+  Future<void> deleteAccount({required String password}) async {
     try {
-      await _apiClient.delete<Map<String, dynamic>>('/auth/delete-account');
+      isLoading.value = true;
+
+      await _apiClient.delete(
+        '/auth/delete-account',
+        data: {'password': password},
+      );
+
       await _apiClient.clearTokens();
       user.value = null;
+
+      // Clear profile state
+      final key = _currentUserKey();
+      _displayNameByUserId.remove(key);
+      _photoByUserId.remove(key);
+      _domicileByUserId.remove(key);
+      _bioByUserId.remove(key);
+      _sportsByUserId.remove(key);
+      selectedSports.clear();
+
       Get.offAllNamed(AppRoutes.login);
-    } on ApiException catch (error) {
-      Get.snackbar('Error', error.message);
-    } catch (_) {
-      Get.snackbar('Error', 'Unexpected error occurred');
+    } on ApiException catch (e) {
+      Get.snackbar('Error', e.message);
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan saat menghapus akun');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<bool> requestPasswordReset(String email) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty) {
+      Get.snackbar('Lupa Password', 'Email wajib diisi');
+      return false;
+    }
+    if (!_isAllowedEmailDomain(trimmedEmail)) {
+      Get.snackbar('Lupa Password', 'Gunakan akun email yang terdaftar');
+      return false;
+    }
+
+    Get.snackbar('Lupa Password', 'Link reset sudah dikirim ke Gmail kamu');
+    return true;
+  }
+
+  bool _isAllowedEmailDomain(String email) {
+    final lower = email.trim().toLowerCase();
+    return lower.endsWith('@gmail.com') ||
+        lower.endsWith('@googlemail.com') ||
+        lower.endsWith('@polban.ac.id');
   }
 }

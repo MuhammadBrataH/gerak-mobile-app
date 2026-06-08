@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -86,12 +88,14 @@ class _HomeViewState extends State<HomeView> {
       location: event.location.toUpperCase(),
       address:
           '${event.location}, ${event.city}${event.district != null ? ', ${event.district}' : ''}',
-      community: '',
+      community: event.communityName ,
       description: event.description ?? '',
       price: '',
       labelIconAsset: icon,
       badgeUrl: event.imageUrl,
       adminPhone: event.adminPhone,
+      communityName: event.communityName,
+      event: event,
       backgroundColor: const Color(0xFFF1F5F9),
       participants: slots,
     );
@@ -113,7 +117,7 @@ class _HomeViewState extends State<HomeView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return const CommunityAddSheet();
+        return CommunityAddSheet(showOnlyMatch: true);
       },
     );
   }
@@ -300,7 +304,7 @@ class _HomeViewState extends State<HomeView> {
                                 vertical: 8,
                               ),
                               itemCount: filteredActivities.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (context, index) =>
                                   const SizedBox(height: 8),
                               itemBuilder: (context, index) {
                                 final activity = filteredActivities[index];
@@ -309,6 +313,7 @@ class _HomeViewState extends State<HomeView> {
                                     Get.back();
                                     Get.to(
                                       () => ActivityDetailView(
+                                        event: activity.event,
                                         title: activity.title.replaceAll(
                                           '\n',
                                           ' ',
@@ -418,9 +423,9 @@ class _HomeViewState extends State<HomeView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4),
-                        // const _HeroHeadline(),
-                        // const SizedBox(height: 20),
+                        const SizedBox(height: 8),
+                        const _HeroHeadline(),
+                        const SizedBox(height: 20),
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
@@ -578,11 +583,17 @@ class _TopBar extends StatelessWidget {
       toolbarHeight: 56,
       titleSpacing: 0,
       leadingWidth: 56,
-      leading: IconButton(
-        onPressed: onAddTap,
-        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
-        tooltip: 'Tambah',
-      ),
+      leading: Obx(() {
+        final authController = Get.find<AuthController>();
+        if (!authController.isCommunityAccount) {
+          return const SizedBox.shrink();
+        }
+        return IconButton(
+          onPressed: onAddTap,
+          icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
+          tooltip: 'Tambah',
+        );
+      }),
       title: const Text(
         'GERAK',
         style: TextStyle(
@@ -622,9 +633,8 @@ class _HeroHeadline extends StatelessWidget {
           fontWeight: FontWeight.w800,
           height: 1.3,
           letterSpacing: 2.4,
-          
         ),
-        
+
         children: [
           TextSpan(
             text: 'GO ',
@@ -1392,6 +1402,7 @@ class _ActivityCard extends StatelessWidget {
       onTap: () {
         Get.to(
           () => ActivityDetailView(
+            event: data.event,
             eventId: data.id,
             title: data.title.replaceAll('\n', ' '),
             label: data.label,
@@ -1399,7 +1410,7 @@ class _ActivityCard extends StatelessWidget {
             time: data.time,
             location: data.location,
             address: data.address,
-            community: data.community,
+            community: data.communityName,
             description: data.description,
             price: data.price,
             participants: data.participants,
@@ -1447,12 +1458,38 @@ class _ActivityCard extends StatelessWidget {
               data.title,
               style: const TextStyle(
                 color: Color(0xFF0F172A),
-                fontSize: 30,
+                fontSize: 28,
                 fontFamily: 'Lexend',
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 height: 1,
               ),
             ),
+            const SizedBox(height: 4),
+            if (data.communityName.isNotEmpty)
+              Row(
+                children: [
+                  const Icon(
+                    Icons.groups_rounded,
+                    size: 12,
+                    color: Color(0xFF94A3B8),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      data.communityName,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -1670,6 +1707,8 @@ class _ActivityCardData {
   final String labelIconAsset;
   final String? badgeUrl;
   final String adminPhone;
+  final String communityName;
+  final EventModel event;
   final Color backgroundColor;
   final String participants;
 
@@ -1687,6 +1726,8 @@ class _ActivityCardData {
     required this.labelIconAsset,
     required this.badgeUrl,
     required this.adminPhone,
+    required this.communityName,
+    required this.event,
     required this.backgroundColor,
     this.participants = '',
   });

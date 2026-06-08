@@ -38,6 +38,8 @@ replay_pid*.log
 /coverage/
 **/node_modules/
 **/.env
+backend/.env
+backend/.env.*
 
 # Symbolication related
 app.*.symbols

@@ -162,6 +162,43 @@ const refreshToken = asyncHandler(async (req, res) => {
         refreshToken: newRefreshToken,
     });
 });
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = asyncHandler(async (req, res) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+        throw new ApiError(400, 'idToken is required');
+    }
+
+    // Verifikasi token dari Google
+    const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    // Cari user, kalau belum ada auto-register
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+    return res.status(200).json({
+        needsRegistration: true,
+        profile: { email, name, picture },
+    });
+}
+
+    const accessToken = issueAccessToken(user._id);
+    const refreshToken = issueRefreshToken(user._id);
+
+    user.refreshTokenHash = hashToken(refreshToken);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json(buildAuthPayload(sanitizeUser(user), accessToken, refreshToken));
+});
 
 const changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
@@ -206,6 +243,5 @@ module.exports = {
     me,
     listCommunities,
     refreshToken,
-    changePassword,
-    deleteAccount,
+    googleLogin,
 };

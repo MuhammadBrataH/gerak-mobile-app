@@ -10,18 +10,21 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../events/presentation/controllers/event_controller.dart';
 
 class CommunityAddSheet extends StatefulWidget {
-  const CommunityAddSheet({super.key});
+  final bool showOnlyMatch;
+  const CommunityAddSheet({super.key, this.showOnlyMatch = false});
 
   @override
   State<CommunityAddSheet> createState() => _CommunityAddSheetState();
 }
 
 class _CommunityAddSheetState extends State<CommunityAddSheet> {
-  int _activeTab = 0; // 0 = Postingan, 1 = Pertandingan
+  int _activeTab =
+      0; // 0 = Postingan (or Pertandingan if showOnlyMatch), 1 = Pertandingan
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _postTitleController = TextEditingController();
   final TextEditingController _postDescController = TextEditingController();
   final TextEditingController _matchTitleController = TextEditingController();
+  final TextEditingController _fieldNameController = TextEditingController();
   final TextEditingController _matchDescController = TextEditingController();
   Uint8List? _postMediaBytes;
   String? _postMediaName;
@@ -44,13 +47,6 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
     'FUTSAL': 'futsal',
     'VOLLEY': 'volleyball',
     'MINI SOCCER': 'mini_soccer',
-  };
-
-  static const _validLevels = <String>{
-    'beginner',
-    'intermediate',
-    'advanced',
-    'mixed',
   };
 
   static const List<String> _availableCities = [
@@ -81,6 +77,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
     _postTitleController.dispose();
     _postDescController.dispose();
     _matchTitleController.dispose();
+    _fieldNameController.dispose();
     _matchDescController.dispose();
     super.dispose();
   }
@@ -92,14 +89,6 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
     );
-  }
-
-  String _normalizeLevel(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'mixed';
-    }
-    final normalized = value.trim().toLowerCase();
-    return _validLevels.contains(normalized) ? normalized : 'mixed';
   }
 
   String? _buildDataUri(Uint8List? bytes, String? fileName) {
@@ -172,13 +161,19 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       return;
     }
 
+    final fieldName = _fieldNameController.text.trim();
+    if (fieldName.isEmpty) {
+      _showInfo('Nama lapangan wajib diisi.');
+      return;
+    }
+
     if (_selectedDate == null || _selectedTime == null) {
       _showInfo('Tanggal dan jam pertandingan wajib diisi.');
       return;
     }
 
-    final location = _locationLabel.trim();
-    if (location.isEmpty || location == 'Lokasi') {
+    final city = _locationLabel.trim();
+    if (city.isEmpty || city == 'Lokasi') {
       _showInfo('Lokasi pertandingan wajib diisi.');
       return;
     }
@@ -208,11 +203,11 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
       name: title,
       description: _matchDescController.text.trim(),
       sport: sport,
-      level: _normalizeLevel(user?.level),
+      level: 'mixed',
       startTime: startTime,
       endTime: endTime,
-      location: location,
-      city: location,
+      location: fieldName,
+      city: city,
       district: '',
       maxSlots: _slotCount,
       totalSlots: _slotCount,
@@ -415,6 +410,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
                     onTabChanged: (index) {
                       setState(() => _activeTab = index);
                     },
+                    showOnlyMatch: widget.showOnlyMatch,
                   ),
                   const SizedBox(height: 18),
                   if (_activeTab == 0)
@@ -434,6 +430,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
                       mediaBytes: _matchMediaBytes,
                       onPickMedia: () => _pickMedia(isMatch: true),
                       titleController: _matchTitleController,
+                      fieldNameController: _fieldNameController,
                       descriptionController: _matchDescController,
                       dateLabel: _selectedDate == null
                           ? 'Pilih Tanggal'
@@ -475,8 +472,13 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
 class _TabHeader extends StatelessWidget {
   final int activeIndex;
   final ValueChanged<int> onTabChanged;
+  final bool showOnlyMatch;
 
-  const _TabHeader({required this.activeIndex, required this.onTabChanged});
+  const _TabHeader({
+    required this.activeIndex,
+    required this.onTabChanged,
+    required this.showOnlyMatch,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,19 +491,21 @@ class _TabHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _TabButton(
-              label: 'Postingan',
-              isActive: activeIndex == 0,
-              onTap: () => onTabChanged(0),
+          if (!showOnlyMatch) ...[
+            Expanded(
+              child: _TabButton(
+                label: 'Postingan',
+                isActive: activeIndex == 0,
+                onTap: () => onTabChanged(0),
+              ),
             ),
-          ),
-          Container(width: 1, height: 44, color: const Color(0xFF808080)),
+            Container(width: 1, height: 44, color: const Color(0xFF808080)),
+          ],
           Expanded(
             child: _TabButton(
-              label: 'Pertandingan',
-              isActive: activeIndex == 1,
-              onTap: () => onTabChanged(1),
+              label: showOnlyMatch ? 'Pertandingan' : 'Pertandingan',
+              isActive: showOnlyMatch ? activeIndex == 0 : activeIndex == 1,
+              onTap: () => onTabChanged(showOnlyMatch ? 0 : 1),
             ),
           ),
         ],
@@ -611,6 +615,7 @@ class _AddMatchForm extends StatelessWidget {
   final VoidCallback onPickMedia;
   final Uint8List? mediaBytes;
   final TextEditingController titleController;
+  final TextEditingController fieldNameController;
   final TextEditingController descriptionController;
   final String dateLabel;
   final String timeLabel;
@@ -632,6 +637,7 @@ class _AddMatchForm extends StatelessWidget {
     required this.onPickMedia,
     required this.mediaBytes,
     required this.titleController,
+    required this.fieldNameController,
     required this.descriptionController,
     required this.dateLabel,
     required this.timeLabel,
@@ -736,6 +742,11 @@ class _AddMatchForm extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _TextField(placeholder: 'Tambahkan Judul', controller: titleController),
+        const SizedBox(height: 12),
+        _TextField(
+          placeholder: 'Nama Lapangan',
+          controller: fieldNameController,
+        ),
         const SizedBox(height: 12),
         _TextArea(
           placeholder: 'Tambahkan Deskripsi',
