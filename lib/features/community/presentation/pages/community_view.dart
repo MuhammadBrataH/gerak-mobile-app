@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../events/presentation/controllers/event_controller.dart';
 import './community_add_sheet.dart';
@@ -37,18 +38,32 @@ class _CommunityViewState extends State<CommunityView> {
       final data = resp.data ?? {};
       final items = data['communities'];
       if (items is List) {
+        final authController = Get.find<AuthController>();
+        final currentUserId = authController.user.value?.id;
+        final currentProfilePhoto = authController.currentProfilePhotoPath;
+
         setState(() {
           _communities = items.whereType<Map<String, dynamic>>().map((m) {
+            final communityId = m['_id']?.toString() ?? '';
+            final apiPhotoUrl =
+                m['photoUrl'] is String && m['photoUrl']!.isNotEmpty
+                ? m['photoUrl'] as String
+                : 'assets/sample 1.jpg';
+
+            // If this community belongs to the current user, use their current profile photo
+            final badgeUrl =
+                (communityId == currentUserId && currentProfilePhoto != null)
+                ? currentProfilePhoto
+                : apiPhotoUrl;
+
             return _CommunityCardData(
-              id: m['_id']?.toString() ?? '',
+              id: communityId,
               name: (m['name'] ?? '').toString(),
               categories:
                   (m['sports'] is List && (m['sports'] as List).isNotEmpty)
                   ? (m['sports'] as List).join(' • ').toUpperCase()
                   : 'GENERAL',
-              badgeUrl: m['photoUrl'] is String && m['photoUrl']!.isNotEmpty
-                  ? m['photoUrl'] as String
-                  : 'assets/sample 1.jpg',
+              badgeUrl: badgeUrl,
             );
           }).toList();
         });
@@ -108,7 +123,8 @@ class _CommunityViewState extends State<CommunityView> {
           builder: (context, setStateSheet) {
             final q = textController.text.toLowerCase();
             filteredCommunities = _communities.where((c) {
-              if (q.isNotEmpty && !c.name.toLowerCase().contains(q)) return false;
+              if (q.isNotEmpty && !c.name.toLowerCase().contains(q))
+                return false;
               return true;
             }).toList();
 
@@ -255,7 +271,9 @@ class _CommunityViewState extends State<CommunityView> {
                                       children: [
                                         CircleAvatar(
                                           radius: 22,
-                                          backgroundImage: AssetImage(comm.badgeUrl),
+                                          backgroundImage: AssetImage(
+                                            comm.badgeUrl,
+                                          ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
@@ -399,16 +417,16 @@ class _CommunityViewState extends State<CommunityView> {
                           onActionTap: () async {
                             final result = await Get.toNamed(
                               AppRoutes.sportsAll,
-                              arguments: {
-                                'selected': _selectedSports.toList(),
-                              },
+                              arguments: {'selected': _selectedSports.toList()},
                             );
                             if (result is List) {
                               final mappedKeys = result.map((e) {
                                 final label = e.toString().toUpperCase();
                                 if (label == 'TENNIS FIELD') return 'tennis';
-                                if (label == 'MINI SOCCER') return 'mini_soccer';
-                                if (label == 'TABLE TENNIS') return 'table_tennis';
+                                if (label == 'MINI SOCCER')
+                                  return 'mini_soccer';
+                                if (label == 'TABLE TENNIS')
+                                  return 'table_tennis';
                                 return label.toLowerCase();
                               }).toSet();
                               setState(() {
@@ -456,81 +474,89 @@ class _CommunityViewState extends State<CommunityView> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: Builder(builder: (context) {
-                    // Show spinner while loading
-                    if (_isLoading) {
-                      return const SliverFillRemaining(
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF2563EB),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final selectedSports = _selectedSports;
-                    
-                    final filteredCommunities = _communities.where((c) {
-                      // Filter by search
-                      if (_searchQuery.isNotEmpty && 
-                          !c.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
-                        return false;
-                      }
-                      
-                      // Filter by category
-                      if (selectedSports.isNotEmpty) {
-                        final cCats = c.categories.split(' • ').map((e) => e.toLowerCase().trim());
-                        bool hasMatch = false;
-                        for (var sel in selectedSports) {
-                          if (cCats.contains(sel.toLowerCase())) {
-                            hasMatch = true;
-                            break;
-                          }
-                        }
-                        if (!hasMatch) return false;
-                      }
-                      return true;
-                    }).toList();
-
-                    if (filteredCommunities.isEmpty) {
-                      return const SliverFillRemaining(
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 40),
-                            child: Text(
-                              'Tidak ada komunitas ditemukan.',
-                              style: TextStyle(
-                                color: Color(0xFF64748B),
-                                fontSize: 14,
-                                fontFamily: 'Plus Jakarta Sans',
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    return SliverList.builder(
-                      itemCount: filteredCommunities.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _CommunityCard(
-                            data: filteredCommunities[index],
-                            onTap: () => Get.toNamed(
-                              AppRoutes.communityProfile,
-                              arguments: {
-                                'id': filteredCommunities[index].id,
-                                'name': filteredCommunities[index].name,
-                                'badgeUrl': filteredCommunities[index].badgeUrl,
-                                'categories': filteredCommunities[index].categories,
-                              },
+                  sliver: Builder(
+                    builder: (context) {
+                      // Show spinner while loading
+                      if (_isLoading) {
+                        return const SliverFillRemaining(
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF2563EB),
                             ),
                           ),
                         );
-                      },
-                    );
-                  }),
+                      }
+
+                      final selectedSports = _selectedSports;
+
+                      final filteredCommunities = _communities.where((c) {
+                        // Filter by search
+                        if (_searchQuery.isNotEmpty &&
+                            !c.name.toLowerCase().contains(
+                              _searchQuery.toLowerCase(),
+                            )) {
+                          return false;
+                        }
+
+                        // Filter by category
+                        if (selectedSports.isNotEmpty) {
+                          final cCats = c.categories
+                              .split(' • ')
+                              .map((e) => e.toLowerCase().trim());
+                          bool hasMatch = false;
+                          for (var sel in selectedSports) {
+                            if (cCats.contains(sel.toLowerCase())) {
+                              hasMatch = true;
+                              break;
+                            }
+                          }
+                          if (!hasMatch) return false;
+                        }
+                        return true;
+                      }).toList();
+
+                      if (filteredCommunities.isEmpty) {
+                        return const SliverFillRemaining(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 40),
+                              child: Text(
+                                'Tidak ada komunitas ditemukan.',
+                                style: TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 14,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return SliverList.builder(
+                        itemCount: filteredCommunities.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _CommunityCard(
+                              data: filteredCommunities[index],
+                              onTap: () => Get.toNamed(
+                                AppRoutes.communityProfile,
+                                arguments: {
+                                  'id': filteredCommunities[index].id,
+                                  'name': filteredCommunities[index].name,
+                                  'badgeUrl':
+                                      filteredCommunities[index].badgeUrl,
+                                  'categories':
+                                      filteredCommunities[index].categories,
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -712,17 +738,34 @@ class _CategoryChips extends StatelessWidget {
         // Map Indonesian label to backend key for checking selection
         String sportKey = '';
         switch (chip.label) {
-          case 'SEPAK BOLA': sportKey = 'football'; break;
-          case 'BASKET': sportKey = 'basketball'; break;
-          case 'BADMINTON': sportKey = 'badminton'; break;
-          case 'LARI': sportKey = 'running'; break;
-          case 'PADEL': sportKey = 'padel'; break;
-          case 'FUTSAL': sportKey = 'futsal'; break;
-          case 'VOLLEY': sportKey = 'volleyball'; break;
-          case 'MINI SOCCER': sportKey = 'mini_soccer'; break;
-          default: sportKey = chip.label.toLowerCase();
+          case 'SEPAK BOLA':
+            sportKey = 'football';
+            break;
+          case 'BASKET':
+            sportKey = 'basketball';
+            break;
+          case 'BADMINTON':
+            sportKey = 'badminton';
+            break;
+          case 'LARI':
+            sportKey = 'running';
+            break;
+          case 'PADEL':
+            sportKey = 'padel';
+            break;
+          case 'FUTSAL':
+            sportKey = 'futsal';
+            break;
+          case 'VOLLEY':
+            sportKey = 'volleyball';
+            break;
+          case 'MINI SOCCER':
+            sportKey = 'mini_soccer';
+            break;
+          default:
+            sportKey = chip.label.toLowerCase();
         }
-        
+
         final isActive = selectedLabels.contains(sportKey);
         return Material(
           color: Colors.transparent,
@@ -998,6 +1041,8 @@ class _CommunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1045,10 +1090,21 @@ class _CommunityCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              CircleAvatar(
-                radius: 49,
-                backgroundImage: AssetImage(data.badgeUrl),
-              ),
+              Obx(() {
+                // If this community belongs to the current user, use their current profile photo
+                final currentUserId = authController.user.value?.id;
+                final currentProfilePhoto =
+                    authController.currentProfilePhotoPath;
+                final badgeUrl =
+                    (data.id == currentUserId && currentProfilePhoto != null)
+                    ? currentProfilePhoto
+                    : data.badgeUrl;
+
+                return CircleAvatar(
+                  radius: 49,
+                  backgroundImage: buildImageProviderFromSource(badgeUrl),
+                );
+              }),
             ],
           ),
         ),

@@ -67,12 +67,12 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     }
   }
 
-  void _showProfileMenu() {
+  Future<void> _showProfileMenu() async {
     final screenWidth = MediaQuery.of(context).size.width;
     final menuWidth = 140.0;
     final authController = Get.find<AuthController>();
 
-    showMenu<String>(
+    final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
       items: [
@@ -96,11 +96,26 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
       ],
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ).then((value) {
-      if (value == 'logout') {
-        authController.logout();
-      }
-    });
+    );
+
+    if (selected == 'logout') {
+      await Get.dialog(
+        AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Apakah Anda yakin ingin logout?'),
+          actions: [
+            TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                authController.logout();
+              },
+              child: const Text('Ya'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
