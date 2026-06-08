@@ -418,18 +418,83 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    isLoading.value = true;
     try {
-      await _apiClient.post<Map<String, dynamic>>('/auth/logout');
-    } on ApiException catch (error) {
-      Get.snackbar('Logout Failed', error.message);
-    } catch (_) {
-      Get.snackbar('Logout Failed', 'Unexpected error occurred');
-    } finally {
+      isLoading.value = true;
+
+      await _apiClient.post('/auth/logout');
+
       await _apiClient.clearTokens();
       user.value = null;
-      isLoading.value = false;
+
+      // Clear profile state
+      final key = _currentUserKey();
+      _displayNameByUserId.remove(key);
+      _photoByUserId.remove(key);
+      _domicileByUserId.remove(key);
+      _bioByUserId.remove(key);
+      _sportsByUserId.remove(key);
+      selectedSports.clear();
+
       Get.offAllNamed(AppRoutes.login);
+    } on ApiException catch (e) {
+      Get.snackbar('Logout Failed', e.message);
+    } catch (e) {
+      Get.snackbar('Logout Failed', 'Terjadi kesalahan saat logout');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      isLoading.value = true;
+
+      await _apiClient.put(
+        '/auth/change-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+
+      Get.snackbar('Success', 'Password berhasil diubah');
+    } on ApiException catch (e) {
+      Get.snackbar('Error', e.message);
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan saat mengubah password');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteAccount({required String password}) async {
+    try {
+      isLoading.value = true;
+
+      await _apiClient.delete(
+        '/auth/delete-account',
+        data: {'password': password},
+      );
+
+      await _apiClient.clearTokens();
+      user.value = null;
+
+      // Clear profile state
+      final key = _currentUserKey();
+      _displayNameByUserId.remove(key);
+      _photoByUserId.remove(key);
+      _domicileByUserId.remove(key);
+      _bioByUserId.remove(key);
+      _sportsByUserId.remove(key);
+      selectedSports.clear();
+
+      Get.offAllNamed(AppRoutes.login);
+    } on ApiException catch (e) {
+      Get.snackbar('Error', e.message);
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan saat menghapus akun');
+    } finally {
+      isLoading.value = false;
     }
   }
 

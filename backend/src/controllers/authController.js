@@ -200,6 +200,42 @@ const googleLogin = asyncHandler(async (req, res) => {
     res.status(200).json(buildAuthPayload(sanitizeUser(user), accessToken, refreshToken));
 });
 
+const changePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        throw new ApiError(400, 'currentPassword and newPassword are required');
+    }
+
+    if (!validatePasswordStrength(newPassword)) {
+        throw new ApiError(400, 'New password must be at least 8 characters and contain letters and numbers');
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
+
+    const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatches) {
+        throw new ApiError(401, 'Invalid current password');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+});
+
+const deleteAccount = asyncHandler(async (req, res) => {
+    const user = await User.findByIdAndDelete(req.user._id);
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
+
+    res.status(200).json({ message: 'Account deleted successfully' });
+});
+
 module.exports = {
     register,
     login,
