@@ -91,7 +91,20 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
                   const SizedBox(height: 16),
                   _PrimaryButton(
                     label: 'Ubah Kata Sandi',
-                    onTap: () => _showToast('Ubah kata sandi tapped'),
+                    onTap: () {
+                      if (_currentController.text.isEmpty || _newController.text.isEmpty || _confirmController.text.isEmpty) {
+                        _showToast('Mohon lengkapi semua data');
+                        return;
+                      }
+                      if (_newController.text != _confirmController.text) {
+                        _showToast('Konfirmasi kata sandi tidak cocok');
+                        return;
+                      }
+                      Get.find<AuthController>().changePassword(
+                        _currentController.text,
+                        _newController.text,
+                      );
+                    },
                   ),
                 ],
               ),

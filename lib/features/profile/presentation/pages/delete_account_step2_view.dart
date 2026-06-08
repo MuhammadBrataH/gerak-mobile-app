@@ -48,7 +48,9 @@ class DeleteAccountStep2View extends StatelessWidget {
                   const SizedBox(height: 24),
                   _PrimaryButton(
                     label: 'Hapus Akun',
-                    onTap: () => _showToast('Hapus akun tapped'),
+                    onTap: () {
+                      Get.find<AuthController>().deleteAccount();
+                    },
                   ),
                   const SizedBox(height: 10),
                   TextButton(

@@ -43,6 +43,26 @@ class AccountSettingsView extends StatelessWidget {
                     label: 'Hapus akun',
                     onTap: () => Get.toNamed(AppRoutes.deleteAccountStep1),
                   ),
+                  const SizedBox(height: 12),
+                  _SettingsItem(
+                    label: 'Keluar',
+                    textColor: Colors.red,
+                    onTap: () {
+                      Get.defaultDialog(
+                        title: 'Konfirmasi',
+                        middleText: 'Apakah anda yakin ingin keluar?',
+                        textConfirm: 'Keluar',
+                        textCancel: 'Batal',
+                        confirmTextColor: Colors.white,
+                        buttonColor: Colors.red,
+                        cancelTextColor: Colors.black,
+                        onConfirm: () {
+                          Get.back();
+                          Get.find<AuthController>().logout();
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -93,8 +113,9 @@ class _AccountSettingsTopBar extends StatelessWidget {
 class _SettingsItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final Color? textColor;
 
-  const _SettingsItem({required this.label, required this.onTap});
+  const _SettingsItem({required this.label, required this.onTap, this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -115,8 +136,8 @@ class _SettingsItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    color: Color(0xFF090909),
+                  style: TextStyle(
+                    color: textColor ?? const Color(0xFF090909),
                     fontSize: 15,
                     fontFamily: 'Plus Jakarta Sans',
                     fontWeight: FontWeight.w600,

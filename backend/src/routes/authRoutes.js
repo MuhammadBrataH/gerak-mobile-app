@@ -11,5 +11,7 @@ router.post('/logout', authenticate(['access']), authController.logout);
 router.get('/me', authenticate(['access']), authController.me);
 router.get('/communities', authController.listCommunities);
 router.post('/refresh-token', authenticate(['refresh']), authController.refreshToken);
+router.put('/change-password', authenticate(['access']), authController.changePassword);
+router.delete('/delete-account', authenticate(['access']), authController.deleteAccount);
 
 module.exports = router;

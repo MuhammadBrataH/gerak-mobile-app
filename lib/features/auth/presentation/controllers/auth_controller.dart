@@ -320,4 +320,41 @@ class AuthController extends GetxController {
       Get.offAllNamed(AppRoutes.login);
     }
   }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    isLoading.value = true;
+    try {
+      await _apiClient.put<Map<String, dynamic>>(
+        '/auth/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+      Get.snackbar('Success', 'Password updated successfully');
+      Get.back();
+    } on ApiException catch (error) {
+      Get.snackbar('Error', error.message);
+    } catch (_) {
+      Get.snackbar('Error', 'Unexpected error occurred');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    isLoading.value = true;
+    try {
+      await _apiClient.delete<Map<String, dynamic>>('/auth/delete-account');
+      await _apiClient.clearTokens();
+      user.value = null;
+      Get.offAllNamed(AppRoutes.login);
+    } on ApiException catch (error) {
+      Get.snackbar('Error', error.message);
+    } catch (_) {
+      Get.snackbar('Error', 'Unexpected error occurred');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }
