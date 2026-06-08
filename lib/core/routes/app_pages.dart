@@ -9,6 +9,7 @@ import '../../features/auth/presentation/pages/signup_private_step2_view.dart';
 import '../../features/auth/presentation/pages/signup_private_step3_view.dart';
 import '../../features/auth/presentation/pages/signup_community_step1_view.dart';
 import '../../features/auth/presentation/pages/signup_community_step2_view.dart';
+import '../../features/auth/presentation/pages/splash_view.dart';
 import '../../features/onboarding/presentation/pages/onboarding_view.dart';
 import '../../features/community/presentation/pages/community_profile_view.dart';
 import '../../features/community/presentation/pages/community_view.dart';
@@ -27,11 +28,20 @@ import '../../features/profile/presentation/pages/profile_view.dart';
 class AppPages {
   static final List<GetPage> pages = [
     GetPage(
+      name: AppRoutes.splash,
+      page: () => const SplashView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
       name: AppRoutes.login,
       page: () => const LoginView(),
       binding: AuthBinding(),
     ),
-    GetPage(name: AppRoutes.onboarding, page: () => const OnboardingView()),
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => const OnboardingView(),
+      binding: AuthBinding(),
+    ),
     GetPage(name: AppRoutes.register, page: () => const SignUpSelectView()),
     GetPage(
       name: AppRoutes.registerPrivate1,
@@ -58,7 +68,11 @@ class AppPages {
       page: () => DashboardView(),
       bindings: [AuthBinding(), EventBinding()],
     ),
-    GetPage(name: AppRoutes.sportsAll, page: () => const SportsAllView()),
+    GetPage(
+      name: AppRoutes.sportsAll,
+      page: () => const SportsAllView(),
+      bindings: [EventBinding()],
+    ),
     GetPage(
       name: AppRoutes.community,
       page: () => const CommunityView(),

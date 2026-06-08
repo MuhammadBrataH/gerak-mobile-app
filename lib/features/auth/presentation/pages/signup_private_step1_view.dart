@@ -21,6 +21,18 @@ class _SignUpPrivateStep1ViewState extends State<SignUpPrivateStep1View> {
     super.initState();
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
+
+    final controller = Get.find<AuthController>();
+    final name = controller.signupName.value;
+    if (name != null && name.trim().isNotEmpty) {
+      final parts = name.trim().split(RegExp(r'\s+'));
+      if (parts.isNotEmpty) {
+        _firstNameController.text = parts.first;
+        if (parts.length > 1) {
+          _lastNameController.text = parts.sublist(1).join(' ');
+        }
+      }
+    }
   }
 
   @override
