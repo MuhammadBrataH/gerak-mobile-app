@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -41,10 +40,8 @@ class _OnboardingViewState extends State<OnboardingView> {
     super.dispose();
   }
 
-  void _goNext() async {
+  void _goNext() {
     if (_currentIndex == _items.length - 1) {
-      final authController = Get.find<AuthController>();
-      await authController.markOnboardingCompleted();
       Get.offAllNamed(AppRoutes.login);
       return;
     }
@@ -52,12 +49,6 @@ class _OnboardingViewState extends State<OnboardingView> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
-  }
-
-  Future<void> _skipOnboarding() async {
-    final authController = Get.find<AuthController>();
-    await authController.markOnboardingCompleted();
-    Get.offAllNamed(AppRoutes.login);
   }
 
   @override
@@ -72,7 +63,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: _skipOnboarding,
+                  onPressed: () => Get.offAllNamed(AppRoutes.login),
                   child: const Text(
                     'Lewati',
                     style: TextStyle(

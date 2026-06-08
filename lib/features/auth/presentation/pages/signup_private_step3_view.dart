@@ -19,6 +19,14 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
   late final TextEditingController _confirmPasswordController;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _isFromGoogle = false;
+
+  bool _isAllowedEmailDomain(String email) {
+    final lower = email.trim().toLowerCase();
+    return lower.endsWith('@gmail.com') ||
+        lower.endsWith('@googlemail.com') ||
+        lower.endsWith('@polban.ac.id');
+  }
 
   @override
   void initState() {
@@ -27,6 +35,13 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
     _phoneController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+
+    final controller = Get.find<AuthController>();
+    final email = controller.signupEmail.value;
+    if (email != null && email.isNotEmpty) {
+      _emailController.text = email;
+      _isFromGoogle = true;
+    }
   }
 
   @override
@@ -62,12 +77,16 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
       Get.snackbar('Validasi', 'Format email tidak valid');
       return;
     }
-    if (password.isEmpty || confirm.isEmpty) {
-      Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
-      return;
-    }
     if (phone.isEmpty) {
       Get.snackbar('Validasi', 'Nomor telepon wajib diisi');
+      return;
+    }
+    if (!_isAllowedEmailDomain(email)) {
+      Get.snackbar('Validasi', 'Gunakan email yang valid');
+      return;
+    }
+    if (password.isEmpty || confirm.isEmpty) {
+      Get.snackbar('Validasi', 'Password dan konfirmasi wajib diisi');
       return;
     }
     if (password != confirm) {
@@ -196,6 +215,7 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                   _LabeledInput(
                                     label: 'Email',
                                     controller: _emailController,
+                                    readOnly: _isFromGoogle,
                                   ),
                                   const SizedBox(height: 16),
                                   _LabeledInput(
@@ -225,7 +245,18 @@ class _SignUpPrivateStep3ViewState extends State<SignUpPrivateStep3View> {
                                       });
                                     },
                                   ),
-                                  const SizedBox(height: 28),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '*Password must be at least 8 characters, contain uppercase, lowercase, and a number',
+                                    style: TextStyle(
+                                      fontSize: fs12,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      height: 1.5,
+                                      letterSpacing: 0.6,
+                                      color: darkslategray,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
                                   Container(
                                     decoration: const BoxDecoration(
                                       boxShadow: shadowDrop,
@@ -303,12 +334,14 @@ class _LabeledInput extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
   final VoidCallback? onToggleVisibility;
+  final bool readOnly;
 
   const _LabeledInput({
     required this.label,
     required this.controller,
     this.obscureText = false,
     this.onToggleVisibility,
+    this.readOnly = false,
   });
 
   @override
@@ -330,6 +363,7 @@ class _LabeledInput extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          readOnly: readOnly,
           decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),
@@ -339,7 +373,7 @@ class _LabeledInput extends StatelessWidget {
               borderSide: BorderSide(width: 1, color: aliceblue),
               borderRadius: BorderRadius.all(Radius.circular(br10)),
             ),
-            fillColor: whitesmoke,
+            fillColor: readOnly ? Colors.grey.shade200 : whitesmoke,
             filled: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,

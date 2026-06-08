@@ -45,6 +45,7 @@ class ApiClient {
           final path = options.path;
           final isAuthRequest =
               path.startsWith('/auth/login') ||
+              path.startsWith('/auth/google') ||
               path.startsWith('/auth/register') ||
               path.startsWith('/auth/refresh');
 

@@ -16,46 +16,44 @@ class EditProfileView extends StatefulWidget {
 class _EditProfileViewState extends State<EditProfileView> {
   final AuthController _authController = Get.find<AuthController>();
   late final TextEditingController _nameController;
-  String _selectedDomicile = 'Cilegon';
+  late final TextEditingController _domicileController;
+  late final TextEditingController _bioController;
   final List<String> _selectedSports = [];
-  final List<String> _domicileOptions = const [
-    'Jakarta',
-    'Bandung',
-    'Bekasi',
-    'Depok',
-    'Tangerang',
-    'Bogor',
-    'Cilegon',
-    'Serang',
-    'Yogyakarta',
-    'Semarang',
-    'Surabaya',
-    'Malang',
-    'Denpasar',
-  ];
 
   @override
   void initState() {
     super.initState();
     final args = Get.arguments as Map?;
+    final fallbackSports = ['SEPAK BOLA', 'BASKET', 'LARI'];
     _nameController = TextEditingController(
       text: (args?['name'] as String?) ?? _authController.displayName,
     );
-    _selectedDomicile =
-        (args?['domicile'] as String?) ??
-        _authController.profileDomicile.value ??
-        'Cilegon';
-    if (!_domicileOptions.contains(_selectedDomicile)) {
-      _selectedDomicile = _domicileOptions.first;
-    }
+    _domicileController = TextEditingController(
+      text:
+          (args?['domicile'] as String?) ??
+          _authController.profileDomicile.value ??
+          'Cilegon',
+    );
+    _bioController = TextEditingController(
+      text:
+          (args?['bio'] as String?) ??
+          _authController.profileBio.value ??
+          'By 1',
+    );
     _selectedSports
       ..clear()
-      ..addAll(_authController.currentSports);
+      ..addAll(
+        _authController.currentSports.isNotEmpty
+            ? _authController.currentSports
+            : fallbackSports,
+      );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _domicileController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -82,20 +80,10 @@ class _EditProfileViewState extends State<EditProfileView> {
       arguments: {'selected': List<String>.from(_selectedSports)},
     );
     if (result is List) {
-      final selected = result.cast<String>();
-      if (selected.length > 3) {
-        _showToast('Maksimal pilih 3 olahraga');
-        setState(() {
-          _selectedSports
-            ..clear()
-            ..addAll(selected.take(3));
-        });
-        return;
-      }
       setState(() {
         _selectedSports
           ..clear()
-          ..addAll(selected);
+          ..addAll(result.cast<String>());
       });
     }
   }
@@ -109,11 +97,14 @@ class _EditProfileViewState extends State<EditProfileView> {
   String _sportIconForLabel(String label) {
     const map = {
       'FOOTBALL': 'assets/icons/soccer.svg',
+      'SEPAK BOLA': 'assets/icons/soccer.svg',
       'FUTSAL': 'assets/icons/futsal.svg',
       'MINI SOCCER': 'assets/icons/mini_soccer.svg',
+      'BASKET': 'assets/icons/basketball.svg',
       'BASKETBALL': 'assets/icons/basketball.svg',
       'BADMINTON': 'assets/icons/badminton.svg',
       'VOLLEY': 'assets/icons/volley.svg',
+      'LARI': 'assets/icons/run.svg',
       'RUNNING': 'assets/icons/run.svg',
       'PADEL': 'assets/icons/padel.svg',
       'BILLIARD': 'assets/icons/billiard.svg',
@@ -140,12 +131,16 @@ class _EditProfileViewState extends State<EditProfileView> {
                     onBackTap: () => Get.back(),
                     onSaveTap: () {
                       _authController.setDisplayName(_nameController.text);
-                      _authController.setProfileDomicile(_selectedDomicile);
+                      _authController.setProfileDomicile(
+                        _domicileController.text,
+                      );
+                      _authController.setProfileBio(_bioController.text);
                       _authController.setSelectedSports(_selectedSports);
                       Get.back(
                         result: {
                           'name': _nameController.text.trim(),
-                          'domicile': _selectedDomicile,
+                          'domicile': _domicileController.text.trim(),
+                          'bio': _bioController.text.trim(),
                         },
                       );
                     },
@@ -161,15 +156,15 @@ class _EditProfileViewState extends State<EditProfileView> {
                     controller: _nameController,
                   ),
                   const SizedBox(height: 12),
-                  _DomicileDropdown(
-                    value: _selectedDomicile,
-                    options: _domicileOptions,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _selectedDomicile = value;
-                      });
-                    },
+                  _EditProfileField(
+                    label: 'Domisili',
+                    controller: _domicileController,
+                  ),
+                  const SizedBox(height: 12),
+                  _EditProfileField(
+                    label: 'Bio',
+                    controller: _bioController,
+                    maxLines: 3,
                   ),
                   const SizedBox(height: 18),
                   Row(
@@ -413,77 +408,6 @@ class _EditProfileField extends StatelessWidget {
           vertical: 12,
         ),
       ),
-    );
-  }
-}
-
-class _DomicileDropdown extends StatelessWidget {
-  final String value;
-  final List<String> options;
-  final ValueChanged<String?> onChanged;
-
-  const _DomicileDropdown({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Domisili',
-          style: TextStyle(
-            color: Color(0xFF64748B),
-            fontSize: 12,
-            fontFamily: 'Plus Jakarta Sans',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          value: value,
-          items: options
-              .map(
-                (city) => DropdownMenuItem(
-                  value: city,
-                  child: Text(
-                    city,
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: onChanged,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 14,
-            ),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFC),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            required: false,
             select: false,
         },
         name: {
@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
         },
         photoUrl: {
@@ -63,6 +63,9 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        googleId: { 
+            type: String, 
+            default: null },
     },
     {
         timestamps: {
@@ -70,6 +73,7 @@ const userSchema = new mongoose.Schema(
             updatedAt: 'updated_at',
         },
     }
+    
 );
 
 userSchema.set('toJSON', {
