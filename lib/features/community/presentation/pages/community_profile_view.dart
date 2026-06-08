@@ -71,17 +71,18 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-    final displayName = authController.displayName;
-    final communityName = displayName.isNotEmpty
-        ? displayName
-        : (args['name'] as String?) ?? 'Komunitas';
+    final communityName = (args['name'] as String?) ?? 'Komunitas';
     final est = (args['est'] as String?) ?? 'EST. 2019';
     final memberCount = (args['members'] as int?) ?? 500;
-    final imagePath = authController.currentProfilePhotoPath;
+    final imagePath =
+        (args['badgeUrl'] as String?) ?? authController.currentProfilePhotoPath;
 
-    final sports = authController.currentSports.isNotEmpty
-        ? authController.currentSports
-        : _fallbackSports;
+    final categoriesStr = (args['categories'] as String?) ?? '';
+    final sports = categoriesStr.isNotEmpty
+        ? categoriesStr.split(' • ')
+        : (authController.currentSports.isNotEmpty
+              ? authController.currentSports
+              : _fallbackSports);
 
     return DefaultTabController(
       length: 2,
@@ -153,8 +154,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
               _CommunityProfileBottomNavBar(
                 onCommunityTap: () => Get.offAllNamed(AppRoutes.community),
                 onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
-                onProfileTap: () =>
-                    Get.offAllNamed(authController.profileRoute),
+                onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
               ),
             ],
           ),

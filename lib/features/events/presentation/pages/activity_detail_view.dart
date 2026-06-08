@@ -198,9 +198,6 @@ class _ActivityDetailViewState extends State<ActivityDetailView> {
   @override
   Widget build(BuildContext context) {
     final eventController = Get.find<EventController>();
-    final editableTotalSlots = RxInt(_initialTotalSlots);
-    final editableJoinedCount = RxInt(_joinedCount);
-    final isUpdatingSlots = false.obs;
 
     return Scaffold(
       backgroundColor: Colors.white,
