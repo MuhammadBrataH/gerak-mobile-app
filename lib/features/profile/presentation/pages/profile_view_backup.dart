@@ -39,9 +39,13 @@ class _ProfileViewState extends State<ProfileView> {
     return age > 0 ? age.toString() : '-';
   }
 
+  bool get _isLoggedIn => _authController.user.value != null;
+
   String? get _profilePhotoPath => _authController.currentProfilePhotoPath;
 
-  List<String> get _sportsDisplay => _authController.currentSports;
+  List<String> get _sportsDisplay => _authController.currentSports.isNotEmpty
+      ? _authController.currentSports
+      : const ['BASKET', 'BADMINTON', 'LARI'];
 
   void _showToast(String message) {
     Get.snackbar(
@@ -50,113 +54,95 @@ class _ProfileViewState extends State<ProfileView> {
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
     );
-  }
-
-  Future<void> _showLogoutConfirm() async {
-    await Get.dialog(
-      AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-          TextButton(
-            onPressed: () {
-              _authController.logout();
-              Get.offAllNamed(AppRoutes.login);
-            },
-            child: const Text('Ya'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _pickProfilePhoto() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image == null) return;
-    _authController.setProfilePhotoPath(image.path);
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  void _showProfileMenu() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final menuWidth = 140.0;
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        screenWidth - menuWidth - 16,
-        56,
-        16,
-        0,
-      ),
-      items: [
-        PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: const [
-              Icon(Icons.logout, size: 18, color: Color(0xFF0F172A)),
-              SizedBox(width: 8),
-              Text(
-                'Logout',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0F172A),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: GestureDetector(
+                onTap: onAvatarTap,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 128,
+                      height: 128,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(48),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: imagePath == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 64,
+                              color: Color(0xFF94A3B8),
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(40),
+                              child: Image.file(
+                                File(imagePath!),
+                                width: 128,
+                                height: 128,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                    ),
+                    Positioned(
+                      right: 8,
+                      bottom: 8,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                        child:
+                            const Icon(Icons.edit, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ],
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ).then((value) {
-      if (value == 'logout') _showLogoutConfirm();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ProfileTopBar(
-                    imagePath: _profilePhotoPath,
-                    onAvatarTap: _showProfileMenu,
-                  ),
-                  const SizedBox(height: 24),
-                  _ProfileHeader(
-                    displayName: _displayName,
-                    domicile: _domicile,
-                    gender: _genderDisplay,
-                    ageLabel: _ageLabel,
-                    imagePath: _profilePhotoPath,
-                    sports: _sportsDisplay,
-                    onAvatarTap: _pickProfilePhoto,
-                  ),
-                  const SizedBox(height: 20),
-                  _ProfileActions(
-                    onSettingsTap: () => Get.toNamed(AppRoutes.accountSettings),
-                    onEditTap: () async {
-                      await Get.toNamed(
-                        AppRoutes.editProfile,
-                        arguments: {
-                          'name': _displayName,
-                          'domicile': _domicile,
-                        },
-                      );
-                      if (mounted) {
-                        setState(() {});
+            ),
+            const SizedBox(height: 16),
+            Text(
+              displayName,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 36,
+                fontFamily: 'Lexend',
+                fontWeight: FontWeight.w800,
+                height: 1.11,
+                letterSpacing: -1.8,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '$gender  $ageLabel  $domicile',
+              style: const TextStyle(
+                color: Color(0xFF0EA5E9),
+                fontSize: 14,
+                fontFamily: 'Plus Jakarta Sans',
+                fontWeight: FontWeight.w600,
+                height: 1.43,
+                letterSpacing: 0.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: sports
+                  .map(
+                    (sport) => _InterestChip(
+                      label: sport,
+                      iconAsset: _sportIconForLabel(sport),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        );
                       }
                     },
                   ),
@@ -191,24 +177,20 @@ class _ProfileTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Center(
-              child: const Text(
-                'GERAK',
-                style: TextStyle(
-                  color: Color(0xFF2563EB),
-                  fontSize: 24,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w900,
-                  height: 1.33,
-                  letterSpacing: -1.2,
-                ),
-              ),
+          const Text(
+            'GERAK',
+            style: TextStyle(
+              color: Color(0xFF2563EB),
+              fontSize: 24,
+              fontFamily: 'Lexend',
+              fontWeight: FontWeight.w900,
+              height: 1.33,
+              letterSpacing: -1.2,
             ),
           ),
           GestureDetector(
@@ -312,11 +294,8 @@ class _ProfileHeader extends StatelessWidget {
                       color: const Color(0xFF2563EB),
                       borderRadius: BorderRadius.circular(9999),
                     ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 14,
-                      color: Colors.white,
-                    ),
+                    child:
+                        const Icon(Icons.edit, size: 14, color: Colors.white),
                   ),
                 ),
               ],
@@ -670,8 +649,6 @@ class _ScheduleCardUpcoming extends StatelessWidget {
 }
 
 class _ScheduleCardPast extends StatelessWidget {
-  const _ScheduleCardPast();
-
   @override
   Widget build(BuildContext context) {
     return Opacity(
@@ -922,10 +899,10 @@ class _BottomNavItem extends StatelessWidget {
                         style: TextStyle(
                           color: color,
                           fontSize: 10,
-                          fontFamily: 'Lexend',
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
-                          letterSpacing: -0.5,
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w700,
+                          height: 1.5,
+                          letterSpacing: 1,
                         ),
                       ),
                     ],
@@ -935,18 +912,16 @@ class _BottomNavItem extends StatelessWidget {
                 Column(
                   children: [
                     Icon(icon, color: color, size: 18),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       label,
-                      softWrap: false,
-                      overflow: TextOverflow.visible,
                       style: TextStyle(
                         color: color,
                         fontSize: 10,
-                        fontFamily: 'Lexend',
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
-                        letterSpacing: -0.5,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                        letterSpacing: 1,
                       ),
                     ),
                   ],

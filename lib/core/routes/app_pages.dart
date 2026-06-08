@@ -58,7 +58,11 @@ class AppPages {
       page: () => DashboardView(),
       bindings: [AuthBinding(), EventBinding()],
     ),
-    GetPage(name: AppRoutes.sportsAll, page: () => const SportsAllView()),
+    GetPage(
+      name: AppRoutes.sportsAll,
+      page: () => const SportsAllView(),
+      bindings: [EventBinding()],
+    ),
     GetPage(
       name: AppRoutes.community,
       page: () => const CommunityView(),
