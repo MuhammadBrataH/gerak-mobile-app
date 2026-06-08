@@ -82,6 +82,7 @@ class _LoginViewState extends State<LoginView> {
       ),
       child: Scaffold(
         backgroundColor: loginBackground,
+        resizeToAvoidBottomInset: false,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
