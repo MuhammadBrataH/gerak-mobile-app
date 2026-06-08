@@ -16,7 +16,7 @@ class CommunityProfileView extends StatefulWidget {
 }
 
 class _CommunityProfileViewState extends State<CommunityProfileView> {
-  static const _fallbackSports = <String>[];
+  static const _fallbackSports = ['BASKET', 'BADMINTON', 'LARI'];
   late final EventController _eventController;
   late Future<List<EventModel>> _postEventsFuture;
   late Future<List<EventModel>> _matchEventsFuture;
@@ -67,94 +67,21 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     }
   }
 
-  Future<void> _showProfileMenu() async {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final menuWidth = 140.0;
-    final authController = Get.find<AuthController>();
-
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
-      items: [
-        PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: const [
-              Icon(Icons.logout, size: 18, color: Color(0xFF0F172A)),
-              SizedBox(width: 8),
-              Text(
-                'Logout',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    );
-
-    if (selected == 'logout') {
-      await Get.dialog(
-        AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Apakah Anda yakin ingin logout?'),
-          actions: [
-            TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                authController.logout();
-              },
-              child: const Text('Ya'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-
-    // If navigated from community list, use the community's own data from args.
-    // Only fall back to authController data if it's the user's own profile page.
-    final communityIdFromArgs = args['id'] as String?;
-    final isViewingOtherCommunity =
-        communityIdFromArgs != null &&
-        communityIdFromArgs.isNotEmpty &&
-        communityIdFromArgs != (authController.user.value?.id ?? '');
-
-    final communityName = isViewingOtherCommunity
-        ? (args['name'] as String?) ?? 'Komunitas'
-        : (authController.displayName.isNotEmpty
-              ? authController.displayName
-              : (args['name'] as String?) ?? 'Komunitas');
-
+    final displayName = authController.displayName;
+    final communityName = displayName.isNotEmpty
+        ? displayName
+        : (args['name'] as String?) ?? 'Komunitas';
     final est = (args['est'] as String?) ?? 'EST. 2019';
     final memberCount = (args['members'] as int?) ?? 500;
+    final imagePath = authController.currentProfilePhotoPath;
 
-    // For image: use args badgeUrl if viewing another community
-    final String? imagePath = isViewingOtherCommunity
-        ? (args['badgeUrl'] as String?)
-        : authController.currentProfilePhotoPath;
-
-    // For sports: parse from args categories if viewing another community
-    final List<String> sports = isViewingOtherCommunity
-        ? ((args['categories'] as String?) ?? '')
-              .split(' \u2022 ')
-              .map((s) => s.trim())
-              .where((s) => s.isNotEmpty)
-              .toList()
-        : (authController.currentSports.isNotEmpty
-              ? authController.currentSports
-              : _fallbackSports);
+    final sports = authController.currentSports.isNotEmpty
+        ? authController.currentSports
+        : _fallbackSports;
 
     return DefaultTabController(
       length: 2,
@@ -170,16 +97,8 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                     child: Obx(
                       () => _TopBar(
                         imagePath: imagePath,
-                        onAddTap:
-                            authController.isCommunityAccount &&
-                                !isViewingOtherCommunity
+                        onAddTap: authController.isCommunityAccount
                             ? _openAddSheet
-                            : null,
-                        onAvatarTap: isViewingOtherCommunity
-                            ? null
-                            : _showProfileMenu,
-                        onBackTap: isViewingOtherCommunity
-                            ? () => Get.back()
                             : null,
                       ),
                     ),
@@ -196,17 +115,14 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                             est: est,
                             sports: sports,
                             memberCount: memberCount,
-                            onSettingsTap: isViewingOtherCommunity
-                                ? null
-                                : () => Get.toNamed(AppRoutes.accountSettings),
-                            onEditTap: isViewingOtherCommunity
-                                ? null
-                                : () async {
-                                    await Get.toNamed(AppRoutes.editProfile);
-                                    if (mounted) {
-                                      setState(_reloadContent);
-                                    }
-                                  },
+                            onSettingsTap: () =>
+                                Get.toNamed(AppRoutes.accountSettings),
+                            onEditTap: () async {
+                              await Get.toNamed(AppRoutes.editProfile);
+                              if (mounted) {
+                                setState(_reloadContent);
+                              }
+                            },
                           ),
                           const SizedBox(height: 16),
                           const _ProfileTabs(),
@@ -239,7 +155,6 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                 onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
                 onProfileTap: () =>
                     Get.offAllNamed(authController.profileRoute),
-                isProfileActive: !isViewingOtherCommunity,
               ),
             ],
           ),
@@ -252,15 +167,8 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
 class _TopBar extends StatelessWidget {
   final String? imagePath;
   final VoidCallback? onAddTap;
-  final VoidCallback? onAvatarTap;
-  final VoidCallback? onBackTap;
 
-  const _TopBar({
-    required this.imagePath,
-    required this.onAddTap,
-    this.onAvatarTap,
-    this.onBackTap,
-  });
+  const _TopBar({required this.imagePath, required this.onAddTap});
 
   @override
   Widget build(BuildContext context) {
@@ -271,17 +179,7 @@ class _TopBar extends StatelessWidget {
         children: [
           SizedBox(
             width: 32,
-            child: onBackTap != null
-                ? IconButton(
-                    onPressed: onBackTap,
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Color(0xFF0F172A),
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  )
-                : onAddTap == null
+            child: onAddTap == null
                 ? const SizedBox.shrink()
                 : IconButton(
                     onPressed: onAddTap,
@@ -305,16 +203,13 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: onAvatarTap,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: buildImageProviderFromSource(imagePath),
-              child: imagePath == null
-                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-                  : null,
-            ),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: const Color(0xFFE2E8F0),
+            backgroundImage: buildImageProviderFromSource(imagePath),
+            child: imagePath == null
+                ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+                : null,
           ),
         ],
       ),
@@ -328,8 +223,8 @@ class _CommunityHeader extends StatelessWidget {
   final String est;
   final List<String> sports;
   final int memberCount;
-  final VoidCallback? onSettingsTap;
-  final VoidCallback? onEditTap;
+  final VoidCallback onSettingsTap;
+  final VoidCallback onEditTap;
 
   const _CommunityHeader({
     required this.imagePath,
@@ -476,63 +371,62 @@ class _CommunityHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        if (onSettingsTap != null || onEditTap != null)
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onSettingsTap,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0F172A),
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    backgroundColor: const Color(0xFFE2E8F0),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onSettingsTap,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0F172A),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9999),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.settings, size: 18, color: Color(0xFF0F172A)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Settings',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontWeight: FontWeight.w700,
-                        ),
+                  backgroundColor: const Color(0xFFE2E8F0),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.settings, size: 18, color: Color(0xFF0F172A)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onEditTap,
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                  backgroundColor: const Color(0xFF2563EB),
+                ),
+                child: const Text(
+                  'Edit Profil',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onEditTap,
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    backgroundColor: const Color(0xFF2563EB),
-                  ),
-                  child: const Text(
-                    'Edit Profil',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1004,13 +898,11 @@ class _CommunityProfileBottomNavBar extends StatelessWidget {
   final VoidCallback onCommunityTap;
   final VoidCallback onHomeTap;
   final VoidCallback onProfileTap;
-  final bool isProfileActive;
 
   const _CommunityProfileBottomNavBar({
     required this.onCommunityTap,
     required this.onHomeTap,
     required this.onProfileTap,
-    this.isProfileActive = true,
   });
 
   @override
@@ -1052,7 +944,7 @@ class _CommunityProfileBottomNavBar extends StatelessWidget {
             _BottomNavItem(
               label: 'PROFILE',
               icon: Icons.person,
-              isActive: isProfileActive,
+              isActive: true,
               onTap: onProfileTap,
             ),
           ],

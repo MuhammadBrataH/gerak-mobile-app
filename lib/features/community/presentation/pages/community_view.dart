@@ -5,7 +5,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../events/presentation/controllers/event_controller.dart';
 import './community_add_sheet.dart';
 
 class CommunityView extends StatefulWidget {
@@ -16,12 +15,10 @@ class CommunityView extends StatefulWidget {
 }
 
 class _CommunityViewState extends State<CommunityView> {
-  String _searchQuery = '';
+  final Set<String> _selectedCategories = {};
   String _selectedLocation = 'Bandung';
-  final Set<String> _selectedSports = {};
   final ApiClient _apiClient = ApiClient();
   List<_CommunityCardData> _communities = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -30,7 +27,6 @@ class _CommunityViewState extends State<CommunityView> {
   }
 
   Future<void> _loadCommunities() async {
-    setState(() => _isLoading = true);
     try {
       final resp = await _apiClient.get<Map<String, dynamic>>(
         '/auth/communities',
@@ -38,40 +34,24 @@ class _CommunityViewState extends State<CommunityView> {
       final data = resp.data ?? {};
       final items = data['communities'];
       if (items is List) {
-        final authController = Get.find<AuthController>();
-        final currentUserId = authController.user.value?.id;
-        final currentProfilePhoto = authController.currentProfilePhotoPath;
-
         setState(() {
           _communities = items.whereType<Map<String, dynamic>>().map((m) {
-            final communityId = m['_id']?.toString() ?? '';
-            final apiPhotoUrl =
-                m['photoUrl'] is String && m['photoUrl']!.isNotEmpty
-                ? m['photoUrl'] as String
-                : 'assets/sample 1.jpg';
-
-            // If this community belongs to the current user, use their current profile photo
-            final badgeUrl =
-                (communityId == currentUserId && currentProfilePhoto != null)
-                ? currentProfilePhoto
-                : apiPhotoUrl;
-
             return _CommunityCardData(
-              id: communityId,
+              id: m['_id']?.toString() ?? '',
               name: (m['name'] ?? '').toString(),
               categories:
                   (m['sports'] is List && (m['sports'] as List).isNotEmpty)
                   ? (m['sports'] as List).join(' • ').toUpperCase()
                   : 'GENERAL',
-              badgeUrl: badgeUrl,
+              badgeUrl: m['photoUrl'] is String && m['photoUrl']!.isNotEmpty
+                  ? m['photoUrl'] as String
+                  : 'assets/sample 1.jpg',
             );
           }).toList();
         });
       }
     } catch (_) {
       // ignore
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -106,217 +86,6 @@ class _CommunityViewState extends State<CommunityView> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return const CommunityAddSheet();
-      },
-    );
-  }
-
-  void _openSearchSheet() {
-    final textController = TextEditingController(text: _searchQuery);
-    List<_CommunityCardData> filteredCommunities = _communities;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setStateSheet) {
-            final q = textController.text.toLowerCase();
-            filteredCommunities = _communities.where((c) {
-              if (q.isNotEmpty && !c.name.toLowerCase().contains(q))
-                return false;
-              return true;
-            }).toList();
-
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
-                ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 12),
-                    Container(
-                      width: 64,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECF2FA),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: textController,
-                              onChanged: (value) {
-                                setStateSheet(() {});
-                                setState(() {
-                                  _searchQuery = value;
-                                });
-                              },
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontFamily: 'Lexend',
-                                color: Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                filled: true,
-                                fillColor: const Color(0xFFF7FAFC),
-                                prefixIcon: const Icon(
-                                  Icons.search,
-                                  color: Color(0xFF94A3B8),
-                                ),
-                                hintText: 'Cari komunitas...',
-                                hintStyle: const TextStyle(
-                                  color: Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () {
-                              textController.clear();
-                              setStateSheet(() {});
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                            child: const Text('Reset'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: filteredCommunities.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(
-                                    Icons.search_off,
-                                    size: 48,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    'Tidak ada hasil',
-                                    style: TextStyle(
-                                      color: Color(0xFF64748B),
-                                      fontSize: 14,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              itemCount: filteredCommunities.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final comm = filteredCommunities[index];
-                                return InkWell(
-                                  onTap: () {
-                                    Get.back();
-                                    Get.toNamed(
-                                      AppRoutes.communityProfile,
-                                      arguments: {
-                                        'id': comm.id,
-                                        'name': comm.name,
-                                        'badgeUrl': comm.badgeUrl,
-                                        'categories': comm.categories,
-                                      },
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF8FAFC),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 22,
-                                          backgroundImage: AssetImage(
-                                            comm.badgeUrl,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                comm.name,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontFamily: 'Lexend',
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF0F172A),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                comm.categories,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontFamily:
-                                                      'Plus Jakarta Sans',
-                                                  color: Color(0xFF64748B),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
       },
     );
   }
@@ -389,16 +158,18 @@ class _CommunityViewState extends State<CommunityView> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    final communities = _communities.isNotEmpty
+        ? _communities
+        : <_CommunityCardData>[
+            _CommunityCardData(
+              name: 'PLAYMAKER FUN CLUB',
+              categories: 'FOOTBALL • PADEL',
+              badgeUrl: 'assets/sample 1.jpg',
+            ),
+          ];
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: _TopBar(
-          onAddTap: authController.isCommunityAccount ? _openAddSheet : null,
-          onSearchTap: _openSearchSheet,
-        ),
-      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -410,42 +181,32 @@ class _CommunityViewState extends State<CommunityView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4),
+                        Obx(
+                          () => _TopBar(
+                            onProfileTap: () => _showProfileMenu(context),
+                            onAddTap: authController.isCommunityAccount
+                                ? _openAddSheet
+                                : null,
+                            imagePath: authController.currentProfilePhotoPath,
+                          ),
+                        ),
+                        
+                        _SearchBar(onTap: () => _showToast('Search tapped')),
+                        const SizedBox(height: 24),
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
-                          onActionTap: () async {
-                            final result = await Get.toNamed(
-                              AppRoutes.sportsAll,
-                              arguments: {'selected': _selectedSports.toList()},
-                            );
-                            if (result is List) {
-                              final mappedKeys = result.map((e) {
-                                final label = e.toString().toUpperCase();
-                                if (label == 'TENNIS FIELD') return 'tennis';
-                                if (label == 'MINI SOCCER')
-                                  return 'mini_soccer';
-                                if (label == 'TABLE TENNIS')
-                                  return 'table_tennis';
-                                return label.toLowerCase();
-                              }).toSet();
-                              setState(() {
-                                _selectedSports.clear();
-                                _selectedSports.addAll(mappedKeys);
-                              });
-                            }
-                          },
+                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
                         _CategoryChips(
-                          selectedLabels: _selectedSports,
+                          selectedLabels: _selectedCategories,
                           onCategoryTap: (label) {
-                            final key = _getSportKeyFromLabel(label);
                             setState(() {
-                              if (_selectedSports.contains(key)) {
-                                _selectedSports.remove(key);
+                              if (_selectedCategories.contains(label)) {
+                                _selectedCategories.remove(label);
                               } else {
-                                _selectedSports.add(key);
+                                _selectedCategories.add(label);
                               }
                             });
                           },
@@ -474,86 +235,23 @@ class _CommunityViewState extends State<CommunityView> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: Builder(
-                    builder: (context) {
-                      // Show spinner while loading
-                      if (_isLoading) {
-                        return const SliverFillRemaining(
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF2563EB),
-                            ),
+                  sliver: SliverList.builder(
+                    itemCount: communities.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _CommunityCard(
+                          data: communities[index],
+                          onTap: () => Get.toNamed(
+                            AppRoutes.communityProfile,
+                            arguments: {
+                              'id': communities[index].id,
+                              'name': communities[index].name,
+                              'badgeUrl': communities[index].badgeUrl,
+                              'categories': communities[index].categories,
+                            },
                           ),
-                        );
-                      }
-
-                      final selectedSports = _selectedSports;
-
-                      final filteredCommunities = _communities.where((c) {
-                        // Filter by search
-                        if (_searchQuery.isNotEmpty &&
-                            !c.name.toLowerCase().contains(
-                              _searchQuery.toLowerCase(),
-                            )) {
-                          return false;
-                        }
-
-                        // Filter by category
-                        if (selectedSports.isNotEmpty) {
-                          final cCats = c.categories
-                              .split(' • ')
-                              .map((e) => e.toLowerCase().trim());
-                          bool hasMatch = false;
-                          for (var sel in selectedSports) {
-                            if (cCats.contains(sel.toLowerCase())) {
-                              hasMatch = true;
-                              break;
-                            }
-                          }
-                          if (!hasMatch) return false;
-                        }
-                        return true;
-                      }).toList();
-
-                      if (filteredCommunities.isEmpty) {
-                        return const SliverFillRemaining(
-                          child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 40),
-                              child: Text(
-                                'Tidak ada komunitas ditemukan.',
-                                style: TextStyle(
-                                  color: Color(0xFF64748B),
-                                  fontSize: 14,
-                                  fontFamily: 'Plus Jakarta Sans',
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return SliverList.builder(
-                        itemCount: filteredCommunities.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _CommunityCard(
-                              data: filteredCommunities[index],
-                              onTap: () => Get.toNamed(
-                                AppRoutes.communityProfile,
-                                arguments: {
-                                  'id': filteredCommunities[index].id,
-                                  'name': filteredCommunities[index].name,
-                                  'badgeUrl':
-                                      filteredCommunities[index].badgeUrl,
-                                  'categories':
-                                      filteredCommunities[index].categories,
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                        ),
                       );
                     },
                   ),
@@ -581,77 +279,105 @@ class _CommunityViewState extends State<CommunityView> {
       ),
     );
   }
-
-  String _getSportKeyFromLabel(String label) {
-    switch (label) {
-      case 'SEPAK BOLA':
-        return 'football';
-      case 'BASKET':
-        return 'basketball';
-      case 'BADMINTON':
-        return 'badminton';
-      case 'LARI':
-        return 'running';
-      case 'PADEL':
-        return 'padel';
-      case 'FUTSAL':
-        return 'futsal';
-      case 'VOLLEY':
-        return 'volleyball';
-      case 'MINI SOCCER':
-        return 'mini_soccer';
-      default:
-        return label.toLowerCase();
-    }
-  }
 }
 
 class _TopBar extends StatelessWidget {
+  final VoidCallback onProfileTap;
   final VoidCallback? onAddTap;
-  final VoidCallback onSearchTap;
+  final String? imagePath;
 
-  const _TopBar({required this.onAddTap, required this.onSearchTap});
+  const _TopBar({
+    required this.onProfileTap,
+    required this.onAddTap,
+    required this.imagePath,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      centerTitle: true,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      toolbarHeight: 56,
-      titleSpacing: 0,
-      leadingWidth: onAddTap != null ? 56 : 0,
-      leading: onAddTap != null
-          ? IconButton(
-              onPressed: onAddTap,
-              icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
-              tooltip: 'Tambah',
-            )
-          : null,
-      title: const Text(
-        'GERAK',
-        style: TextStyle(
-          color: Color(0xFF2563EB),
-          fontSize: 24,
-          fontFamily: 'Lexend',
-          fontWeight: FontWeight.w900,
-          height: 1.33,
-          letterSpacing: -1.2,
-        ),
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          // SizedBox(
+          //   width: 32,
+          //   child: onAddTap == null
+          //       ? const SizedBox.shrink()
+          //       : IconButton(
+          //           onPressed: onAddTap,
+          //           icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+          //           padding: EdgeInsets.zero,
+          //           constraints: const BoxConstraints(),
+          //         ),
+          // ),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'GERAK',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 24,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w900,
+                  height: 1.33,
+                  letterSpacing: -1.2,
+                ),
+              ),
+            ),
+          ),
+          // GestureDetector(
+          //   onTap: onProfileTap,
+          //   child: CircleAvatar(
+          //     radius: 16,
+          //     backgroundColor: const Color(0xFFE2E8F0),
+          //     backgroundImage: buildImageProviderFromSource(imagePath),
+          //     child: imagePath == null
+          //         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+          //         : null,
+          //   ),
+          // ),
+        ],
       ),
-      actions: [
-        IconButton(
-          onPressed: onSearchTap,
-          icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
-          tooltip: 'Cari',
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SearchBar({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(48),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(48),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: const [
+              Icon(Icons.search, color: Color(0xFF94A3B8)),
+              SizedBox(width: 12),
+              Text(
+                'CARI KOMUNITAS',
+                style: TextStyle(
+                  color: Color(0x99475569),
+                  fontSize: 16,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.6,
+                ),
+              ),
+            ],
+          ),
         ),
-      ],
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: SizedBox.shrink(),
       ),
     );
   }
@@ -735,38 +461,7 @@ class _CategoryChips extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: categories.map((chip) {
-        // Map Indonesian label to backend key for checking selection
-        String sportKey = '';
-        switch (chip.label) {
-          case 'SEPAK BOLA':
-            sportKey = 'football';
-            break;
-          case 'BASKET':
-            sportKey = 'basketball';
-            break;
-          case 'BADMINTON':
-            sportKey = 'badminton';
-            break;
-          case 'LARI':
-            sportKey = 'running';
-            break;
-          case 'PADEL':
-            sportKey = 'padel';
-            break;
-          case 'FUTSAL':
-            sportKey = 'futsal';
-            break;
-          case 'VOLLEY':
-            sportKey = 'volleyball';
-            break;
-          case 'MINI SOCCER':
-            sportKey = 'mini_soccer';
-            break;
-          default:
-            sportKey = chip.label.toLowerCase();
-        }
-
-        final isActive = selectedLabels.contains(sportKey);
+        final isActive = selectedLabels.contains(chip.label);
         return Material(
           color: Colors.transparent,
           child: InkWell(
@@ -1041,8 +736,6 @@ class _CommunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1090,21 +783,10 @@ class _CommunityCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Obx(() {
-                // If this community belongs to the current user, use their current profile photo
-                final currentUserId = authController.user.value?.id;
-                final currentProfilePhoto =
-                    authController.currentProfilePhotoPath;
-                final badgeUrl =
-                    (data.id == currentUserId && currentProfilePhoto != null)
-                    ? currentProfilePhoto
-                    : data.badgeUrl;
-
-                return CircleAvatar(
-                  radius: 49,
-                  backgroundImage: buildImageProviderFromSource(badgeUrl),
-                );
-              }),
+              CircleAvatar(
+                radius: 49,
+                backgroundImage: AssetImage(data.badgeUrl),
+              ),
             ],
           ),
         ),

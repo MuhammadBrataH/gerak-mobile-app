@@ -300,7 +300,7 @@ class _HomeViewState extends State<HomeView> {
                                 vertical: 8,
                               ),
                               itemCount: filteredActivities.length,
-                              separatorBuilder: (context, index) =>
+                              separatorBuilder: (_, __) =>
                                   const SizedBox(height: 8),
                               itemBuilder: (context, index) {
                                 final activity = filteredActivities[index];
@@ -424,24 +424,7 @@ class _HomeViewState extends State<HomeView> {
                         _SectionHeader(
                           title: 'KATEGORI',
                           action: 'LIHAT SEMUA',
-                          onActionTap: () async {
-                            final result = await Get.toNamed(
-                              AppRoutes.sportsAll,
-                              arguments: {
-                                'selected': _eventController.currentSports.toList(),
-                              },
-                            );
-                            if (result is List) {
-                              final mappedKeys = result.map((e) {
-                                final label = e.toString().toUpperCase();
-                                if (label == 'TENNIS FIELD') return 'tennis';
-                                if (label == 'MINI SOCCER') return 'mini_soccer';
-                                if (label == 'TABLE TENNIS') return 'table_tennis';
-                                return label.toLowerCase();
-                              }).toSet();
-                              _eventController.setSelectedSports(mappedKeys);
-                            }
-                          },
+                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
                         Obx(
@@ -626,7 +609,36 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+class _HeroHeadline extends StatelessWidget {
+  const _HeroHeadline();
 
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: const TextSpan(
+        style: TextStyle(
+          fontSize: 16,
+          fontFamily: 'Lexend',
+          fontWeight: FontWeight.w800,
+          height: 1.3,
+          letterSpacing: 2.4,
+          
+        ),
+        
+        children: [
+          TextSpan(
+            text: 'GO ',
+            style: TextStyle(color: Color(0xFF475569)),
+          ),
+          TextSpan(
+            text: 'ACTIVITY!',
+            style: TextStyle(color: Color(0xFF2563EB)),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _SectionHeader extends StatelessWidget {
   final String title;
