@@ -67,6 +67,42 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     }
   }
 
+  void _showProfileMenu() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final menuWidth = 140.0;
+    final authController = Get.find<AuthController>();
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
+      items: [
+        PopupMenuItem<String>(
+          value: 'logout',
+          child: Row(
+            children: const [
+              Icon(Icons.logout, size: 18, color: Color(0xFF0F172A)),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ).then((value) {
+      if (value == 'logout') {
+        authController.logout();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
@@ -83,8 +119,8 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     final communityName = isViewingOtherCommunity
         ? (args['name'] as String?) ?? 'Komunitas'
         : (authController.displayName.isNotEmpty
-            ? authController.displayName
-            : (args['name'] as String?) ?? 'Komunitas');
+              ? authController.displayName
+              : (args['name'] as String?) ?? 'Komunitas');
 
     final est = (args['est'] as String?) ?? 'EST. 2019';
     final memberCount = (args['members'] as int?) ?? 500;
@@ -97,13 +133,13 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
     // For sports: parse from args categories if viewing another community
     final List<String> sports = isViewingOtherCommunity
         ? ((args['categories'] as String?) ?? '')
-            .split(' \u2022 ')
-            .map((s) => s.trim())
-            .where((s) => s.isNotEmpty)
-            .toList()
+              .split(' \u2022 ')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList()
         : (authController.currentSports.isNotEmpty
-            ? authController.currentSports
-            : _fallbackSports);
+              ? authController.currentSports
+              : _fallbackSports);
 
     return DefaultTabController(
       length: 2,
@@ -119,8 +155,16 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                     child: Obx(
                       () => _TopBar(
                         imagePath: imagePath,
-                        onAddTap: authController.isCommunityAccount
+                        onAddTap:
+                            authController.isCommunityAccount &&
+                                !isViewingOtherCommunity
                             ? _openAddSheet
+                            : null,
+                        onAvatarTap: isViewingOtherCommunity
+                            ? null
+                            : _showProfileMenu,
+                        onBackTap: isViewingOtherCommunity
+                            ? () => Get.back()
                             : null,
                       ),
                     ),
@@ -180,6 +224,7 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                 onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
                 onProfileTap: () =>
                     Get.offAllNamed(authController.profileRoute),
+                isProfileActive: !isViewingOtherCommunity,
               ),
             ],
           ),
@@ -192,8 +237,15 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
 class _TopBar extends StatelessWidget {
   final String? imagePath;
   final VoidCallback? onAddTap;
+  final VoidCallback? onAvatarTap;
+  final VoidCallback? onBackTap;
 
-  const _TopBar({required this.imagePath, required this.onAddTap});
+  const _TopBar({
+    required this.imagePath,
+    required this.onAddTap,
+    this.onAvatarTap,
+    this.onBackTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +256,17 @@ class _TopBar extends StatelessWidget {
         children: [
           SizedBox(
             width: 32,
-            child: onAddTap == null
+            child: onBackTap != null
+                ? IconButton(
+                    onPressed: onBackTap,
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFF0F172A),
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  )
+                : onAddTap == null
                 ? const SizedBox.shrink()
                 : IconButton(
                     onPressed: onAddTap,
@@ -228,13 +290,16 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFFE2E8F0),
-            backgroundImage: buildImageProviderFromSource(imagePath),
-            child: imagePath == null
-                ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-                : null,
+          GestureDetector(
+            onTap: onAvatarTap,
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundImage: buildImageProviderFromSource(imagePath),
+              child: imagePath == null
+                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+                  : null,
+            ),
           ),
         ],
       ),
@@ -924,11 +989,13 @@ class _CommunityProfileBottomNavBar extends StatelessWidget {
   final VoidCallback onCommunityTap;
   final VoidCallback onHomeTap;
   final VoidCallback onProfileTap;
+  final bool isProfileActive;
 
   const _CommunityProfileBottomNavBar({
     required this.onCommunityTap,
     required this.onHomeTap,
     required this.onProfileTap,
+    this.isProfileActive = true,
   });
 
   @override
@@ -970,7 +1037,7 @@ class _CommunityProfileBottomNavBar extends StatelessWidget {
             _BottomNavItem(
               label: 'PROFILE',
               icon: Icons.person,
-              isActive: true,
+              isActive: isProfileActive,
               onTap: onProfileTap,
             ),
           ],
