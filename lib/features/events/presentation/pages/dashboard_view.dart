@@ -408,162 +408,168 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: _TopBar(onAddTap: _openAddSheet, onSearchTap: _openSearchSheet),
-      ),
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        const _HeroHeadline(),
-                        const SizedBox(height: 20),
-                        _SectionHeader(
-                          title: 'KATEGORI',
-                          action: 'LIHAT SEMUA',
-                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
-                        ),
-                        const SizedBox(height: 12),
-                        _CategoryChips(
-                          selectedSports: _eventController.currentSports,
-                          labelToSportKey: _categoryToSport,
-                          onCategoryTap: (label) {
-                            final sportKey = _categoryToSport[label];
-                            if (sportKey == null) {
-                              return;
-                            }
-                            _eventController.toggleSportSelection(sportKey);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        _FilterRow(
-                          locationLabel: _selectedLocation.isEmpty
-                              ? 'Lokasi'
-                              : _selectedLocation,
-                          dateLabel: _formatDateLabel(
-                            _eventController.currentDate.value,
+            _TopBar(onAddTap: _openAddSheet, onSearchTap: _openSearchSheet),
+            Expanded(
+              child: Stack(
+                children: [
+                  CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              const _HeroHeadline(),
+                              const SizedBox(height: 20),
+                              _SectionHeader(
+                                title: 'KATEGORI',
+                                action: 'LIHAT SEMUA',
+                                onActionTap: () =>
+                                    Get.toNamed(AppRoutes.sportsAll),
+                              ),
+                              const SizedBox(height: 12),
+                              _CategoryChips(
+                                selectedSports: _eventController.currentSports,
+                                labelToSportKey: _categoryToSport,
+                                onCategoryTap: (label) {
+                                  final sportKey = _categoryToSport[label];
+                                  if (sportKey == null) {
+                                    return;
+                                  }
+                                  _eventController.toggleSportSelection(
+                                    sportKey,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              _FilterRow(
+                                locationLabel: _selectedLocation.isEmpty
+                                    ? 'Lokasi'
+                                    : _selectedLocation,
+                                dateLabel: _formatDateLabel(
+                                  _eventController.currentDate.value,
+                                ),
+                                onLocationTap: _openLocationSheet,
+                                onDateTap: _openDateSheet,
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'AKTIVITAS',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w700,
+                                  height: 1,
+                                  letterSpacing: -0.6,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ),
-                          onLocationTap: _openLocationSheet,
-                          onDateTap: _openDateSheet,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'AKTIVITAS',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontFamily: 'Lexend',
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                            letterSpacing: -0.6,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                // Activity list from API
-                Obx(() {
-                  if (_eventController.isLoading.value &&
-                      _eventController.events.isEmpty) {
-                    return const SliverFillRemaining(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF2563EB),
                         ),
                       ),
-                    );
-                  }
-
-                  final activities = _eventController.events
-                      .map(_eventToCardData)
-                      .toList();
-
-                  if (activities.isEmpty) {
-                    return SliverFillRemaining(
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.event_busy,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Belum ada aktivitas',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                                fontFamily: 'Lexend',
+                      // Activity list from API
+                      Obx(() {
+                        if (_eventController.isLoading.value &&
+                            _eventController.events.isEmpty) {
+                          return const SliverFillRemaining(
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF2563EB),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Coba ubah filter atau lokasi',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[400],
-                                fontFamily: 'Plus Jakarta Sans',
+                          );
+                        }
+
+                        final activities = _eventController.events
+                            .map(_eventToCardData)
+                            .toList();
+
+                        if (activities.isEmpty) {
+                          return SliverFillRemaining(
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.event_busy,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Belum ada aktivitas',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                      fontFamily: 'Lexend',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Coba ubah filter atau lokasi',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[400],
+                                      fontFamily: 'Plus Jakarta Sans',
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
+                          );
+                        }
 
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-                    sliver: SliverList.builder(
-                      itemCount: activities.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _ActivityCard(data: activities[index]),
+                        return SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                          sliver: SliverList.builder(
+                            itemCount: activities.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: _ActivityCard(data: activities[index]),
+                              );
+                            },
+                          ),
                         );
-                      },
-                    ),
-                  );
-                }),
-              ],
+                      }),
+                    ],
+                  ),
+                  _BottomNavBar(
+                    onTap: (label) {
+                      if (label == 'Home') {
+                        return;
+                      }
+                      if (label == 'Profile') {
+                        final authController = Get.find<AuthController>();
+                        if (authController.isCommunityAccount) {
+                          Get.toNamed(
+                            AppRoutes.communityProfile,
+                            arguments: {'isOwnProfile': true},
+                          );
+                        } else {
+                          Get.toNamed(AppRoutes.profile);
+                        }
+                        return;
+                      }
+                      if (label == 'Community') {
+                        Get.offAllNamed(AppRoutes.community);
+                        return;
+                      }
+                      _showToast('Nav: $label');
+                    },
+                  ),
+                ],
+              ),
             ),
-            _BottomNavBar(
-              onTap: (label) {
-                if (label == 'Home') {
-                  return;
-                }
-                if (label == 'Profile') {
-                  final authController = Get.find<AuthController>();
-                  if (authController.isCommunityAccount) {
-                    Get.toNamed(
-                      AppRoutes.communityProfile,
-                      arguments: {'isOwnProfile': true},
-                    );
-                  } else {
-                    Get.toNamed(AppRoutes.profile);
-                  }
-                  return;
-                }
-                if (label == 'Community') {
-                  Get.offAllNamed(AppRoutes.community);
-                  return;
-                }
-                _showToast('Nav: $label');
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -577,48 +583,50 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      centerTitle: true,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      toolbarHeight: 56,
-      titleSpacing: 0,
-      leadingWidth: 56,
-      leading: Obx(() {
-        final authController = Get.find<AuthController>();
-        if (!authController.isCommunityAccount) {
-          return const SizedBox.shrink();
-        }
-        return IconButton(
-          onPressed: onAddTap,
-          icon: const Icon(Icons.add_rounded, color: Color(0xFF0F172A)),
-          tooltip: 'Tambah',
-        );
-      }),
-      title: const Text(
-        'GERAK',
-        style: TextStyle(
-          color: Color(0xFF2563EB),
-          fontSize: 24,
-          fontFamily: 'Lexend',
-          fontWeight: FontWeight.w900,
-          height: 1.33,
-          letterSpacing: -1.2,
-        ),
+    return Container(
+      height: 56,
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
       ),
-      actions: [
-        IconButton(
-          onPressed: onSearchTap,
-          icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
-          tooltip: 'Cari',
-        ),
-      ],
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: SizedBox.shrink(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Obx(() {
+            final authController = Get.find<AuthController>();
+            if (!authController.isCommunityAccount) {
+              return const SizedBox(width: 32);
+            }
+            return SizedBox(
+              width: 32,
+              child: IconButton(
+                onPressed: onAddTap,
+                icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            );
+          }),
+          Expanded(
+            child: Center(
+              child: const Text(
+                'GERAK',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 24,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w900,
+                  height: 1.33,
+                  letterSpacing: -1.2,
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: onSearchTap,
+            icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
+            tooltip: 'Cari',
+          ),
+        ],
       ),
     );
   }

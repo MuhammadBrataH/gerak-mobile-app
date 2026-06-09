@@ -1,21 +1,34 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
+
 import '../../../../core/network/api_client.dart';
+
 import '../../data/models/event_model.dart';
 
 class EventController extends GetxController {
   final ApiClient _apiClient;
+
   final RxBool isLoading = false.obs;
+
   final RxMap<String, bool> eventLoadingStates = <String, bool>{}.obs;
+
   final RxList<EventModel> events = <EventModel>[].obs;
+
   final RxInt currentPage = 1.obs;
+
   final RxBool hasMore = true.obs;
+
   final RxnString currentCity = RxnString();
+
   final RxnString currentDistrict = RxnString();
+
   final RxSet<String> currentSports = <String>{}.obs;
+
   final Rxn<DateTime> currentDate = Rxn<DateTime>();
+
   final RxnString currentActivityType = RxnString('match');
+
   Timer? _filterDebounce;
 
   EventController({ApiClient? apiClient})
@@ -24,42 +37,57 @@ class EventController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     fetchEvents(activityType: 'match');
   }
 
   Future<({List<EventModel> events, int total})> _fetchEventsPage({
     String? city,
+
     String? district,
+
     String? sport,
+
     String? createdBy,
+
     String? activityType,
+
     int page = 1,
+
     int limit = 10,
   }) async {
     final query = <String, dynamic>{'page': page, 'limit': limit};
+
     if (city != null && city.isNotEmpty) {
       query['city'] = city;
     }
+
     if (district != null && district.isNotEmpty) {
       query['district'] = district;
     }
+
     if (sport != null && sport.isNotEmpty) {
       query['sport'] = sport;
     }
+
     if (createdBy != null && createdBy.isNotEmpty) {
       query['createdBy'] = createdBy;
     }
+
     if (activityType != null && activityType.isNotEmpty) {
       query['activityType'] = activityType;
     }
 
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/events',
+
       queryParameters: query,
     );
 
     final data = response.data ?? const <String, dynamic>{};
+
     final items = data['events'];
+
     final total = data['total'];
 
     final parsed = items is List
@@ -78,43 +106,62 @@ class EventController extends GetxController {
 
   Future<void> fetchEvents({
     String? city,
+
     String? district,
+
     Set<String>? sports,
+
     DateTime? date,
+
     String? activityType,
+
     int page = 1,
   }) async {
     isLoading.value = true;
+
     try {
       final effectiveActivityType =
           activityType ?? currentActivityType.value ?? 'match';
+
       final effectiveSports = sports ?? currentSports.toSet();
+
       final effectiveDate = date ?? currentDate.value;
+
       final apiSport = effectiveSports.length == 1
           ? effectiveSports.first
           : null;
 
       if (page <= 1) {
         currentCity.value = city;
+
         currentDistrict.value = district;
+
         currentSports
           ..clear()
           ..addAll(effectiveSports);
+
         currentDate.value = effectiveDate;
+
         currentActivityType.value = effectiveActivityType;
       }
 
       final result = await _fetchEventsPage(
         city: city,
+
         district: district,
+
         sport: apiSport,
+
         activityType: effectiveActivityType,
+
         page: page,
       );
 
       final filtered = _applyLocalFilters(
         result.events,
+
         sports: effectiveSports,
+
         date: effectiveDate,
       );
 
@@ -125,6 +172,7 @@ class EventController extends GetxController {
       }
 
       currentPage.value = page;
+
       hasMore.value = events.length < result.total;
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
@@ -142,20 +190,30 @@ class EventController extends GetxController {
 
     await fetchEvents(
       city: currentCity.value,
+
       district: currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
+
       page: currentPage.value + 1,
     );
   }
 
   Future<void> resetFilters() async {
     currentCity.value = null;
+
     currentDistrict.value = null;
+
     currentSports.clear();
+
     currentDate.value = null;
+
     currentActivityType.value = 'match';
+
     await fetchEvents(page: 1, activityType: 'match');
   }
 
@@ -163,43 +221,67 @@ class EventController extends GetxController {
     if (isLoading.value) {
       return;
     }
+
     currentPage.value = 1;
+
     events.clear();
+
     await fetchEvents(
       city: currentCity.value,
+
       district: currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
+
       page: 1,
     );
   }
 
   Future<List<EventModel>> fetchEventsAsList({
     String? city,
+
     String? district,
+
     Set<String>? sports,
+
     DateTime? date,
+
     String? createdBy,
+
     String? activityType,
+
     int page = 1,
+
     int limit = 50,
   }) async {
     final result = await _fetchEventsPage(
       city: city,
+
       district: district,
+
       sport: sports != null && sports.length == 1 ? sports.first : null,
+
       createdBy: createdBy,
+
       activityType: activityType,
+
       page: page,
+
       limit: limit,
     );
+
     return _applyLocalFilters(result.events, sports: sports, date: date);
   }
 
   List<EventModel> _applyLocalFilters(
     List<EventModel> source, {
+
     Set<String>? sports,
+
     DateTime? date,
   }) {
     final normalizedSports = sports
@@ -215,9 +297,11 @@ class EventController extends GetxController {
 
       if (date != null) {
         final start = event.startTime;
+
         if (start == null) {
           return false;
         }
+
         if (start.year != date.year ||
             start.month != date.month ||
             start.day != date.day) {
@@ -231,19 +315,24 @@ class EventController extends GetxController {
 
   bool _matchesCurrentFilters(EventModel event) {
     final city = currentCity.value;
+
     if (city != null && city.isNotEmpty) {
       final match = event.city.toLowerCase().contains(city.toLowerCase());
+
       if (!match) {
         return false;
       }
     }
 
     final district = currentDistrict.value;
+
     if (district != null && district.isNotEmpty) {
       final eventDistrict = event.district ?? '';
+
       final match = eventDistrict.toLowerCase().contains(
         district.toLowerCase(),
       );
+
       if (!match) {
         return false;
       }
@@ -253,17 +342,21 @@ class EventController extends GetxController {
       final normalized = currentSports
           .map((sport) => sport.toLowerCase())
           .toSet();
+
       if (!normalized.contains(event.sport.toLowerCase())) {
         return false;
       }
     }
 
     final date = currentDate.value;
+
     if (date != null) {
       final start = event.startTime;
+
       if (start == null) {
         return false;
       }
+
       if (start.year != date.year ||
           start.month != date.month ||
           start.day != date.day) {
@@ -278,11 +371,16 @@ class EventController extends GetxController {
     currentSports
       ..clear()
       ..addAll(sports);
+
     fetchEventsDebounced(
       city: currentCity.value,
+
       district: currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
     );
   }
@@ -293,22 +391,36 @@ class EventController extends GetxController {
     } else {
       currentSports.add(sportKey);
     }
+
+    update(['sports']);
+
     fetchEventsDebounced(
       city: currentCity.value,
+
       district: currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
     );
   }
 
   void setSelectedDate(DateTime? date) {
     currentDate.value = date;
+
+    update(['date']);
+
     fetchEventsDebounced(
       city: currentCity.value,
+
       district: currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
     );
   }
@@ -316,55 +428,88 @@ class EventController extends GetxController {
   void applyFilters({String? city, String? district}) {
     fetchEventsDebounced(
       city: city ?? currentCity.value,
+
       district: district ?? currentDistrict.value,
+
       sports: currentSports.toSet(),
+
       date: currentDate.value,
+
       activityType: currentActivityType.value,
     );
   }
 
   Future<EventModel?> createEvent({
     required String name,
+
     required String sport,
+
     required String level,
+
     required DateTime startTime,
+
     required DateTime endTime,
+
     required String location,
+
     required String city,
+
     required String adminPhone,
+
     String activityType = 'match',
+
     String description = '',
+
     String? district,
+
     int? maxSlots,
+
     int? totalSlots,
+
     String? imageUrl,
   }) async {
     try {
       final payload = <String, dynamic>{
         'name': name,
+
         'description': description,
+
         'sport': sport,
+
         'level': level,
+
         'startTime': startTime.toIso8601String(),
+
         'endTime': endTime.toIso8601String(),
+
         'location': location,
+
         'city': city,
+
         'district': district ?? '',
+
         'maxSlots': maxSlots,
+
         'totalSlots': totalSlots ?? maxSlots,
+
         'adminPhone': adminPhone,
+
         'imageUrl': imageUrl ?? '',
+
         'activityType': activityType,
       };
 
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/events',
+
         data: payload,
       );
 
       final eventJson = response.data?['event'];
+
       if (eventJson is! Map<String, dynamic>) {
         Get.snackbar('Events', 'Failed to create event');
+
         return null;
       }
 
@@ -376,26 +521,35 @@ class EventController extends GetxController {
 
       await fetchEvents(
         city: currentCity.value,
+
         district: currentDistrict.value,
+
         sports: currentSports.toSet(),
+
         date: currentDate.value,
+
         page: 1,
       );
 
       Get.snackbar('Events', 'Aktivitas berhasil ditambahkan');
+
       return created;
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
+
       return null;
     } catch (_) {
       Get.snackbar('Events', 'Gagal menambahkan aktivitas');
+
       return null;
     }
   }
 
   Future<EventModel?> updateEventSlots(
     String eventId, {
+
     required int maxSlots,
+
     required int totalSlots,
   }) async {
     if (eventId.isEmpty) {
@@ -407,27 +561,36 @@ class EventController extends GetxController {
     }
 
     _setEventLoading(eventId, true);
+
     try {
       final response = await _apiClient.put<Map<String, dynamic>>(
         '/events/$eventId',
+
         data: {'maxSlots': maxSlots, 'totalSlots': totalSlots},
       );
 
       final eventJson = response.data?['event'];
+
       if (eventJson is! Map<String, dynamic>) {
         Get.snackbar('Events', 'Failed to update event slots');
+
         return null;
       }
 
       final updated = EventModel.fromJson(eventJson);
+
       _replaceEvent(updated);
+
       Get.snackbar('Events', 'Slot berhasil diperbarui');
+
       return updated;
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
+
       return null;
     } catch (_) {
       Get.snackbar('Events', 'Gagal memperbarui slot');
+
       return null;
     } finally {
       _setEventLoading(eventId, false);
@@ -436,20 +599,31 @@ class EventController extends GetxController {
 
   void fetchEventsDebounced({
     String? city,
+
     String? district,
+
     Set<String>? sports,
+
     DateTime? date,
+
     String? activityType,
+
     int page = 1,
   }) {
     _filterDebounce?.cancel();
+
     _filterDebounce = Timer(const Duration(milliseconds: 500), () {
       fetchEvents(
         city: city,
+
         district: district,
+
         sports: sports,
+
         date: date,
+
         activityType: activityType,
+
         page: page,
       );
     });
@@ -458,6 +632,7 @@ class EventController extends GetxController {
   @override
   void onClose() {
     _filterDebounce?.cancel();
+
     super.onClose();
   }
 
@@ -465,12 +640,16 @@ class EventController extends GetxController {
     if (_isEventLoading(eventId)) {
       return;
     }
+
     _setEventLoading(eventId, true);
+
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/events/$eventId/join',
       );
+
       _replaceEventFromResponse(response.data);
+
       Get.snackbar('Events', 'Successfully joined the event!');
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
@@ -485,12 +664,16 @@ class EventController extends GetxController {
     if (_isEventLoading(eventId)) {
       return;
     }
+
     _setEventLoading(eventId, true);
+
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/events/$eventId/leave',
       );
+
       _replaceEventFromResponse(response.data);
+
       Get.snackbar('Events', 'You left the event');
     } on ApiException catch (error) {
       Get.snackbar('Events', error.message);
@@ -503,16 +686,19 @@ class EventController extends GetxController {
 
   void _replaceEventFromResponse(Map<String, dynamic>? data) {
     final eventJson = data?['event'];
+
     if (eventJson is! Map<String, dynamic>) {
       return;
     }
 
     final updated = EventModel.fromJson(eventJson);
+
     _replaceEvent(updated);
   }
 
   void _replaceEvent(EventModel updated) {
     final index = events.indexWhere((event) => event.id == updated.id);
+
     if (index == -1) {
       return;
     }

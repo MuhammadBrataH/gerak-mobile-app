@@ -188,10 +188,14 @@ class _ProfileTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       height: 56,
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+      ),
       child: Row(
         children: [
+          const SizedBox(width: 4),
           const Expanded(
             child: Center(
               child: Text(
@@ -207,6 +211,7 @@ class _ProfileTopBar extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 4),
           GestureDetector(
             onTap: onAvatarTap,
             child: CircleAvatar(
@@ -218,6 +223,7 @@ class _ProfileTopBar extends StatelessWidget {
                   : null,
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
     );
