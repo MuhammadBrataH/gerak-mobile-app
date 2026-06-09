@@ -79,6 +79,25 @@ class _SportsAllViewState extends State<SportsAllView> {
         iconAsset: 'assets/icons/tennis_field.svg',
       ),
     ];
+
+    // Initialize with selected sports from arguments
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = Get.arguments as Map? ?? {};
+      final initialSelected = (args['selected'] as List?) ?? [];
+      final initialKeys = initialSelected
+          .map(
+            (label) => _sports
+                .firstWhere(
+                  (s) => s.label == label,
+                  orElse: () => _sports.first,
+                )
+                .key,
+          )
+          .toList();
+      _eventController.currentSports
+        ..clear()
+        ..addAll(initialKeys);
+    });
   }
 
   void _toggleSelection(String sportKey) {
@@ -96,7 +115,20 @@ class _SportsAllViewState extends State<SportsAllView> {
             _TopBar(
               title: 'SPORTS',
               onBackTap: () => Get.back(),
-              onSaveTap: () => Get.back(),
+              onSaveTap: () {
+                final selectedKeys = _eventController.currentSports.toList();
+                final selectedLabels = selectedKeys
+                    .map(
+                      (key) => _sports
+                          .firstWhere(
+                            (s) => s.key == key,
+                            orElse: () => _sports.first,
+                          )
+                          .label,
+                    )
+                    .toList();
+                Get.back(result: selectedLabels);
+              },
             ),
             const SizedBox(height: 8),
             const Padding(

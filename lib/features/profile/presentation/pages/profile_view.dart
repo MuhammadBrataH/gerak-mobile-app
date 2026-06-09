@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -14,6 +15,7 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   AuthController get _authController => Get.find<AuthController>();
+  final ImagePicker _imagePicker = ImagePicker();
 
   String get _displayName => _authController.displayName;
   String get _domicile => _authController.currentDomicile;
@@ -38,13 +40,18 @@ class _ProfileViewState extends State<ProfileView> {
     return age > 0 ? age.toString() : '-';
   }
 
-  bool get _isLoggedIn => _authController.user.value != null;
-
   String? get _profilePhotoPath => _authController.currentProfilePhotoPath;
 
   List<String> get _sportsDisplay => _authController.currentSports.isNotEmpty
       ? _authController.currentSports
-      : const ['BASKET', 'BADMINTON', 'LARI'];
+      : [];
+
+  Future<void> _pickProfilePhoto() async {
+    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    _authController.setProfilePhotoPath(image.path);
+    setState(() {});
+  }
 
   void _showToast(String message) {
     Get.snackbar(
@@ -55,67 +62,54 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  void _showProfileMenu(BuildContext context) {
+  Future<void> _showProfileMenu(BuildContext context) async {
     final screenWidth = MediaQuery.of(context).size.width;
-    final menuWidth = 120.0;
+    final menuWidth = 140.0;
 
-    showMenu(
+    final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(screenWidth - menuWidth - 16, 56, 16, 0),
       items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Container(
-            width: 120,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: const EdgeInsets.all(14),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: GestureDetector(
-                onTap: () {
-                  Get.back();
-                  if (_isLoggedIn) {
-                    _authController.logout();
-                  } else {
-                    Get.offAllNamed(AppRoutes.login);
-                  }
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isLoggedIn ? Icons.logout : Icons.login,
-                      color: const Color(0xFF2563EB),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isLoggedIn ? 'Logout' : 'Login',
-                      style: const TextStyle(
-                        color: Color(0xFF2563EB),
-                        fontSize: 14,
-                        fontFamily: 'Lexend',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+        PopupMenuItem<String>(
+          value: 'logout',
+          child: Row(
+            children: [
+              const Icon(Icons.logout, size: 18, color: Color(0xFF0F172A)),
+              const SizedBox(width: 8),
+              const Text(
+                'Logout',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ],
-      elevation: 0,
-      color: Colors.transparent,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
+
+    if (selected == 'logout') {
+      await Get.dialog(
+        AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Apakah yakin untuk logout?'),
+          actions: [
+            TextButton(onPressed: () => Get.back(), child: const Text('Tidak')),
+            TextButton(
+              onPressed: () {
+                Get.back();
+                _authController.logout();
+              },
+              child: const Text('Ya'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -144,6 +138,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ageLabel: _ageLabel,
                     imagePath: _profilePhotoPath,
                     sports: _sportsDisplay,
+                    onPhotoTap: _pickProfilePhoto,
                   ),
                   const SizedBox(height: 20),
                   _ProfileActions(
@@ -196,17 +191,20 @@ class _ProfileTopBar extends StatelessWidget {
     return SizedBox(
       height: 56,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'GERAK',
-            style: TextStyle(
-              color: Color(0xFF2563EB),
-              fontSize: 24,
-              fontFamily: 'Lexend',
-              fontWeight: FontWeight.w900,
-              height: 1.33,
-              letterSpacing: -1.2,
+          const Expanded(
+            child: Center(
+              child: Text(
+                'GERAK',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 24,
+                  fontFamily: 'Lexend',
+                  fontWeight: FontWeight.w900,
+                  height: 1.33,
+                  letterSpacing: -1.2,
+                ),
+              ),
             ),
           ),
           GestureDetector(
@@ -233,6 +231,7 @@ class _ProfileHeader extends StatelessWidget {
   final String ageLabel;
   final String? imagePath;
   final List<String> sports;
+  final VoidCallback? onPhotoTap;
 
   const _ProfileHeader({
     required this.displayName,
@@ -241,6 +240,7 @@ class _ProfileHeader extends StatelessWidget {
     required this.ageLabel,
     required this.imagePath,
     required this.sports,
+    this.onPhotoTap,
   });
 
   String _sportIconForLabel(String label) {
@@ -269,42 +269,49 @@ class _ProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Stack(
-          children: [
-            Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(48),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: imagePath == null
-                  ? const Icon(Icons.person, size: 64, color: Color(0xFF94A3B8))
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: Image(
-                        image: buildImageProviderFromSource(imagePath),
-                        width: 128,
-                        height: 128,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-            ),
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: Container(
-                width: 28,
-                height: 28,
+        GestureDetector(
+          onTap: onPhotoTap,
+          child: Stack(
+            children: [
+              Container(
+                width: 128,
+                height: 128,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
-                  borderRadius: BorderRadius.circular(9999),
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(48),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                child: imagePath == null
+                    ? const Icon(
+                        Icons.person,
+                        size: 64,
+                        color: Color(0xFF94A3B8),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(40),
+                        child: Image(
+                          image: buildImageProviderFromSource(imagePath),
+                          width: 128,
+                          height: 128,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
               ),
-            ),
-          ],
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(9999),
+                  ),
+                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         Text(

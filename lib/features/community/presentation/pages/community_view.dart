@@ -196,6 +196,171 @@ class _CommunityViewState extends State<CommunityView> {
     );
   }
 
+  void _openSearchSheet() {
+    final communities = _filteredCommunities;
+    final textController = TextEditingController();
+    List<_CommunityCardData> filteredCommunities = communities;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 64,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECF2FA),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: textController,
+                              onChanged: (value) {
+                                setState(() {
+                                  final q = value.toLowerCase();
+                                  filteredCommunities = communities
+                                      .where(
+                                        (community) =>
+                                            community.name
+                                                .toLowerCase()
+                                                .contains(q) ||
+                                            community.categories
+                                                .toLowerCase()
+                                                .contains(q),
+                                      )
+                                      .toList();
+                                });
+                              },
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Lexend',
+                                color: Color(0xFF0F172A),
+                              ),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: const Color(0xFFF7FAFC),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                hintText: 'Cari komunitas...',
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              textController.clear();
+                              setState(() {
+                                filteredCommunities = communities;
+                              });
+                            },
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: filteredCommunities.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 48,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Tidak ada komunitas ditemukan',
+                                    style: TextStyle(
+                                      color: Color(0xFF94A3B8),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              itemCount: filteredCommunities.length,
+                              itemBuilder: (context, index) {
+                                final community = filteredCommunities[index];
+                                return _CommunityCard(
+                                  data: community,
+                                  onTap: () {
+                                    Get.back();
+                                    Get.toNamed(
+                                      AppRoutes.communityProfile,
+                                      arguments: {
+                                        'id': community.id,
+                                        'name': community.name,
+                                        'badgeUrl': community.badgeUrl,
+                                        'categories': community.categories,
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
@@ -220,16 +385,9 @@ class _CommunityViewState extends State<CommunityView> {
                             onAddTap: authController.isCommunityAccount
                                 ? _openAddSheet
                                 : null,
+                            onSearchTap: _openSearchSheet,
                             imagePath: authController.currentProfilePhotoPath,
                           ),
-                        ),
-
-                        _SearchBar(
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                          },
                         ),
                         const SizedBox(height: 24),
                         _SectionHeader(
@@ -344,11 +502,13 @@ class _CommunityViewState extends State<CommunityView> {
 class _TopBar extends StatelessWidget {
   final VoidCallback onProfileTap;
   final VoidCallback? onAddTap;
+  final VoidCallback onSearchTap;
   final String? imagePath;
 
   const _TopBar({
     required this.onProfileTap,
     required this.onAddTap,
+    required this.onSearchTap,
     required this.imagePath,
   });
 
@@ -359,17 +519,17 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          // SizedBox(
-          //   width: 32,
-          //   child: onAddTap == null
-          //       ? const SizedBox.shrink()
-          //       : IconButton(
-          //           onPressed: onAddTap,
-          //           icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
-          //           padding: EdgeInsets.zero,
-          //           constraints: const BoxConstraints(),
-          //         ),
-          // ),
+          SizedBox(
+            width: 32,
+            child: onAddTap == null
+                ? const SizedBox.shrink()
+                : IconButton(
+                    onPressed: onAddTap,
+                    icon: const Icon(Icons.add, color: Color(0xFF0F172A)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+          ),
           Expanded(
             child: Center(
               child: const Text(
@@ -385,63 +545,20 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          // GestureDetector(
-          //   onTap: onProfileTap,
-          //   child: CircleAvatar(
-          //     radius: 16,
-          //     backgroundColor: const Color(0xFFE2E8F0),
-          //     backgroundImage: buildImageProviderFromSource(imagePath),
-          //     child: imagePath == null
-          //         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-          //         : null,
-          //   ),
-          // ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(48),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search, color: Color(0xFF94A3B8)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              onChanged: onChanged,
-              style: const TextStyle(
-                color: Color(0xFF475569),
-                fontSize: 16,
-                fontFamily: 'Lexend',
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.6,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'CARI KOMUNITAS',
-                hintStyle: TextStyle(
-                  color: Color(0x99475569),
-                  fontSize: 16,
-                  fontFamily: 'Lexend',
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.6,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-              ),
+          IconButton(
+            onPressed: onSearchTap,
+            icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
+            tooltip: 'Cari',
+          ),
+          GestureDetector(
+            onTap: onProfileTap,
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundImage: buildImageProviderFromSource(imagePath),
+              child: imagePath == null
+                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
+                  : null,
             ),
           ),
         ],
