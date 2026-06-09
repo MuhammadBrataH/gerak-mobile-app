@@ -117,61 +117,67 @@ class _ProfileViewState extends State<ProfileView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            _ProfileTopBar(
+              imagePath: _profilePhotoPath,
+              onAvatarTap: () {
+                _showProfileMenu(context);
+              },
+            ),
+            Expanded(
+              child: Stack(
                 children: [
-                  _ProfileTopBar(
-                    imagePath: _profilePhotoPath,
-                    onAvatarTap: () {
-                      _showProfileMenu(context);
-                    },
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ProfileHeader(
+                          displayName: _displayName,
+                          domicile: _domicile,
+                          gender: _genderDisplay,
+                          ageLabel: _ageLabel,
+                          imagePath: _profilePhotoPath,
+                          sports: _sportsDisplay,
+                          onPhotoTap: _pickProfilePhoto,
+                        ),
+                        const SizedBox(height: 20),
+                        _ProfileActions(
+                          onSettingsTap: () =>
+                              Get.toNamed(AppRoutes.accountSettings),
+                          onEditTap: () async {
+                            await Get.toNamed(
+                              AppRoutes.editProfile,
+                              arguments: {
+                                'name': _displayName,
+                                'domicile': _domicile,
+                                'bio': _bio,
+                              },
+                            );
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 28),
+                        const _ScheduleHeader(),
+                        const SizedBox(height: 16),
+                        _ScheduleCardUpcoming(
+                          onDetailsTap: () => _showToast('View details tapped'),
+                        ),
+                        const SizedBox(height: 16),
+                        _ScheduleCardPast(),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 24),
-                  _ProfileHeader(
-                    displayName: _displayName,
-                    domicile: _domicile,
-                    gender: _genderDisplay,
-                    ageLabel: _ageLabel,
-                    imagePath: _profilePhotoPath,
-                    sports: _sportsDisplay,
-                    onPhotoTap: _pickProfilePhoto,
+                  _ProfileBottomNavBar(
+                    onHomeTap: () => Get.offAllNamed(_authController.homeRoute),
+                    onCommunityTap: () => Get.offAllNamed(AppRoutes.community),
+                    onProfileTap: () {},
                   ),
-                  const SizedBox(height: 20),
-                  _ProfileActions(
-                    onSettingsTap: () => Get.toNamed(AppRoutes.accountSettings),
-                    onEditTap: () async {
-                      await Get.toNamed(
-                        AppRoutes.editProfile,
-                        arguments: {
-                          'name': _displayName,
-                          'domicile': _domicile,
-                          'bio': _bio,
-                        },
-                      );
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 28),
-                  const _ScheduleHeader(),
-                  const SizedBox(height: 16),
-                  _ScheduleCardUpcoming(
-                    onDetailsTap: () => _showToast('View details tapped'),
-                  ),
-                  const SizedBox(height: 16),
-                  _ScheduleCardPast(),
                 ],
               ),
-            ),
-            _ProfileBottomNavBar(
-              onHomeTap: () => Get.offAllNamed(_authController.homeRoute),
-              onCommunityTap: () => Get.offAllNamed(AppRoutes.community),
-              onProfileTap: () {},
             ),
           ],
         ),
@@ -194,6 +200,7 @@ class _ProfileTopBar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(width: 4),
           const Expanded(

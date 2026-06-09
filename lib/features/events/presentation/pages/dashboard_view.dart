@@ -565,13 +565,13 @@ class _HomeViewState extends State<HomeView> {
                       _showToast('Nav: $label');
                     },
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                ], // end Stack children
+              ), // end Stack
+            ), // end Expanded
+          ], // end Column children
+        ), // end Column
+      ), // end SafeArea
+    ); // end Scaffold
   }
 }
 

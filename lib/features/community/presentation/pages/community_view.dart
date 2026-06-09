@@ -370,134 +370,140 @@ class _CommunityViewState extends State<CommunityView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Obx(
-                          () => _TopBar(
-                            onAddTap: authController.isCommunityAccount
-                                ? _openAddSheet
-                                : null,
-                            onSearchTap: _openSearchSheet,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _SectionHeader(
-                          title: 'KATEGORI',
-                          action: 'LIHAT SEMUA',
-                          onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
-                        ),
-                        const SizedBox(height: 12),
-                        _CategoryChips(
-                          selectedLabels: _selectedCategories,
-                          onCategoryTap: (label) {
-                            setState(() {
-                              if (_selectedCategories.contains(label)) {
-                                _selectedCategories.remove(label);
-                              } else {
-                                _selectedCategories.add(label);
-                              }
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        _FilterRow(
-                          locationLabel: _selectedLocation,
-                          onLocationTap: _openLocationSheet,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'KOMUNITAS',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontFamily: 'Lexend',
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                            letterSpacing: -0.6,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                  sliver: _isLoading
-                      ? SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(48),
-                              child: CircularProgressIndicator(
-                                color: const Color(0xFF2563EB),
+            Obx(
+              () => _TopBar(
+                onAddTap: authController.isCommunityAccount
+                    ? _openAddSheet
+                    : null,
+                onSearchTap: _openSearchSheet,
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _SectionHeader(
+                                title: 'KATEGORI',
+                                action: 'LIHAT SEMUA',
+                                onActionTap: () =>
+                                    Get.toNamed(AppRoutes.sportsAll),
                               ),
-                            ),
+                              const SizedBox(height: 12),
+                              _CategoryChips(
+                                selectedLabels: _selectedCategories,
+                                onCategoryTap: (label) {
+                                  setState(() {
+                                    if (_selectedCategories.contains(label)) {
+                                      _selectedCategories.remove(label);
+                                    } else {
+                                      _selectedCategories.add(label);
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              _FilterRow(
+                                locationLabel: _selectedLocation,
+                                onLocationTap: _openLocationSheet,
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'KOMUNITAS',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w700,
+                                  height: 1,
+                                  letterSpacing: -0.6,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ),
-                        )
-                      : SliverList.builder(
-                          itemCount: communities.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _CommunityCard(
-                                data: communities[index],
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          CommunityProfileView(),
-                                      settings: RouteSettings(
-                                        arguments: {
-                                          'id': communities[index].id,
-                                          'name': communities[index].name,
-                                          'badgeUrl':
-                                              communities[index].badgeUrl,
-                                          'categories':
-                                              communities[index].categories,
-                                        },
-                                      ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                        sliver: _isLoading
+                            ? SliverToBoxAdapter(
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(48),
+                                    child: CircularProgressIndicator(
+                                      color: const Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : SliverList.builder(
+                                itemCount: communities.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: _CommunityCard(
+                                      data: communities[index],
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                CommunityProfileView(),
+                                            settings: RouteSettings(
+                                              arguments: {
+                                                'id': communities[index].id,
+                                                'name': communities[index].name,
+                                                'badgeUrl':
+                                                    communities[index].badgeUrl,
+                                                'categories': communities[index]
+                                                    .categories,
+                                              },
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   );
                                 },
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-            _BottomNavBar(
-              onTap: (label) {
-                if (label == 'Community') {
-                  return;
-                }
-                if (label == 'Home') {
-                  Get.offAllNamed(Get.find<AuthController>().homeRoute);
-                  return;
-                }
-                if (label == 'Profile') {
-                  final authController = Get.find<AuthController>();
-                  if (authController.isCommunityAccount) {
-                    Get.offAllNamed(
-                      AppRoutes.communityProfile,
-                      arguments: {'isOwnProfile': true},
-                    );
-                  } else {
-                    Get.offAllNamed(AppRoutes.profile);
-                  }
-                  return;
-                }
-                _showToast('Nav: $label');
-              },
+                      ),
+                    ],
+                  ),
+                  _BottomNavBar(
+                    onTap: (label) {
+                      if (label == 'Community') {
+                        return;
+                      }
+                      if (label == 'Home') {
+                        Get.offAllNamed(Get.find<AuthController>().homeRoute);
+                        return;
+                      }
+                      if (label == 'Profile') {
+                        final authController = Get.find<AuthController>();
+                        if (authController.isCommunityAccount) {
+                          Get.offAllNamed(
+                            AppRoutes.communityProfile,
+                            arguments: {'isOwnProfile': true},
+                          );
+                        } else {
+                          Get.offAllNamed(AppRoutes.profile);
+                        }
+                        return;
+                      }
+                      _showToast('Nav: $label');
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -520,6 +526,7 @@ class _TopBar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
             width: 32,
