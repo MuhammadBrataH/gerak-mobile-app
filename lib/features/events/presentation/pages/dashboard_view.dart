@@ -432,31 +432,27 @@ class _HomeViewState extends State<HomeView> {
                           onActionTap: () => Get.toNamed(AppRoutes.sportsAll),
                         ),
                         const SizedBox(height: 12),
-                        Obx(
-                          () => _CategoryChips(
-                            selectedSports: _eventController.currentSports,
-                            labelToSportKey: _categoryToSport,
-                            onCategoryTap: (label) {
-                              final sportKey = _categoryToSport[label];
-                              if (sportKey == null) {
-                                return;
-                              }
-                              _eventController.toggleSportSelection(sportKey);
-                            },
-                          ),
+                        _CategoryChips(
+                          selectedSports: _eventController.currentSports,
+                          labelToSportKey: _categoryToSport,
+                          onCategoryTap: (label) {
+                            final sportKey = _categoryToSport[label];
+                            if (sportKey == null) {
+                              return;
+                            }
+                            _eventController.toggleSportSelection(sportKey);
+                          },
                         ),
                         const SizedBox(height: 16),
-                        Obx(
-                          () => _FilterRow(
-                            locationLabel: _selectedLocation.isEmpty
-                                ? 'Lokasi'
-                                : _selectedLocation,
-                            dateLabel: _formatDateLabel(
-                              _eventController.currentDate.value,
-                            ),
-                            onLocationTap: _openLocationSheet,
-                            onDateTap: _openDateSheet,
+                        _FilterRow(
+                          locationLabel: _selectedLocation.isEmpty
+                              ? 'Lokasi'
+                              : _selectedLocation,
+                          dateLabel: _formatDateLabel(
+                            _eventController.currentDate.value,
                           ),
+                          onLocationTap: _openLocationSheet,
+                          onDateTap: _openDateSheet,
                         ),
                         const SizedBox(height: 24),
                         const Text(

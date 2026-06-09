@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import '../controllers/event_controller.dart';
 
 class SportsAllView extends StatefulWidget {
   const SportsAllView({super.key});
@@ -12,7 +11,7 @@ class SportsAllView extends StatefulWidget {
 
 class _SportsAllViewState extends State<SportsAllView> {
   late final List<_SportItemData> _sports;
-  EventController get _eventController => Get.find<EventController>();
+  final Set<String> _selectedSports = {};
 
   @override
   void initState() {
@@ -94,14 +93,31 @@ class _SportsAllViewState extends State<SportsAllView> {
                 .key,
           )
           .toList();
-      _eventController.currentSports
-        ..clear()
-        ..addAll(initialKeys);
+      setState(() {
+        _selectedSports
+          ..clear()
+          ..addAll(initialKeys);
+      });
     });
   }
 
   void _toggleSelection(String sportKey) {
-    _eventController.toggleSportSelection(sportKey);
+    if (_selectedSports.length >= 3 && !_selectedSports.contains(sportKey)) {
+      Get.snackbar(
+        'Info',
+        'Maksimal pilih 3 kategori olahraga',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+    setState(() {
+      if (_selectedSports.contains(sportKey)) {
+        _selectedSports.remove(sportKey);
+      } else {
+        _selectedSports.add(sportKey);
+      }
+    });
   }
 
   @override
@@ -116,7 +132,7 @@ class _SportsAllViewState extends State<SportsAllView> {
               title: 'SPORTS',
               onBackTap: () => Get.back(),
               onSaveTap: () {
-                final selectedKeys = _eventController.currentSports.toList();
+                final selectedKeys = _selectedSports.toList();
                 final selectedLabels = selectedKeys
                     .map(
                       (key) => _sports
@@ -152,14 +168,10 @@ class _SportsAllViewState extends State<SportsAllView> {
                   runSpacing: 8,
                   children: _sports
                       .map(
-                        (sport) => Obx(
-                          () => _SportChip(
-                            data: sport,
-                            isSelected: _eventController.currentSports.contains(
-                              sport.key,
-                            ),
-                            onTap: () => _toggleSelection(sport.key),
-                          ),
+                        (sport) => _SportChip(
+                          data: sport,
+                          isSelected: _selectedSports.contains(sport.key),
+                          onTap: () => _toggleSelection(sport.key),
                         ),
                       )
                       .toList(),

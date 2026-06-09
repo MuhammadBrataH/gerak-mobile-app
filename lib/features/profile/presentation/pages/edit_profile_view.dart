@@ -83,10 +83,6 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   Future<void> _openSportsSelector() async {
-    if (_selectedSports.length >= 3) {
-      _showToast('Maksimal pilih 3 kategori olahraga');
-      return;
-    }
     final result = await Get.toNamed(
       AppRoutes.sportsAll,
       arguments: {'selected': List<String>.from(_selectedSports)},
