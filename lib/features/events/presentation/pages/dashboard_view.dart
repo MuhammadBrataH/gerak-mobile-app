@@ -88,7 +88,7 @@ class _HomeViewState extends State<HomeView> {
       location: event.location.toUpperCase(),
       address:
           '${event.location}, ${event.city}${event.district != null ? ', ${event.district}' : ''}',
-      community: event.communityName ,
+      community: event.communityName,
       description: event.description ?? '',
       price: '',
       labelIconAsset: icon,
@@ -548,7 +548,15 @@ class _HomeViewState extends State<HomeView> {
                   return;
                 }
                 if (label == 'Profile') {
-                  Get.toNamed(Get.find<AuthController>().profileRoute);
+                  final authController = Get.find<AuthController>();
+                  if (authController.isCommunityAccount) {
+                    Get.toNamed(
+                      AppRoutes.communityProfile,
+                      arguments: {'isOwnProfile': true},
+                    );
+                  } else {
+                    Get.toNamed(AppRoutes.profile);
+                  }
                   return;
                 }
                 if (label == 'Community') {

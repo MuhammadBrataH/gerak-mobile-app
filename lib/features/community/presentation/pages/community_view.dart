@@ -344,6 +344,7 @@ class _CommunityViewState extends State<CommunityView> {
                                         'name': community.name,
                                         'badgeUrl': community.badgeUrl,
                                         'categories': community.categories,
+                                        'isOwnProfile': false,
                                       },
                                     );
                                   },
@@ -381,12 +382,10 @@ class _CommunityViewState extends State<CommunityView> {
                       children: [
                         Obx(
                           () => _TopBar(
-                            onProfileTap: () => _showProfileMenu(context),
                             onAddTap: authController.isCommunityAccount
                                 ? _openAddSheet
                                 : null,
                             onSearchTap: _openSearchSheet,
-                            imagePath: authController.currentProfilePhotoPath,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -486,7 +485,15 @@ class _CommunityViewState extends State<CommunityView> {
                   return;
                 }
                 if (label == 'Profile') {
-                  Get.offAllNamed(Get.find<AuthController>().profileRoute);
+                  final authController = Get.find<AuthController>();
+                  if (authController.isCommunityAccount) {
+                    Get.offAllNamed(
+                      AppRoutes.communityProfile,
+                      arguments: {'isOwnProfile': true},
+                    );
+                  } else {
+                    Get.offAllNamed(AppRoutes.profile);
+                  }
                   return;
                 }
                 _showToast('Nav: $label');
@@ -500,17 +507,10 @@ class _CommunityViewState extends State<CommunityView> {
 }
 
 class _TopBar extends StatelessWidget {
-  final VoidCallback onProfileTap;
   final VoidCallback? onAddTap;
   final VoidCallback onSearchTap;
-  final String? imagePath;
 
-  const _TopBar({
-    required this.onProfileTap,
-    required this.onAddTap,
-    required this.onSearchTap,
-    required this.imagePath,
-  });
+  const _TopBar({required this.onAddTap, required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -549,17 +549,6 @@ class _TopBar extends StatelessWidget {
             onPressed: onSearchTap,
             icon: const Icon(Icons.search_rounded, color: Color(0xFF0F172A)),
             tooltip: 'Cari',
-          ),
-          GestureDetector(
-            onTap: onProfileTap,
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFFE2E8F0),
-              backgroundImage: buildImageProviderFromSource(imagePath),
-              child: imagePath == null
-                  ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 18)
-                  : null,
-            ),
           ),
         ],
       ),

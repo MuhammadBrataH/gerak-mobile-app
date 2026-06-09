@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/media_source_image.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -20,6 +21,11 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
   late final EventController _eventController;
   late Future<List<EventModel>> _postEventsFuture;
   late Future<List<EventModel>> _matchEventsFuture;
+  final ImagePicker _imagePicker = ImagePicker();
+  bool get _isOwnProfile {
+    final args = Get.arguments as Map<String, dynamic>? ?? {};
+    return args['isOwnProfile'] == true;
+  }
 
   @override
   void initState() {
@@ -50,6 +56,14 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
       activityType: 'match',
       limit: 50,
     );
+  }
+
+  Future<void> _pickProfilePhoto() async {
+    final authController = Get.find<AuthController>();
+    final image = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    authController.setProfilePhotoPath(image.path);
+    setState(() {});
   }
 
   Future<void> _openAddSheet() async {
@@ -122,7 +136,9 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
     final args = Get.arguments as Map<String, dynamic>? ?? {};
-    final communityName = (args['name'] as String?) ?? 'Komunitas';
+    final communityName = _isOwnProfile
+        ? authController.displayName
+        : (args['name'] as String?) ?? 'Komunitas';
     final est = (args['est'] as String?) ?? 'EST. 2019';
     final memberCount = (args['members'] as int?) ?? 500;
     final imagePath =
@@ -159,13 +175,18 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                         onAvatarTap: isViewingOwnCommunity
                             ? () => _showProfileMenu(context)
                             : null,
-                        onBackTap: () => Get.back(),
+                        onBackTap: _isOwnProfile ? null : () => Get.back(),
                       ),
                     ),
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        0,
+                        24,
+                        _isOwnProfile ? 120 : 24,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -175,6 +196,20 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                             est: est,
                             sports: sports,
                             memberCount: memberCount,
+                            onSettingsTap: _isOwnProfile
+                                ? () => Get.toNamed(AppRoutes.accountSettings)
+                                : null,
+                            onEditTap: _isOwnProfile
+                                ? () async {
+                                    await Get.toNamed(AppRoutes.editProfile);
+                                    if (mounted) {
+                                      setState(_reloadContent);
+                                    }
+                                  }
+                                : null,
+                            onPhotoTap: _isOwnProfile
+                                ? _pickProfilePhoto
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           const _ProfileTabs(),
@@ -202,6 +237,155 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                   ),
                 ],
               ),
+              if (_isOwnProfile)
+                _CommunityProfileBottomNavBar(
+                  onCommunityTap: () => Get.offAllNamed(AppRoutes.community),
+                  onHomeTap: () => Get.offAllNamed(AppRoutes.dashboard),
+                  onProfileTap: () => Get.offAllNamed(AppRoutes.profile),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CommunityProfileBottomNavBar extends StatelessWidget {
+  final VoidCallback onCommunityTap;
+  final VoidCallback onHomeTap;
+  final VoidCallback onProfileTap;
+
+  const _CommunityProfileBottomNavBar({
+    required this.onCommunityTap,
+    required this.onHomeTap,
+    required this.onProfileTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0C000000),
+              blurRadius: 32,
+              offset: Offset(0, -8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _BottomNavItem(
+              label: 'COMMUNITY',
+              icon: Icons.groups_rounded,
+              isActive: false,
+              onTap: onCommunityTap,
+            ),
+            _BottomNavItem(
+              label: 'HOME',
+              icon: Icons.home_filled,
+              isActive: false,
+              onTap: onHomeTap,
+            ),
+            _BottomNavItem(
+              label: 'PROFILE',
+              icon: Icons.person,
+              isActive: true,
+              onTap: onProfileTap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _BottomNavItem({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? Colors.white : const Color(0x99475569);
+
+    return SizedBox(
+      width: 110,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isActive)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF357AF3),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(icon, color: color, size: 18),
+                      const SizedBox(height: 2),
+                      Text(
+                        label,
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 10,
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w700,
+                          height: 1.5,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Column(
+                  children: [
+                    Icon(icon, color: color, size: 18),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 10,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w500,
+                        height: 1.5,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -214,13 +398,13 @@ class _TopBar extends StatelessWidget {
   final String? imagePath;
   final VoidCallback? onAddTap;
   final VoidCallback? onAvatarTap;
-  final VoidCallback onBackTap;
+  final VoidCallback? onBackTap;
 
   const _TopBar({
     required this.imagePath,
     required this.onAddTap,
     this.onAvatarTap,
-    required this.onBackTap,
+    this.onBackTap,
   });
 
   @override
@@ -230,16 +414,18 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          IconButton(
-            onPressed: onBackTap,
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-              color: Color(0xFF0F172A),
+          if (onBackTap != null) ...[
+            IconButton(
+              onPressed: onBackTap,
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: Color(0xFF0F172A),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+          ],
           SizedBox(
             width: 32,
             child: onAddTap == null
@@ -289,6 +475,9 @@ class _CommunityHeader extends StatelessWidget {
   final String est;
   final List<String> sports;
   final int memberCount;
+  final VoidCallback? onSettingsTap;
+  final VoidCallback? onEditTap;
+  final VoidCallback? onPhotoTap;
 
   const _CommunityHeader({
     required this.imagePath,
@@ -296,6 +485,9 @@ class _CommunityHeader extends StatelessWidget {
     required this.est,
     required this.sports,
     required this.memberCount,
+    this.onSettingsTap,
+    this.onEditTap,
+    this.onPhotoTap,
   });
 
   String _sportIconForLabel(String label) {
@@ -328,43 +520,51 @@ class _CommunityHeader extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Stack(
             children: [
-              Container(
-                width: 128,
-                height: 128,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(48),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: imagePath == null
-                    ? const Icon(
-                        Icons.groups,
-                        size: 64,
-                        color: Color(0xFF94A3B8),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(40),
-                        child: Image(
-                          image: buildImageProviderFromSource(imagePath),
-                          width: 128,
-                          height: 128,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-              ),
-              Positioned(
-                right: 8,
-                bottom: 8,
+              GestureDetector(
+                onTap: onPhotoTap,
                 child: Container(
-                  width: 28,
-                  height: 28,
+                  width: 128,
+                  height: 128,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(9999),
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(48),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                  child: imagePath == null
+                      ? const Icon(
+                          Icons.groups,
+                          size: 64,
+                          color: Color(0xFF94A3B8),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(40),
+                          child: Image(
+                            image: buildImageProviderFromSource(imagePath),
+                            width: 128,
+                            height: 128,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                 ),
               ),
+              if (onPhotoTap != null)
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB),
+                      borderRadius: BorderRadius.circular(9999),
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -433,6 +633,70 @@ class _CommunityHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        if (onSettingsTap != null || onEditTap != null)
+          Row(
+            children: [
+              if (onSettingsTap != null)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onSettingsTap,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0F172A),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                      backgroundColor: const Color(0xFFE2E8F0),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.settings,
+                          size: 18,
+                          color: Color(0xFF0F172A),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (onSettingsTap != null && onEditTap != null)
+                const SizedBox(width: 12),
+              if (onEditTap != null)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onEditTap,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                      backgroundColor: const Color(0xFF2563EB),
+                    ),
+                    child: const Text(
+                      'Edit Profil',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
       ],
     );
   }
