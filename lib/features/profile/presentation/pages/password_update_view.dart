@@ -10,9 +10,11 @@ class PasswordUpdateView extends StatefulWidget {
 }
 
 class _PasswordUpdateViewState extends State<PasswordUpdateView> {
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
@@ -44,33 +46,36 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
       _isLoading = true;
     });
 
-    Get.find<AuthController>().changePassword(
-      currentPassword: _currentPasswordController.text,
-      newPassword: _newPasswordController.text,
-    ).then((_) {
-      setState(() {
-        _isLoading = false;
-      });
-      Get.snackbar(
-        'Berhasil',
-        'Kata sandi berhasil diubah',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      Get.back();
-    }).catchError((error) {
-      setState(() {
-        _isLoading = false;
-      });
-      Get.snackbar(
-        'Error',
-        error.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    });
+    Get.find<AuthController>()
+        .changePassword(
+          currentPassword: _currentPasswordController.text,
+          newPassword: _newPasswordController.text,
+        )
+        .then((_) {
+          setState(() {
+            _isLoading = false;
+          });
+          Get.snackbar(
+            'Berhasil',
+            'Kata sandi berhasil diubah',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          Get.back();
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+          });
+          Get.snackbar(
+            'Error',
+            error.toString(),
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        });
   }
 
   @override
@@ -85,7 +90,7 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
           onPressed: () => Get.back(),
         ),
         title: const Text(
-          'Ubah Kata Sandi',
+          'Kata Sandi',
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -98,37 +103,27 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
-                'Kata sandi saat ini',
+                'Perbarui Kata Sandi',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 8),
+              const Text(
+                'Silahkan masukkan kata sandi anda saat ini dan kata sandi baru',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              _PasswordField(
+                label: 'Kata sandi saat ini',
                 controller: _currentPasswordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Masukkan kata sandi saat ini',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.blue),
-                  ),
-                ),
+                hintText: 'Masukkan kata sandi saat ini',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Kata sandi saat ini wajib diisi';
@@ -136,36 +131,11 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'Kata sandi baru',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 16),
+              _PasswordField(
+                label: 'Kata sandi baru',
                 controller: _newPasswordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Masukkan kata sandi baru',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.blue),
-                  ),
-                ),
+                hintText: 'Masukkan kata sandi baru',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Kata sandi baru wajib diisi';
@@ -176,36 +146,11 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'Konfirmasi kata sandi baru',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 16),
+              _PasswordField(
+                label: 'Konfirmasi kata sandi baru',
                 controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Masukkan ulang kata sandi baru',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.blue),
-                  ),
-                ),
+                hintText: 'Masukkan ulang kata sandi baru',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Konfirmasi kata sandi wajib diisi';
@@ -269,6 +214,62 @@ class _PrimaryButton extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final String hintText;
+  final String? Function(String?) validator;
+
+  const _PasswordField({
+    required this.label,
+    required this.controller,
+    required this.hintText,
+    required this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: hintText,
+              hintStyle: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.5),
+                fontSize: 14,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              isDense: true,
+            ),
+            validator: validator,
+          ),
+        ],
       ),
     );
   }
