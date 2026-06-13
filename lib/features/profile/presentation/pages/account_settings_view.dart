@@ -49,7 +49,7 @@ class AccountSettingsView extends StatelessWidget {
           _SettingsItem(
             title: 'Hapus Akun',
             textColor: Colors.red,
-            onTap: () => Get.toNamed('/profile/delete-account'),
+            onTap: () => Get.toNamed(AppRoutes.deleteAccount),
           ),
           const SizedBox(height: 12),
           _SettingsItem(

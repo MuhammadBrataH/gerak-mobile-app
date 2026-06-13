@@ -17,6 +17,7 @@ import '../../features/events/presentation/pages/dashboard_view.dart';
 import '../../features/events/presentation/pages/sports_all_view.dart';
 import '../../features/profile/presentation/pages/account_info_view.dart';
 import '../../features/profile/presentation/pages/account_settings_view.dart';
+import '../../features/profile/presentation/pages/delete_account_view.dart';
 import '../../features/profile/presentation/pages/delete_account_step1_view.dart';
 import '../../features/profile/presentation/pages/delete_account_step2_view.dart';
 import '../../features/profile/presentation/pages/edit_profile_view.dart';
@@ -95,6 +96,10 @@ class AppPages {
     GetPage(
       name: AppRoutes.passwordUpdate,
       page: () => const PasswordUpdateView(),
+    ),
+    GetPage(
+      name: AppRoutes.deleteAccount,
+      page: () => const DeleteAccountView(),
     ),
     GetPage(
       name: AppRoutes.deleteAccountStep1,

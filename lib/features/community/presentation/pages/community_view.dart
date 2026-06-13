@@ -466,6 +466,14 @@ class _CommunityViewState extends State<CommunityView> {
                                                     communities[index].badgeUrl,
                                                 'categories': communities[index]
                                                     .categories,
+                                                'isOwnProfile':
+                                                    authController
+                                                        .isCommunityAccount &&
+                                                    communities[index].id ==
+                                                        authController
+                                                            .user
+                                                            .value
+                                                            ?.id,
                                               },
                                             ),
                                           ),

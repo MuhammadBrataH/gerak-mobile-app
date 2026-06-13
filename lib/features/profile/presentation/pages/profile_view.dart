@@ -313,14 +313,21 @@ class _ProfileHeader extends StatelessWidget {
               Positioned(
                 right: 8,
                 bottom: 8,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(9999),
+                child: GestureDetector(
+                  onTap: onPhotoTap,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB),
+                      borderRadius: BorderRadius.circular(9999),
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
                 ),
               ),
             ],

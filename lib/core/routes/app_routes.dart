@@ -20,6 +20,7 @@ abstract class AppRoutes {
   static const String emailUpdate = '/profile/email-update';
   static const String accountSettings = '/profile/settings';
   static const String passwordUpdate = '/profile/password-update';
+  static const String deleteAccount = '/profile/delete-account';
   static const String deleteAccountStep1 = '/profile/delete-account-step-1';
   static const String deleteAccountStep2 = '/profile/delete-account-step-2';
 }

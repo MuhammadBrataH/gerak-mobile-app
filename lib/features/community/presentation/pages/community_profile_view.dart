@@ -169,10 +169,11 @@ class _CommunityProfileViewState extends State<CommunityProfileView> {
                     child: Obx(
                       () => _TopBar(
                         imagePath: imagePath,
-                        onAddTap: authController.isCommunityAccount
+                        onAddTap:
+                            (authController.isCommunityAccount && _isOwnProfile)
                             ? _openAddSheet
                             : null,
-                        onAvatarTap: isViewingOwnCommunity
+                        onAvatarTap: isViewingOwnCommunity || _isOwnProfile
                             ? () => _showProfileMenu(context)
                             : null,
                         onBackTap: _isOwnProfile ? null : () => Get.back(),
@@ -551,17 +552,20 @@ class _CommunityHeader extends StatelessWidget {
                 Positioned(
                   right: 8,
                   bottom: 8,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB),
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 14,
-                      color: Colors.white,
+                  child: GestureDetector(
+                    onTap: onPhotoTap,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB),
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

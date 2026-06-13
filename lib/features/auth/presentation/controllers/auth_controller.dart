@@ -220,8 +220,10 @@ class AuthController extends GetxController {
   String get homeRoute => _homeRouteForAccountType(user.value?.accountType);
 
   Future<bool> get isLoggedIn async {
-    final token = await _storage.read(key: 'token');
-    return token != null && token.isNotEmpty;
+    // Disable auto-login for testing - always return false
+    return false;
+    // final token = await _storage.read(key: 'token');
+    // return token != null && token.isNotEmpty;
   }
 
   Future<bool> get hasCompletedOnboarding async {
