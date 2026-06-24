@@ -97,12 +97,7 @@ class _CommunityViewState extends State<CommunityView> {
   }
 
   void _showToast(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    Get.snackbar('Info', message);
   }
 
   Future<void> _openLocationSheet() async {
@@ -245,6 +240,7 @@ class _CommunityViewState extends State<CommunityView> {
                           Expanded(
                             child: TextField(
                               controller: textController,
+                              enableInteractiveSelection: true,
                               onChanged: (value) {
                                 setState(() {
                                   final q = value.toLowerCase();
@@ -855,6 +851,7 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: TextField(
                   controller: _controller,
+                  enableInteractiveSelection: true,
                   onChanged: (value) {
                     setState(() {
                       _query = value;

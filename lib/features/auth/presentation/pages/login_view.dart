@@ -429,6 +429,7 @@ class _LabeledField extends StatelessWidget {
           textInputAction: TextInputAction.next,
           autocorrect: false,
           enableSuggestions: false,
+          enableInteractiveSelection: true,
           decoration: InputDecoration(
             enabledBorder: const OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),
@@ -533,6 +534,7 @@ class _PasswordFieldState extends State<_PasswordField> {
           textInputAction: TextInputAction.done,
           autocorrect: false,
           enableSuggestions: false,
+          enableInteractiveSelection: true,
           decoration: InputDecoration(
             enabledBorder: const OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),

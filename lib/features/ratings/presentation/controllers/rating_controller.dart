@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import '../../../../core/network/api_client.dart';
 import '../../data/models/rating_model.dart';
 
@@ -12,7 +13,7 @@ class RatingController extends GetxController {
 
   Future<void> createRating(String eventId, int score, String? review) async {
     if (eventId.isEmpty) {
-      Get.snackbar('Ratings', 'Event ID is required');
+      showCustomSnackbar('Ratings', 'Event ID is required');
       return;
     }
 
@@ -30,11 +31,11 @@ class RatingController extends GetxController {
         ratings.insert(0, created);
       }
 
-      Get.snackbar('Ratings', 'Rating submitted successfully!');
+      showCustomSnackbar('Ratings', 'Rating submitted successfully!');
     } on ApiException catch (error) {
-      Get.snackbar('Ratings', error.message);
+      showCustomSnackbar('Ratings', error.message);
     } catch (_) {
-      Get.snackbar('Ratings', 'Failed to create rating');
+      showCustomSnackbar('Ratings', 'Failed to create rating');
     } finally {
       isLoading.value = false;
     }
@@ -42,7 +43,7 @@ class RatingController extends GetxController {
 
   Future<void> fetchEventRatings(String eventId) async {
     if (eventId.isEmpty) {
-      Get.snackbar('Ratings', 'Event ID is required');
+      showCustomSnackbar('Ratings', 'Event ID is required');
       return;
     }
 
@@ -62,9 +63,9 @@ class RatingController extends GetxController {
           : <RatingModel>[];
       ratings.assignAll(parsed);
     } on ApiException catch (error) {
-      Get.snackbar('Ratings', error.message);
+      showCustomSnackbar('Ratings', error.message);
     } catch (_) {
-      Get.snackbar('Ratings', 'Failed to load ratings');
+      showCustomSnackbar('Ratings', 'Failed to load ratings');
     } finally {
       isLoading.value = false;
     }
@@ -72,7 +73,7 @@ class RatingController extends GetxController {
 
   Future<void> fetchUserRatings(String userId) async {
     if (userId.isEmpty) {
-      Get.snackbar('Ratings', 'User ID is required');
+      showCustomSnackbar('Ratings', 'User ID is required');
       return;
     }
 
@@ -92,9 +93,9 @@ class RatingController extends GetxController {
           : <RatingModel>[];
       ratings.assignAll(parsed);
     } on ApiException catch (error) {
-      Get.snackbar('Ratings', error.message);
+      showCustomSnackbar('Ratings', error.message);
     } catch (_) {
-      Get.snackbar('Ratings', 'Failed to load ratings');
+      showCustomSnackbar('Ratings', 'Failed to load ratings');
     } finally {
       isLoading.value = false;
     }

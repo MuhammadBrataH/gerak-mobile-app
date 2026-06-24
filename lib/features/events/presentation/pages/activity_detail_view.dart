@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/media_source_image.dart';
@@ -177,7 +178,7 @@ class _ActivityDetailViewState extends State<ActivityDetailView> {
       widget.event?.adminPhone ?? widget.adminPhone,
     );
     if (organizerPhone.isEmpty) {
-      Get.snackbar('WhatsApp', 'Nomor organizer belum tersedia');
+      showCustomSnackbar('WhatsApp', 'Nomor organizer belum tersedia');
       return;
     }
 
@@ -191,7 +192,7 @@ class _ActivityDetailViewState extends State<ActivityDetailView> {
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
     if (!launched) {
-      Get.snackbar('WhatsApp', 'Gagal membuka WhatsApp');
+      showCustomSnackbar('WhatsApp', 'Gagal membuka WhatsApp');
     }
   }
 
@@ -218,7 +219,7 @@ class _ActivityDetailViewState extends State<ActivityDetailView> {
                     ),
                     GestureDetector(
                       onTap: () =>
-                          Get.snackbar('Favorit', 'Ditambahkan ke favorit'),
+                          showCustomSnackbar('Favorit', 'Ditambahkan ke favorit'),
                       child: const Icon(Icons.favorite_outline, size: 24),
                     ),
                   ],

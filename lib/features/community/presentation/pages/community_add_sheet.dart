@@ -1,5 +1,6 @@
 ﻿import 'dart:convert';
 import 'dart:typed_data';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -83,12 +84,7 @@ class _CommunityAddSheetState extends State<CommunityAddSheet> {
   }
 
   void _showInfo(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    showCustomSnackbar('Info', message);
   }
 
   String? _buildDataUri(Uint8List? bytes, String? fileName) {
@@ -937,6 +933,7 @@ class _TextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      enableInteractiveSelection: true,
       decoration: InputDecoration(
         hintText: placeholder,
         isDense: true,
@@ -973,6 +970,7 @@ class _TextArea extends StatelessWidget {
     return TextField(
       controller: controller,
       maxLines: 4,
+      enableInteractiveSelection: true,
       decoration: InputDecoration(
         hintText: placeholder,
         contentPadding: const EdgeInsets.all(12),

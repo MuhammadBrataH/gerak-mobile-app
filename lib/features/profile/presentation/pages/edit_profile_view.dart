@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -66,12 +67,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   void _showToast(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    showCustomSnackbar('Info', message);
   }
 
   Future<void> _pickProfilePhoto() async {
@@ -391,6 +387,7 @@ class _EditProfileField extends StatelessWidget {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      enableInteractiveSelection: true,
       style: const TextStyle(
         color: Color(0xFF090909),
         fontSize: 12,

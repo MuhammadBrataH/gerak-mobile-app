@@ -79,288 +79,277 @@ class _SignUpPrivateStep2ViewState extends State<SignUpPrivateStep2View> {
                   Positioned.fill(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: verticalPadding),
-                      child: Center(
-                        child: SizedBox(
+                      child: SingleChildScrollView(
+                        child: Center(
+                          child: Container(
                           width: cardWidth,
-                          height: constraints.maxHeight - (verticalPadding * 2),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.center,
-                            child: Container(
-                              width: cardWidth,
-                              padding: const EdgeInsets.all(padding32),
-                              decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(br32),
+                          padding: const EdgeInsets.all(padding32),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(br32),
+                            ),
+                            color: white200,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1A0F172A),
+                                blurRadius: 24,
+                                offset: Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'GERAK',
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.11,
+                                  letterSpacing: -1.8,
+                                  color: royalblue200,
                                 ),
-                                color: white200,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0x1A0F172A),
-                                    blurRadius: 24,
-                                    offset: Offset(0, 12),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Selamat Datang',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
+                                  letterSpacing: -0.75,
+                                  color: gray,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Silahkan mendaftar untuk melanjutkan',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  height: 1.5,
+                                  color: darkslategray,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Tanggal Lahir',
+                                style: TextStyle(
+                                  fontSize: fs12,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  height: 1.33,
+                                  letterSpacing: 1.2,
+                                  color: darkslategray,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: _DateBox(
+                                      initialValue: _day,
+                                      onChanged: (value) {
+                                        _day = value;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 4,
+                                    child: DropdownButtonFormField<String>(
+                                      value: _month,
+                                      isExpanded: true,
+                                      items: _months
+                                          .map(
+                                            (month) => DropdownMenuItem(
+                                              value: month,
+                                              child: Text(
+                                                month,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (value) {
+                                        if (value == null) {
+                                          return;
+                                        }
+                                        setState(() {
+                                          _month = value;
+                                        });
+                                      },
+                                      decoration: const InputDecoration(
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            width: 1,
+                                            color: aliceblue,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(br10),
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            width: 1,
+                                            color: aliceblue,
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(br10),
+                                          ),
+                                        ),
+                                        fillColor: whitesmoke,
+                                        filled: true,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: fs16,
+                                        fontFamily: 'Plus Jakarta Sans',
+                                        color: darkslategray,
+                                      ),
+                                      icon: const Icon(Icons.arrow_drop_down),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 3,
+                                    child: _DateBox(
+                                      initialValue: _year,
+                                      onChanged: (value) {
+                                        _year = value;
+                                      },
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    'GERAK',
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontFamily: 'Lexend',
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.11,
-                                      letterSpacing: -1.8,
-                                      color: royalblue200,
-                                    ),
-                                    textAlign: TextAlign.center,
+                              const SizedBox(height: 20),
+                              const Text(
+                                'Jenis Kelamin',
+                                style: TextStyle(
+                                  fontSize: fs12,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  height: 1.33,
+                                  letterSpacing: 1.2,
+                                  color: darkslategray,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<String>(
+                                value: _gender,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'Laki-Laki',
+                                    child: Text('Laki-Laki'),
                                   ),
-                                  const SizedBox(height: 24),
-                                  const Text(
-                                    'Selamat Datang',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Lexend',
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.2,
-                                      letterSpacing: -0.75,
-                                      color: gray,
-                                    ),
+                                  DropdownMenuItem(
+                                    value: 'Perempuan',
+                                    child: Text('Perempuan'),
                                   ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Silahkan mendaftar untuk melanjutkan',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      height: 1.5,
-                                      color: darkslategray,
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _gender = value;
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      width: 1,
+                                      color: aliceblue,
                                     ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  const Text(
-                                    'Tanggal Lahir',
-                                    style: TextStyle(
-                                      fontSize: fs12,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      height: 1.33,
-                                      letterSpacing: 1.2,
-                                      color: darkslategray,
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(br10),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: _DateBox(
-                                          initialValue: _day,
-                                          onChanged: (value) {
-                                            _day = value;
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        flex: 4,
-                                        child: DropdownButtonFormField<String>(
-                                          value: _month,
-                                          isExpanded: true,
-                                          items: _months
-                                              .map(
-                                                (month) => DropdownMenuItem(
-                                                  value: month,
-                                                  child: Text(
-                                                    month,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: (value) {
-                                            if (value == null) {
-                                              return;
-                                            }
-                                            setState(() {
-                                              _month = value;
-                                            });
-                                          },
-                                          decoration: const InputDecoration(
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                width: 1,
-                                                color: aliceblue,
-                                              ),
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(br10),
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                width: 1,
-                                                color: aliceblue,
-                                              ),
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(br10),
-                                              ),
-                                            ),
-                                            fillColor: whitesmoke,
-                                            filled: true,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 12,
-                                                ),
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: fs16,
-                                            fontFamily: 'Plus Jakarta Sans',
-                                            color: darkslategray,
-                                          ),
-                                          icon: const Icon(
-                                            Icons.arrow_drop_down,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        flex: 3,
-                                        child: _DateBox(
-                                          initialValue: _year,
-                                          onChanged: (value) {
-                                            _year = value;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Jenis Kelamin',
-                                    style: TextStyle(
-                                      fontSize: fs12,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      height: 1.33,
-                                      letterSpacing: 1.2,
-                                      color: darkslategray,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      width: 1,
+                                      color: aliceblue,
+                                    ),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(br10),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  DropdownButtonFormField<String>(
-                                    value: _gender,
-                                    items: const [
-                                      DropdownMenuItem(
-                                        value: 'Laki-Laki',
-                                        child: Text('Laki-Laki'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'Perempuan',
-                                        child: Text('Perempuan'),
-                                      ),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _gender = value;
-                                      });
-                                    },
-                                    decoration: const InputDecoration(
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          width: 1,
-                                          color: aliceblue,
-                                        ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(br10),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                          width: 1,
-                                          color: aliceblue,
-                                        ),
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(br10),
-                                        ),
-                                      ),
-                                      fillColor: whitesmoke,
-                                      filled: true,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: fs20,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      color: darkslategray,
-                                    ),
-                                    icon: const Icon(Icons.arrow_drop_down),
+                                  fillColor: whitesmoke,
+                                  filled: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
                                   ),
-                                  const SizedBox(height: 28),
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      boxShadow: shadowDrop,
-                                      gradient: gradientPrimary,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: fs20,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  color: darkslategray,
+                                ),
+                                icon: const Icon(Icons.arrow_drop_down),
+                              ),
+                              const SizedBox(height: 28),
+                              Container(
+                                decoration: const BoxDecoration(
+                                  boxShadow: shadowDrop,
+                                  gradient: gradientPrimary,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(br48),
+                                  ),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    // Parse date of birth and store data
+                                    final int dayInt = int.tryParse(_day) ?? 1;
+                                    final int monthInt =
+                                        _months.indexOf(_month) + 1;
+                                    final int yearInt =
+                                        int.tryParse(_year) ?? 2000;
+                                    final dateOfBirth = DateTime(
+                                      yearInt,
+                                      monthInt,
+                                      dayInt,
+                                    );
+
+                                    final authController =
+                                        Get.find<AuthController>();
+                                    authController.setSignupGender(
+                                      _gender ?? 'Laki-Laki',
+                                    );
+                                    authController.setSignupDateOfBirth(
+                                      dateOfBirth,
+                                    );
+
+                                    Get.toNamed(AppRoutes.registerPrivate3);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    foregroundColor: white200,
+                                    shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
                                         Radius.circular(br48),
                                       ),
                                     ),
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        // Parse date of birth and store data
-                                        final int dayInt =
-                                            int.tryParse(_day) ?? 1;
-                                        final int monthInt =
-                                            _months.indexOf(_month) + 1;
-                                        final int yearInt =
-                                            int.tryParse(_year) ?? 2000;
-                                        final dateOfBirth = DateTime(
-                                          yearInt,
-                                          monthInt,
-                                          dayInt,
-                                        );
-
-                                        final authController =
-                                            Get.find<AuthController>();
-                                        authController.setSignupGender(
-                                          _gender ?? 'Laki-Laki',
-                                        );
-                                        authController.setSignupDateOfBirth(
-                                          dateOfBirth,
-                                        );
-
-                                        Get.toNamed(AppRoutes.registerPrivate3);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        elevation: 0,
-                                        foregroundColor: white200,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(br48),
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: padding16,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'LANJUT',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Lexend',
-                                          fontWeight: FontWeight.w800,
-                                          height: 1.56,
-                                        ),
-                                      ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: padding16,
                                     ),
                                   ),
-                                ],
+                                  child: const Text(
+                                    'LANJUT',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: 'Lexend',
+                                      fontWeight: FontWeight.w800,
+                                      height: 1.56,
+                                    ),
+                                  ),
+                                ),
                               ),
+                            ],
                             ),
                           ),
                         ),
@@ -398,6 +387,7 @@ class _DateBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      enableInteractiveSelection: true,
       decoration: InputDecoration(
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(width: 1, color: aliceblue),

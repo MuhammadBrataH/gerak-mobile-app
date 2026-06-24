@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
@@ -29,22 +30,17 @@ class _DeleteAccountStep2ViewState extends State<DeleteAccountStep2View> {
       _isLoading = true;
     });
 
-    Get.find<AuthController>().deleteAccount(
-      password: _passwordController.text,
-    ).then((_) {
-      // Navigation is handled in the controller
-    }).catchError((error) {
-      setState(() {
-        _isLoading = false;
-      });
-      Get.snackbar(
-        'Error',
-        error.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    });
+    Get.find<AuthController>()
+        .deleteAccount(password: _passwordController.text)
+        .then((_) {
+          // Navigation is handled in the controller
+        })
+        .catchError((error) {
+          setState(() {
+            _isLoading = false;
+          });
+          showCustomSnackbar('Error', 'Gagal menghapus akun');
+        });
   }
 
   @override
@@ -91,10 +87,7 @@ class _DeleteAccountStep2ViewState extends State<DeleteAccountStep2View> {
               const SizedBox(height: 16),
               const Text(
                 'Tindakan ini tidak dapat dibatalkan. Semua data Anda akan dihapus secara permanen dari sistem.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),
               const Text(

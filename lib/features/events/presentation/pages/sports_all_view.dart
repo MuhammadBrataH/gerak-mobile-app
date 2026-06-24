@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
@@ -103,12 +104,7 @@ class _SportsAllViewState extends State<SportsAllView> {
 
   void _toggleSelection(String sportKey) {
     if (_selectedSports.length >= 3 && !_selectedSports.contains(sportKey)) {
-      Get.snackbar(
-        'Info',
-        'Maksimal pilih 3 kategori olahraga',
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
+      showCustomSnackbar('Info', 'Maksimal pilih 3 kategori olahraga');
       return;
     }
     setState(() {

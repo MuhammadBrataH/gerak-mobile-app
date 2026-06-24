@@ -245,8 +245,13 @@ class ApiClient {
   }
 
   String? _extractErrorMessage(dynamic data) {
-    if (data is Map && data['error'] is String) {
-      return data['error'] as String;
+    if (data is Map) {
+      if (data['error'] is String) {
+        return data['error'] as String;
+      }
+      if (data['message'] is String) {
+        return data['message'] as String;
+      }
     }
     return null;
   }

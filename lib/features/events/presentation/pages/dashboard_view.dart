@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -102,13 +103,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _showToast(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      backgroundColor: const Color(0xFF2563EB),
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    showCustomSnackbar('Info', message);
   }
 
   Future<void> _openAddSheet() async {
@@ -214,6 +209,7 @@ class _HomeViewState extends State<HomeView> {
                           Expanded(
                             child: TextField(
                               controller: textController,
+                              enableInteractiveSelection: true,
                               onChanged: (value) {
                                 setState(() {
                                   final q = value.toLowerCase();
@@ -979,6 +975,7 @@ class _LocationFilterSheetState extends State<_LocationFilterSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: TextField(
                   controller: _controller,
+                  enableInteractiveSelection: true,
                   onChanged: (value) {
                     setState(() {
                       _query = value;

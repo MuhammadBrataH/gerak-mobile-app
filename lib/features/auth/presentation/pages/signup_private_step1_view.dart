@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:gerak_mobile_app/core/routes/app_routes.dart';
@@ -44,7 +45,7 @@ class _SignUpPrivateStep1ViewState extends State<SignUpPrivateStep1View> {
 
   void _goNext() {
     if (_firstNameController.text.trim().isEmpty) {
-      Get.snackbar('Validasi', 'Nama depan wajib diisi');
+      showCustomSnackbar('Validasi', 'Nama depan wajib diisi');
       return;
     }
     final controller = Get.find<AuthController>();
@@ -102,114 +103,106 @@ class _SignUpPrivateStep1ViewState extends State<SignUpPrivateStep1View> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: verticalPadding),
                       child: Center(
-                        child: SizedBox(
+                        child: Container(
                           width: cardWidth,
-                          height: constraints.maxHeight - (verticalPadding * 2),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.center,
-                            child: Container(
-                              width: cardWidth,
-                              padding: const EdgeInsets.all(padding32),
-                              decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(br32),
-                                ),
-                                color: white200,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0x1A0F172A),
-                                    blurRadius: 24,
-                                    offset: Offset(0, 12),
-                                  ),
-                                ],
+                          padding: const EdgeInsets.all(padding32),
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(br32),
+                            ),
+                            color: white200,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1A0F172A),
+                                blurRadius: 24,
+                                offset: Offset(0, 12),
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    'GERAK',
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontFamily: 'Lexend',
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.11,
-                                      letterSpacing: -1.8,
-                                      color: royalblue200,
-                                    ),
-                                    textAlign: TextAlign.center,
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'GERAK',
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.11,
+                                  letterSpacing: -1.8,
+                                  color: royalblue200,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Selamat Datang',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontFamily: 'Lexend',
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
+                                  letterSpacing: -0.75,
+                                  color: gray,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Silahkan mendaftar untuk melanjutkan',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  height: 1.5,
+                                  color: darkslategray,
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              _LabeledInput(
+                                label: 'Nama depan',
+                                controller: _firstNameController,
+                              ),
+                              const SizedBox(height: 16),
+                              _LabeledInput(
+                                label: 'Nama belakang (opsional)',
+                                controller: _lastNameController,
+                              ),
+                              const SizedBox(height: 28),
+                              Container(
+                                decoration: const BoxDecoration(
+                                  boxShadow: shadowDrop,
+                                  gradient: gradientPrimary,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(br48),
                                   ),
-                                  const SizedBox(height: 24),
-                                  const Text(
-                                    'Selamat Datang',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontFamily: 'Lexend',
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.2,
-                                      letterSpacing: -0.75,
-                                      color: gray,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Silahkan mendaftar untuk melanjutkan',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      height: 1.5,
-                                      color: darkslategray,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 28),
-                                  _LabeledInput(
-                                    label: 'Nama depan',
-                                    controller: _firstNameController,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _LabeledInput(
-                                    label: 'Nama belakang (opsional)',
-                                    controller: _lastNameController,
-                                  ),
-                                  const SizedBox(height: 28),
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      boxShadow: shadowDrop,
-                                      gradient: gradientPrimary,
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _goNext,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    foregroundColor: white200,
+                                    shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
                                         Radius.circular(br48),
                                       ),
                                     ),
-                                    child: ElevatedButton(
-                                      onPressed: _goNext,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        elevation: 0,
-                                        foregroundColor: white200,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(br48),
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: padding16,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'LANJUT',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'Lexend',
-                                          fontWeight: FontWeight.w800,
-                                          height: 1.56,
-                                        ),
-                                      ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: padding16,
                                     ),
                                   ),
-                                ],
+                                  child: const Text(
+                                    'LANJUT',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: 'Lexend',
+                                      fontWeight: FontWeight.w800,
+                                      height: 1.56,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
@@ -261,6 +254,7 @@ class _LabeledInput extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          enableInteractiveSelection: true,
           decoration: const InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(width: 1, color: aliceblue),

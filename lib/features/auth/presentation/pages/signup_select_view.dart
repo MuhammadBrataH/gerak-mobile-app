@@ -133,16 +133,20 @@ class SignUpSelectView extends StatelessWidget {
                                       onPressed: () {
                                         final controller =
                                             Get.find<AuthController>();
+                                        final isGoogle = controller.isGoogleSignup.value;
                                         final savedEmail =
                                             controller.signupEmail.value;
                                         final savedName =
                                             controller.signupName.value;
                                         controller.resetSignupFlow();
-                                        if (savedEmail != null) {
-                                          controller.setSignupEmail(savedEmail);
-                                        }
-                                        if (savedName != null) {
-                                          controller.setSignupName(savedName);
+                                        if (isGoogle) {
+                                          controller.isGoogleSignup.value = true;
+                                          if (savedEmail != null) {
+                                            controller.setSignupEmail(savedEmail);
+                                          }
+                                          if (savedName != null) {
+                                            controller.setSignupName(savedName);
+                                          }
                                         }
                                         controller.setSignupAccountType(
                                           'personal',
@@ -198,16 +202,20 @@ class SignUpSelectView extends StatelessWidget {
                                       onPressed: () {
                                         final controller =
                                             Get.find<AuthController>();
+                                        final isGoogle = controller.isGoogleSignup.value;
                                         final savedEmail =
                                             controller.signupEmail.value;
                                         final savedName =
                                             controller.signupName.value;
                                         controller.resetSignupFlow();
-                                        if (savedEmail != null) {
-                                          controller.setSignupEmail(savedEmail);
-                                        }
-                                        if (savedName != null) {
-                                          controller.setSignupName(savedName);
+                                        if (isGoogle) {
+                                          controller.isGoogleSignup.value = true;
+                                          if (savedEmail != null) {
+                                            controller.setSignupEmail(savedEmail);
+                                          }
+                                          if (savedName != null) {
+                                            controller.setSignupName(savedName);
+                                          }
                                         }
                                         controller.setSignupAccountType(
                                           'community',

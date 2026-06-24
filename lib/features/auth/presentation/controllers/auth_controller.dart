@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,7 @@ class AuthController extends GetxController {
   final RxnString signupGender = RxnString();
   final Rxn<DateTime> signupDateOfBirth = Rxn<DateTime>();
   final RxList<String> selectedSports = <String>[].obs;
+  final RxBool isGoogleSignup = false.obs;
   final RxnString profilePhotoPath = RxnString();
   final RxnString profileDomicile = RxnString();
   final RxnString profileBio = RxnString();
@@ -142,6 +144,7 @@ class AuthController extends GetxController {
     signupGender.value = null;
     signupDateOfBirth.value = null;
     selectedSports.clear();
+    isGoogleSignup.value = false;
   }
 
   String _currentUserKey() {
@@ -238,11 +241,11 @@ class AuthController extends GetxController {
   Future<void> login(String email, String password) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty || password.isEmpty) {
-      Get.snackbar('Login Failed', 'Email and password cannot be empty');
+      showCustomSnackbar('Login Gagal', 'Email dan password tidak boleh kosong');
       return;
     }
     if (!_isAllowedEmailDomain(trimmedEmail)) {
-      Get.snackbar('Login Failed', 'Gunakan email yang valid untuk login');
+      showCustomSnackbar('Login Gagal', 'Gunakan email yang valid untuk login');
       return;
     }
 
@@ -273,9 +276,9 @@ class AuthController extends GetxController {
 
       Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
     } on ApiException catch (error) {
-      Get.snackbar('Login Failed', error.message);
+      showCustomSnackbar('Login Gagal', error.message);
     } catch (_) {
-      Get.snackbar('Login Failed', 'Unexpected error occurred');
+      showCustomSnackbar('Login Gagal', 'Terjadi kesalahan yang tidak terduga');
     } finally {
       isLoading.value = false;
     }
@@ -297,7 +300,7 @@ class AuthController extends GetxController {
       final auth = await account.authentication;
       final idToken = auth.idToken;
       if (idToken == null || idToken.isEmpty) {
-        Get.snackbar('Google Login', 'Gagal mendapatkan token Google');
+        showCustomSnackbar('Google Login', 'Gagal mendapatkan token Google');
         return;
       }
 
@@ -310,6 +313,7 @@ class AuthController extends GetxController {
       final needsRegistration = data['needsRegistration'] == true;
 
       if (needsRegistration) {
+        isGoogleSignup.value = true;
         final profile = data['profile'];
         if (profile is Map<String, dynamic>) {
           final email = (profile['email'] ?? '').toString();
@@ -345,9 +349,9 @@ class AuthController extends GetxController {
 
       Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
     } on ApiException catch (error) {
-      Get.snackbar('Google Login', error.message);
+      showCustomSnackbar('Google Login', error.message);
     } catch (_) {
-      Get.snackbar('Google Login', 'Login Google gagal');
+      showCustomSnackbar('Google Login', 'Login Google gagal');
     } finally {
       isLoading.value = false;
     }
@@ -367,11 +371,11 @@ class AuthController extends GetxController {
         password.isEmpty ||
         name.isEmpty ||
         phone.isEmpty) {
-      Get.snackbar('Register Failed', 'All fields are required');
+      showCustomSnackbar('Register Failed', 'All fields are required');
       return;
     }
     if (!_isAllowedEmailDomain(trimmedEmail)) {
-      Get.snackbar('Register Failed', 'Gunakan email yang valid untuk daftar');
+      showCustomSnackbar('Register Failed', 'Gunakan email yang valid untuk daftar');
       return;
     }
 
@@ -408,12 +412,12 @@ class AuthController extends GetxController {
         _syncProfileCacheForUser();
       }
 
-      Get.snackbar('Register', 'Registration successful');
+      showCustomSnackbar('Register', 'Registration successful');
       Get.offAllNamed(_homeRouteForAccountType(user.value?.accountType));
     } on ApiException catch (error) {
-      Get.snackbar('Register Failed', error.message);
+      showCustomSnackbar('Register Failed', error.message);
     } catch (_) {
-      Get.snackbar('Register Failed', 'Unexpected error occurred');
+      showCustomSnackbar('Register Failed', 'Unexpected error occurred');
     } finally {
       isLoading.value = false;
     }
@@ -439,9 +443,9 @@ class AuthController extends GetxController {
 
       Get.offAllNamed(AppRoutes.login);
     } on ApiException catch (e) {
-      Get.snackbar('Logout Failed', e.message);
+      showCustomSnackbar('Logout Failed', e.message);
     } catch (e) {
-      Get.snackbar('Logout Failed', 'Terjadi kesalahan saat logout');
+      showCustomSnackbar('Logout Failed', 'Terjadi kesalahan saat logout');
     } finally {
       isLoading.value = false;
     }
@@ -459,11 +463,11 @@ class AuthController extends GetxController {
         data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
 
-      Get.snackbar('Success', 'Password berhasil diubah');
+      showCustomSnackbar('Success', 'Password berhasil diubah');
     } on ApiException catch (e) {
-      Get.snackbar('Error', e.message);
+      showCustomSnackbar('Error', e.message);
     } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan saat mengubah password');
+      showCustomSnackbar('Error', 'Terjadi kesalahan saat mengubah password');
     } finally {
       isLoading.value = false;
     }
@@ -492,9 +496,9 @@ class AuthController extends GetxController {
 
       Get.offAllNamed(AppRoutes.login);
     } on ApiException catch (e) {
-      Get.snackbar('Error', e.message);
+      showCustomSnackbar('Error', e.message);
     } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan saat menghapus akun');
+      showCustomSnackbar('Error', 'Terjadi kesalahan saat menghapus akun');
     } finally {
       isLoading.value = false;
     }
@@ -503,15 +507,15 @@ class AuthController extends GetxController {
   Future<bool> requestPasswordReset(String email) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
-      Get.snackbar('Lupa Password', 'Email wajib diisi');
+      showCustomSnackbar('Lupa Password', 'Email wajib diisi');
       return false;
     }
     if (!_isAllowedEmailDomain(trimmedEmail)) {
-      Get.snackbar('Lupa Password', 'Gunakan akun email yang terdaftar');
+      showCustomSnackbar('Lupa Password', 'Gunakan akun email yang terdaftar');
       return false;
     }
 
-    Get.snackbar('Lupa Password', 'Link reset sudah dikirim ke Gmail kamu');
+    showCustomSnackbar('Lupa Password', 'Link reset sudah dikirim ke Gmail kamu');
     return true;
   }
 

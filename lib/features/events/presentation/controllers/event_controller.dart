@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 
 import 'package:get/get.dart';
 
@@ -175,9 +176,9 @@ class EventController extends GetxController {
 
       hasMore.value = events.length < result.total;
     } on ApiException catch (error) {
-      Get.snackbar('Events', error.message);
+      showCustomSnackbar('Events', error.message);
     } catch (_) {
-      Get.snackbar('Events', 'Failed to load events');
+      showCustomSnackbar('Events', 'Failed to load events');
     } finally {
       isLoading.value = false;
     }
@@ -508,7 +509,7 @@ class EventController extends GetxController {
       final eventJson = response.data?['event'];
 
       if (eventJson is! Map<String, dynamic>) {
-        Get.snackbar('Events', 'Failed to create event');
+        showCustomSnackbar('Events', 'Failed to create event');
 
         return null;
       }
@@ -531,15 +532,15 @@ class EventController extends GetxController {
         page: 1,
       );
 
-      Get.snackbar('Events', 'Aktivitas berhasil ditambahkan');
+      showCustomSnackbar('Events', 'Aktivitas berhasil ditambahkan');
 
       return created;
     } on ApiException catch (error) {
-      Get.snackbar('Events', error.message);
+      showCustomSnackbar('Events', error.message);
 
       return null;
     } catch (_) {
-      Get.snackbar('Events', 'Gagal menambahkan aktivitas');
+      showCustomSnackbar('Events', 'Gagal menambahkan aktivitas');
 
       return null;
     }
@@ -572,7 +573,7 @@ class EventController extends GetxController {
       final eventJson = response.data?['event'];
 
       if (eventJson is! Map<String, dynamic>) {
-        Get.snackbar('Events', 'Failed to update event slots');
+        showCustomSnackbar('Events', 'Failed to update event slots');
 
         return null;
       }
@@ -581,15 +582,15 @@ class EventController extends GetxController {
 
       _replaceEvent(updated);
 
-      Get.snackbar('Events', 'Slot berhasil diperbarui');
+      showCustomSnackbar('Events', 'Slot berhasil diperbarui');
 
       return updated;
     } on ApiException catch (error) {
-      Get.snackbar('Events', error.message);
+      showCustomSnackbar('Events', error.message);
 
       return null;
     } catch (_) {
-      Get.snackbar('Events', 'Gagal memperbarui slot');
+      showCustomSnackbar('Events', 'Gagal memperbarui slot');
 
       return null;
     } finally {
@@ -650,11 +651,11 @@ class EventController extends GetxController {
 
       _replaceEventFromResponse(response.data);
 
-      Get.snackbar('Events', 'Successfully joined the event!');
+      showCustomSnackbar('Events', 'Successfully joined the event!');
     } on ApiException catch (error) {
-      Get.snackbar('Events', error.message);
+      showCustomSnackbar('Events', error.message);
     } catch (_) {
-      Get.snackbar('Events', 'Failed to join event');
+      showCustomSnackbar('Events', 'Failed to join event');
     } finally {
       _setEventLoading(eventId, false);
     }
@@ -674,11 +675,11 @@ class EventController extends GetxController {
 
       _replaceEventFromResponse(response.data);
 
-      Get.snackbar('Events', 'You left the event');
+      showCustomSnackbar('Events', 'You left the event');
     } on ApiException catch (error) {
-      Get.snackbar('Events', error.message);
+      showCustomSnackbar('Events', error.message);
     } catch (_) {
-      Get.snackbar('Events', 'Failed to leave event');
+      showCustomSnackbar('Events', 'Failed to leave event');
     } finally {
       _setEventLoading(eventId, false);
     }

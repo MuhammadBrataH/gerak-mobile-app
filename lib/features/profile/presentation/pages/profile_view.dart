@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,12 +55,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   void _showToast(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    showCustomSnackbar('Info', message);
   }
 
   Future<void> _showProfileMenu(BuildContext context) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
@@ -32,13 +33,7 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
     }
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      Get.snackbar(
-        'Error',
-        'Konfirmasi kata sandi tidak cocok',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      showCustomSnackbar('Error', 'Konfirmasi kata sandi tidak cocok');
       return;
     }
 
@@ -55,26 +50,14 @@ class _PasswordUpdateViewState extends State<PasswordUpdateView> {
           setState(() {
             _isLoading = false;
           });
-          Get.snackbar(
-            'Berhasil',
-            'Kata sandi berhasil diubah',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
+          showCustomSnackbar('Berhasil', 'Kata sandi berhasil diubah');
           Get.back();
         })
         .catchError((error) {
           setState(() {
             _isLoading = false;
           });
-          Get.snackbar(
-            'Error',
-            error.toString(),
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
+          showCustomSnackbar('Error', 'Gagal mengubah kata sandi');
         });
   }
 

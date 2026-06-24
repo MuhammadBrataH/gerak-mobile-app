@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gerak_mobile_app/core/utils/snackbar_helper.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -14,12 +15,7 @@ class _DeleteAccountStep1ViewState extends State<DeleteAccountStep1View> {
   int? _selectedIndex;
 
   void _showToast(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    showCustomSnackbar('Info', message);
   }
 
   @override
