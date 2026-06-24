@@ -240,12 +240,19 @@ class AuthController extends GetxController {
 
   Future<void> login(String email, String password) async {
     final trimmedEmail = email.trim();
-    if (trimmedEmail.isEmpty || password.isEmpty) {
-      showCustomSnackbar('Login Gagal', 'Email dan password tidak boleh kosong');
-      return;
-    }
+
+    // Cek format email dulu
     if (!_isAllowedEmailDomain(trimmedEmail)) {
       showCustomSnackbar('Login Gagal', 'Gunakan email yang valid untuk login');
+      return;
+    }
+
+    // Cek kosong setelah format valid
+    if (trimmedEmail.isEmpty || password.isEmpty) {
+      showCustomSnackbar(
+        'Login Gagal',
+        'Email dan password tidak boleh kosong',
+      );
       return;
     }
 
@@ -375,7 +382,10 @@ class AuthController extends GetxController {
       return;
     }
     if (!_isAllowedEmailDomain(trimmedEmail)) {
-      showCustomSnackbar('Register Failed', 'Gunakan email yang valid untuk daftar');
+      showCustomSnackbar(
+        'Register Failed',
+        'Gunakan email yang valid untuk daftar',
+      );
       return;
     }
 
@@ -515,7 +525,10 @@ class AuthController extends GetxController {
       return false;
     }
 
-    showCustomSnackbar('Lupa Password', 'Link reset sudah dikirim ke Gmail kamu');
+    showCustomSnackbar(
+      'Lupa Password',
+      'Link reset sudah dikirim ke Gmail kamu',
+    );
     return true;
   }
 

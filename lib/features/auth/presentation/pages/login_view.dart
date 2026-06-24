@@ -15,6 +15,8 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+  String? _emailError;
+  String? _passwordError;
 
   void _showForgotPasswordDialog(AuthController controller) {
     final emailController = TextEditingController(
@@ -63,11 +65,25 @@ class _LoginViewState extends State<LoginView> {
     _passwordController = TextEditingController();
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  void _handleLogin() {
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    final controller = Get.find<AuthController>();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        if (email.isEmpty) _emailError = 'Email tidak boleh kosong';
+        if (password.isEmpty) _passwordError = 'Password tidak boleh kosong';
+      });
+      return;
+    }
+
+    controller.login(email, password);
   }
 
   @override
@@ -187,10 +203,26 @@ class _LoginViewState extends State<LoginView> {
                                     label: 'GMAIL',
                                     hintText: 'example@gmail.com',
                                     controller: _emailController,
+                                    errorText: _emailError,
+                                    onChanged: (_) {
+                                      if (_emailError != null) {
+                                        setState(() {
+                                          _emailError = null;
+                                        });
+                                      }
+                                    },
                                   ),
                                   const SizedBox(height: 24),
                                   _PasswordField(
                                     controller: _passwordController,
+                                    errorText: _passwordError,
+                                    onChanged: (_) {
+                                      if (_passwordError != null) {
+                                        setState(() {
+                                          _passwordError = null;
+                                        });
+                                      }
+                                    },
                                     onForgotPassword: () {
                                       _showForgotPasswordDialog(controller);
                                     },
@@ -224,12 +256,7 @@ class _LoginViewState extends State<LoginView> {
                                       () => ElevatedButton(
                                         onPressed: controller.isLoading.value
                                             ? null
-                                            : () {
-                                                controller.login(
-                                                  _emailController.text.trim(),
-                                                  _passwordController.text,
-                                                );
-                                              },
+                                            : _handleLogin,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.transparent,
                                           elevation: 0,
@@ -391,11 +418,15 @@ class _LabeledField extends StatelessWidget {
   final String label;
   final String hintText;
   final TextEditingController controller;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
 
   const _LabeledField({
     required this.label,
     required this.hintText,
     required this.controller,
+    this.errorText,
+    this.onChanged,
   });
 
   @override
@@ -430,13 +461,20 @@ class _LabeledField extends StatelessWidget {
           autocorrect: false,
           enableSuggestions: false,
           enableInteractiveSelection: true,
+          onChanged: onChanged,
           decoration: InputDecoration(
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                width: 1,
+                color: errorText != null ? Colors.red : aliceblue,
+              ),
               borderRadius: BorderRadius.all(Radius.circular(br32)),
             ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                width: 1,
+                color: errorText != null ? Colors.red : aliceblue,
+              ),
               borderRadius: BorderRadius.all(Radius.circular(br32)),
             ),
             fillColor: whitesmoke,
@@ -453,6 +491,14 @@ class _LabeledField extends StatelessWidget {
             ),
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              errorText!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }
@@ -461,10 +507,14 @@ class _LabeledField extends StatelessWidget {
 class _PasswordField extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onForgotPassword;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
 
   const _PasswordField({
     required this.controller,
     required this.onForgotPassword,
+    this.errorText,
+    this.onChanged,
   });
 
   @override
@@ -535,13 +585,20 @@ class _PasswordFieldState extends State<_PasswordField> {
           autocorrect: false,
           enableSuggestions: false,
           enableInteractiveSelection: true,
+          onChanged: widget.onChanged,
           decoration: InputDecoration(
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                width: 1,
+                color: widget.errorText != null ? Colors.red : aliceblue,
+              ),
               borderRadius: BorderRadius.all(Radius.circular(br32)),
             ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: aliceblue),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                width: 1,
+                color: widget.errorText != null ? Colors.red : aliceblue,
+              ),
               borderRadius: BorderRadius.all(Radius.circular(br32)),
             ),
             fillColor: whitesmoke,
@@ -565,6 +622,14 @@ class _PasswordFieldState extends State<_PasswordField> {
             ),
           ),
         ),
+        if (widget.errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              widget.errorText!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }
